@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batch JSON Builder</title>
+<!-- Builds the input file for the Batch section of Proofing with AI: a JSON
+     list of entries, each with "Page Number", "English Script" and "Telugu
+     Script". Runs entirely in the browser from this one file - nothing that
+     is pasted here is sent anywhere. -->
+<style>
+:root{
+  --bg:#e8eef5; --panel:#fff; --border:#cbd5e1; --text:#1e293b; --muted:#64748b;
+  --green:#16a34a; --blue:#1d4ed8; --amber:#b45309; --pink:#be185d; --red:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+     font-family:Consolas,"Courier New",monospace;font-size:13px}
+.hdr{background:var(--panel);border-bottom:1px solid var(--border);
+     padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+     position:sticky;top:0;z-index:2}
+.hdr b{color:var(--pink);letter-spacing:.5px}
+.hdr .sub{color:var(--muted);font-size:11px}
+.panel{background:var(--panel);border:1px solid var(--border);margin:8px 10px 0;
+       padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.panel .name{font-weight:bold;font-size:11px;color:var(--pink);width:90px}
+label{font-size:11px;color:var(--muted);font-weight:bold;display:flex;
+      align-items:center;gap:6px}
+input[type=number],input[type=text]{font-family:inherit;font-size:13px;
+      padding:4px 6px;border:1px solid var(--border);border-radius:3px}
+input[type=number]{width:80px}
+button{font-family:inherit;font-size:12px;font-weight:bold;padding:5px 10px;
+       border:1px solid var(--border);border-radius:3px;cursor:pointer;
+       background:#fff;color:var(--text)}
+button:disabled{opacity:.45;cursor:default}
+.b-add{background:#dcfce7;color:var(--green);border-color:#bbf7d0}
+.b-make{background:#fce7f3;color:var(--pink);border-color:#fbcfe8}
+.b-open{background:#dbeafe;color:var(--blue);border-color:#bfdbfe}
+.b-clear{background:#fef3c7;color:var(--amber);border-color:#fde68a}
+.status{font-family:"Nirmala UI",sans-serif;font-size:12px;color:var(--muted);
+        flex:1 1 240px;min-width:0}
+.status.ok{color:var(--green)} .status.warn{color:var(--amber)} .status.err{color:var(--red)}
+
+table{width:calc(100% - 20px);margin:8px 10px 24px;border-collapse:collapse;
+      background:var(--panel);border:1px solid var(--border);table-layout:fixed}
+th{font-size:11px;color:var(--green);text-align:left;padding:6px 8px;
+   border-bottom:1px solid var(--border);background:#f8fafc;position:sticky;top:49px;z-index:1}
+td{border-bottom:1px solid var(--border);padding:6px 8px;vertical-align:top}
+col.c-pg{width:90px} col.c-x{width:44px}
+td.pg input{width:100%}
+textarea{width:100%;min-height:110px;resize:vertical;padding:6px 8px;
+         border:1px solid var(--border);border-radius:3px;
+         font-family:"Nirmala UI",sans-serif;font-size:15px;line-height:1.7}
+textarea.empty{background:#fffbeb;border-color:#fde68a}
+.count{font-size:10px;color:var(--muted);margin-top:2px}
+.rm{width:30px;height:30px;padding:0;color:#94a3b8;font-size:15px}
+.rm:hover{color:var(--red);border-color:#fecaca;background:#fef2f2}
+.none{color:var(--muted);text-align:center;padding:28px;font-family:"Nirmala UI",sans-serif}
+[hidden]{display:none!important}
+</style></head><body>
+
+<div class="hdr">
+  <b>BATCH JSON BUILDER</b>
+  <span class="sub">Makes the input file for the Batch section &mdash; Page Number, English Script, Telugu Script. Nothing you paste leaves this browser.</span>
+</div>
+
+<div class="panel">
+  <span class="name">ADD</span>
+  <label>Starting page <input id="start" type="number" min="0" value="1"></label>
+  <label>Number of entries <input id="count" type="number" min="1" max="500" value="5"></label>
+  <button id="bAdd" class="b-add">&#10010; Add entries</button>
+  <span id="addStatus" class="status">Entries are added below; page numbers count up from the starting page.</span>
+</div>
+
+<div class="panel">
+  <span class="name">FILE</span>
+  <label>File name <input id="fname" type="text" value="Book_batch.json" style="width:220px"></label>
+  <button id="bMake" class="b-make">&#8681; Create JSON file</button>
+  <button id="bOpen" class="b-open" title="Load a JSON made earlier, to add to it or correct it">&#128194; Open existing JSON</button>
+  <input id="pick" type="file" accept=".json,application/json" hidden>
+  <button id="bClear" class="b-clear">&#10006; Clear all</button>
+  <span id="status" class="status"></span>
+</div>
+
+<table>
+  <colgroup><col class="c-pg"><col><col><col class="c-x"></colgroup>
+  <thead><tr><th>Page</th><th>English text</th><th>Telugu text</th><th></th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+const $=id=>document.getElementById(id);
+const DRAFT_KEY="batchJsonBuilder.draft.v1";
+let ROWS=[];        // [{page, english, telugu}]
+const ADD_HINT="Entries are added below; page numbers count up from the starting page.";
+
+const say=(el,m,c)=>{ el.textContent=m; el.className="status "+(c||""); };
+
+/* ---- the draft survives a closed tab --------------------------------- */
+function saveDraft(){
+  try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(
+         {rows:ROWS, start:$("start").value, fname:$("fname").value})); }
+  catch(e){ /* storage blocked: the page still works, it just will not remember */ }
+}
+function loadDraft(){
+  try{
+    const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");
+    if(!d || !Array.isArray(d.rows)) return;
+    ROWS=d.rows; if(d.start) $("start").value=d.start; if(d.fname) $("fname").value=d.fname;
+    if(ROWS.length) say($("status"),"Restored "+ROWS.length+" entr"+(ROWS.length===1?"y":"ies")+" from your last visit.","ok");
+  }catch(e){}
+}
+
+/* ---- rows ------------------------------------------------------------- */
+const cps=s=>Array.from(s||"").length;
+function render(){
+  const tb=$("rows");
+  if(!ROWS.length){
+    tb.innerHTML='<tr><td colspan="4" class="none">No entries yet &mdash; set the starting page and the number of entries above, then press Add entries.</td></tr>';
+    return;
+  }
+  tb.innerHTML="";
+  ROWS.forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=
+      '<td class="pg"><input type="text" value=""></td>'+
+      '<td><textarea placeholder="Paste the English for this page" spellcheck="true"></textarea><div class="count"></div></td>'+
+      '<td><textarea placeholder="Paste the Telugu for this page" spellcheck="false" lang="te"></textarea><div class="count"></div></td>'+
+      '<td><button class="rm" title="Remove this entry">&#10006;</button></td>';
+    const [pg]=tr.querySelectorAll("input"), [en,te]=tr.querySelectorAll("textarea"),
+          [cEn,cTe]=tr.querySelectorAll(".count");
+    pg.value=r.page; en.value=r.english; te.value=r.telugu;
+    const counts=()=>{
+      cEn.textContent=en.value.trim()?cps(en.value)+" characters":"";
+      cTe.textContent=te.value.trim()?cps(te.value)+" characters":"";
+      en.classList.toggle("empty",!en.value.trim());
+      te.classList.toggle("empty",!te.value.trim());
+    };
+    counts();
+    pg.oninput=()=>{ r.page=pg.value; saveDraft(); };
+    en.oninput=()=>{ r.english=en.value; counts(); saveDraft(); };
+    te.oninput=()=>{ r.telugu=te.value; counts(); saveDraft(); };
+    tr.querySelector(".rm").onclick=()=>{
+      if((r.english.trim()||r.telugu.trim()) &&
+         !confirm("Remove page "+r.page+"? Its text goes with it.")) return;
+      ROWS.splice(i,1); saveDraft(); render();
+    };
+    tb.appendChild(tr);
+  });
+}
+
+/* Page numbers count up from the starting page. Afterwards the starting
+   page moves on past the last one added, so pressing Add again carries on
+   the sequence instead of repeating it. */
+$("bAdd").onclick=()=>{
+  const start=parseInt($("start").value,10), n=parseInt($("count").value,10);
+  if(!Number.isFinite(start)){ say($("addStatus"),"Enter a starting page number.","warn"); return; }
+  if(!Number.isFinite(n)||n<1){ say($("addStatus"),"Enter how many entries to add (1 or more).","warn"); return; }
+  if(n>500){ say($("addStatus"),"That is a lot at once — add at most 500 at a time.","warn"); return; }
+  const taken=new Set(ROWS.map(r=>String(r.page).trim()));
+  const clash=[];
+  for(let k=0;k<n;k++){
+    const p=String(start+k);
+    if(taken.has(p)) clash.push(p);
+    ROWS.push({page:p, english:"", telugu:""});
+  }
+  $("start").value=start+n;
+  saveDraft(); render();
+  say($("addStatus"),"✔ Added pages "+start+(n>1?" to "+(start+n-1):"")+"."
+      +(clash.length?" Page "+clash.join(", ")+" was already in the list.":""),
+      clash.length?"warn":"ok");
+  // Straight to the first new English box, ready to paste.
+  const boxes=$("rows").querySelectorAll("tr");
+  const first=boxes[ROWS.length-n]; if(first) first.querySelectorAll("textarea")[0].focus();
+};
+
+/* ---- the file --------------------------------------------------------- */
+function asPage(p){
+  const s=String(p).trim();
+  return /^\d+$/.test(s) ? parseInt(s,10) : s;     // 12 stays a number, "12a" a string
+}
+$("bMake").onclick=()=>{
+  if(!ROWS.length){ say($("status"),"Add some entries first.","warn"); return; }
+  const noTe=ROWS.filter(r=>!r.telugu.trim()).map(r=>r.page);
+  const noEn=ROWS.filter(r=>!r.english.trim()).map(r=>r.page);
+  const noPg=ROWS.filter(r=>!String(r.page).trim()).length;
+  const pages=ROWS.map(r=>String(r.page).trim()).filter(Boolean);
+  const dups=[...new Set(pages.filter((p,i)=>pages.indexOf(p)!==i))];
+  const problems=[];
+  if(noTe.length) problems.push("no Telugu on page "+noTe.join(", ")+" — the batch will mark these as failed");
+  if(noEn.length) problems.push("no English on page "+noEn.join(", ")+" — proofing works much worse without it");
+  if(noPg) problems.push(noPg+" entr"+(noPg===1?"y has":"ies have")+" no page number");
+  if(dups.length) problems.push("page "+dups.join(", ")+" appears more than once");
+  if(problems.length && !confirm("Before creating the file:\n\n• "+problems.join("\n• ")+"\n\nCreate it anyway?")) return;
+
+  const data=ROWS.map(r=>({"Page Number":asPage(r.page),
+                           "English Script":r.english.trim(),
+                           "Telugu Script":r.telugu.trim()}));
+  let name=($("fname").value||"Book_batch").trim().replace(/[<>:"/\\|?*]/g,"");
+  if(!/\.json$/i.test(name)) name+=".json";
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  say($("status"),"✔ Created "+name+" with "+data.length+" entr"+(data.length===1?"y":"ies")
+      +" — it is in your Downloads folder. Drop it into the Batch section.", problems.length?"warn":"ok");
+};
+
+/* Reopen a file made earlier — same keys, matched loosely, as the batch reads them. */
+const key=k=>String(k).toLowerCase().replace(/[^a-z]/g,"");
+function field(o,names){ for(const k of Object.keys(o)) if(names.includes(key(k))) return o[k]; }
+$("bOpen").onclick=()=>$("pick").click();
+$("pick").onchange=async function(){
+  const f=this.files[0]; this.value="";
+  if(!f) return;
+  try{
+    let d=JSON.parse((await f.text()).replace(/^﻿/,""));
+    if(!Array.isArray(d) && d && typeof d==="object"){
+      const lists=Object.values(d).filter(Array.isArray); if(lists.length===1) d=lists[0]; }
+    if(!Array.isArray(d)) throw new Error("expected a list of entries");
+    const rows=d.filter(o=>o&&typeof o==="object").map((o,i)=>{
+      const p=field(o,["pagenumber","page","pageno"]);
+      return {page:p===undefined||p===null?String(i+1):String(p),
+              english:String(field(o,["englishscript","english"])||""),
+              telugu:String(field(o,["teluguscript","telugu"])||"")};
+    });
+    if(!rows.length) throw new Error("no entries in it");
+    if(ROWS.length && !confirm("Opening "+f.name+" replaces the "+ROWS.length+" entr"
+        +(ROWS.length===1?"y":"ies")+" here. Continue?")) return;
+    ROWS=rows; $("fname").value=f.name;
+    say($("addStatus"),ADD_HINT,"");
+    const last=parseInt(rows[rows.length-1].page,10);
+    if(Number.isFinite(last)) $("start").value=last+1;
+    saveDraft(); render();
+    say($("status"),"✔ Opened "+f.name+" — "+rows.length+" entr"+(rows.length===1?"y":"ies")+".","ok");
+  }catch(e){ say($("status"),"Could not open "+f.name+" — "+e.message,"err"); }
+};
+
+$("bClear").onclick=()=>{
+  if(!ROWS.length) return;
+  if(!confirm("Remove all "+ROWS.length+" entries? This cannot be undone.")) return;
+  ROWS=[]; $("start").value=1; saveDraft(); render();
+  say($("addStatus"),ADD_HINT,"");
+  say($("status"),"Cleared.","");
+};
+$("fname").oninput=saveDraft;
+
+loadDraft(); render();
+</script>
+</body></html>
