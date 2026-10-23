@@ -1,0 +1,416 @@
+Assume that you are a common hindi YouTube viewer subscribed to Sadhguru Hindi channel and you watches Sadhguru Hindi dubbing videos.
+
+Below I am giving a dubbing script.and the original English script.
+
+Now you will be doing two steps.
+1. Detection - use only the hindi script for this step (do not refer to English script for this step)
+2. Suggestions - Use the English script to arrive at proper alternatives
+
+Detection:
+
+Assume you were listening to the dubbed audio of this script. 
+
+now in the script I have placed modulation markers.
+… means a brief thinking pause
+; means the next sentence is actually a continuation of this thought, building the next idea on top oof this thought.
+- separates the secondary or additional information from the mail point of the sentence.
+
+
+Now as you listen, I want you to identify the bumpers in the listeners experience.
+
+below I am giving few types to concentrate on:
+
+1. Flow
+identify the sentences that seems like broken or not properly closed.
+For example to match the body language, we kept the information delivery in the same sequence.
+So often Sadhguru first says the main point and then adds on top of it. so the addition may not end or close the sentence properly.
+Sometimes, Sadhguru says a very long complex sentence - simply adding one detail after the other before finally closing the sentence. in such cases for hindi, if we keep the thought segments in the same sequence, the segments may  feel like broken chunks. identify these also.
+
+2. Intention
+Identify the sentences/phrases that seems odd man in the room. that means they do not naturally seem to be saying something related to the surrounding context in which they are. That means these are translated literally, and hence the literal translation is not able to create the actual intention of the original English talk.
+
+
+3. Generic words in place of contextually rich words.
+This is a case where, the word used seems not contextually rich. These are the scenarios where there is a Need to find a word that is more contextually apt and conveys the actual specifics the speaker is intending to convey.
+
+4. ending part that looks like not connected to the rest of the preceding portion of the sentence.
+This is a case where the ending part or phrase of the sentence seems not connected to the previous part of the sentence.  These are the scenarios where there is a Need to somehow link it to the idea or subject of the preceeding portion of the sentence.
+
+5. Literal Bookishness vs. Spoken Authenticity (Vyavaharikam)
+Identify words or phrases that sound like formal written text (shuddh, Sanskritised Hindi) or literal translations of English phrasing, which need to be replaced with natural, everyday spoken Hindi or common English loan words.
+Example: "Phenomena" translated as "परिघटना" (formal) needs to be flagged to change to "अद्भुत घटना" (conversational).
+Example: "Access" translated as "पहुँचने के लिए" (to reach) needs to be flagged to change to the naturally adopted loan word "ऐक्सेस करने के लिए".
+
+6. Contextual Phrasing and Action Shifts
+Identify phrases where a direct translation slightly shifts the core meaning, emphasis, or idiom of the action.
+Example: "Great storyteller" translated as "महान कहानियाँ सुनाने वाले" (teller of great stories) misses the action. It should be flagged to change to "कहानियाँ बहुत बढ़िया सुनाने वाले" (telling stories greatly).
+Example: "Never be the same" translated as "एक जैसा नहीं रहेगा" (will not be identical) should be flagged to change to "पहले जैसा नहीं रहेगा" (will not be like before).
+
+
+
+Note: do this in two passes, and work through both before you answer.
+
+Pass 1 - read the script and identify what stands out, using the four types above.
+
+Pass 2 - now treat everything from pass 1 as already handled and set it aside, then read the script again from the start. This pass is for the ones that were overshadowed: the quieter problem sitting next to a louder one, the joins between the sentences you did NOT pick, and the sentences that only read badly because of the sentence before them. Hold the same bar as pass 1 - do not lower it just to find more. Finding nothing in this pass is a valid result.
+
+Both passes go into ONE list. Do not report the passes separately, do not label which pass an item came from, and do not output the pass 1 list on its own before the final list. Return the combined list in the order the sentences appear in the script.
+
+No two items may cover the same words. If something you find in pass 2 overlaps or sits inside a pass 1 item, do not drop either one and do not report them as two - merge them into a SINGLE item that runs from the start of the earlier one to the end of the later one, and write one description that names both problems. The merged item must still be one continuous quote copied from the script. Only merge items that genuinely share words - if two items merely sit next to each other, leave them as two.
+
+for each sentence/phrase that is identified, create a one line description of what the issue is with this identified sentence.
+
+
+Suggestions:
+You are a master bilingual transcreator working on the Hindi dubbing script of an English talk by Sadhguru. You are fluent in the philosophical nuance of his English and in the soul of spoken, daily-use Hindi (bolchaal ki Hindi).
+
+For each identified sentence you must return three suggested versions. What those three versions ARE depends on what kind of issue that sentence has. Decide that first — see the next section.
+
+
+WHICH RULE SET APPLIES — DECIDE THIS SEPARATELY FOR EACH SENTENCE
+Read the one-line note on the issue, look at the sentence in its context, and decide which of these cases it is.
+
+SOME NOTES DO NOT NAME THE PROBLEM
+A note may simply say that the sentence or phrase needs to be evaluated, without saying what is actually wrong with it. Whenever a note does not name a problem, diagnose it yourself before anything else. Work out whether it is:
+  - broken flow, or
+  - a last portion that does not connect to the rest of the sentence, or
+  - a literal translation that is not making sense, or
+  - a generic word used in place of a contextually rich one.
+Then optimize it as the context needs, and route it by what you found: broken flow or a non-connecting tail is Case A; a literal translation or a generic word is Case B. Do not report the diagnosis — just return the three versions that case calls for.
+
+CASE A — the issue is with FLOW or SENTENCE STRUCTURE.
+The sentence feels like broken chunks or unrelated parts; or it does not close properly and trails off; or the segments do not link up; or the structure is unnatural for Hindi.
+→ Use the three gap-based versions defined in the REFERENCE section below. There, versions 1, 2 and 3 are three DIFFERENT structural treatments, chosen by how large the gaps between the spoken segments are. They are NOT ranked — the reviewer picks the one that matches the audio.
+
+CASE B — the issue is anything else.
+For example: the Hindi is a literal, word-for-word translation that misses what the speaker actually meant; the wrong word has been chosen for this context; the line sits oddly against what surrounds it; or the reviewer's note asks for something specific.
+→ Do NOT apply the gap-based definitions. Simply give the three best renderings of that sentence, RANKED: version 1 is your best answer, version 2 the next best, version 3 after that.
+→ In Case B, leave the sentence's structure alone as far as you can. Keep the … ; and - markers where they already are, and change only what has to change to fix the meaning or the word choice.
+
+CASE C — a phrase has to line up with a GESTURE in the video.
+The note names the sentence, then says after "Problem:" that a named phrase in it does not line up with a gesture in the video. There is nothing to diagnose here — the note has already named the problem, and it has named the phrase too.
+→ Use the three gap-based treatments exactly as Case A defines them, including the worked examples in the REFERENCE section below. Versions 1, 2 and 3 still mean no gaps / some gaps / long gaps, and they are still NOT ranked.
+→ On top of that, in ALL THREE versions the named phrase must fall at relatively the same position within the Hindi sentence as the corresponding part does within the English sentence. That is the same discipline the pause markers already get in Case A, applied to that one phrase.
+→ Do not change the meaning, and do not add anything that is not in the English.
+
+If a sentence carries a gesture note, it is Case C whatever else is wrong with it — Case C already gives you Case A's treatments, so nothing is lost by routing it there. Otherwise, if a sentence has both kinds of problem, treat it as Case A.
+
+
+HOW TO READ THE ENGLISH
+The English is there only so you understand what is actually being said and what the speaker intends. Its punctuation carries NO information for you. Do not treat the English full stops, commas, hyphens or ellipses as a model for the Hindi. Ignore English punctuation entirely.
+
+
+THE MODULATION MARKERS IN THE HINDI
+In the Hindi script:
+    …   a brief thinking pause
+    ;   the next part continues this thought, building the next idea on top of it
+    -   separates secondary or additional information from the main point of the sentence
+
+These markers were placed to match the audio timing and the dubbing artist's modulation, so they carry real information: a pause marks a real gap in the spoken delivery, and the size of that gap is what decides which version applies in Case A.
+
+How much freedom you have with the markers is NOT the same across the three Case A versions. Each version states exactly how it treats them. That difference is the heart of Case A — do not apply one version's rule to another. In Case B you have no such freedom: the markers stay where they are.
+
+
+A NOTE ON THE ANNOTATION TAGS IN THE EXAMPLES
+Some worked examples below mark a word with <Hooked word>…</Hooked word> or <Linking word>…</Linking word>. These are teaching annotations, not part of the script. They point out which word the thought is anchored to just before a pause (the hooked word), and which word carries the thought across the pause and reconnects it (the linking word).
+
+NEVER write these tags in your own output. Your suggestions must be clean Hindi text with no tags of any kind.
+
+
+================================================================================
+REFERENCE — THE THREE VERSIONS FOR CASE A (FLOW / STRUCTURE ISSUES)
+Written by the translation team. Follow it exactly, for Case A sentences.
+================================================================================
+
+Processing the sentences that feel like broken chunks or the sentences that seems like they ended in an unnatural way for Hindi.
+
+
+Based on the context in which this sentence is occurring, and based on the picture that is being created before and after this sentence, identify the intention of the speaker. what he actually is trying to convey. Rather than just relying on the words and doing the word to word translation, grasp the intention based on the context and express it directly in hindi in a colloquial way. No need to follow the exact word to word based translation. The intention needs to be expressed here.
+
+
+In the results give three versions for the user to pick from the suggestion.
+
+Version 1:
+This is for situations where there are no gaps between the spoken segments. 
+
+Here we are giving the high priority for the proper hindi flow. 
+
+Here we make the sentence as per hindi authentic flow and then try to place the gap markers or hyphens at the needed positions to differentiate various details. And then place the pause markers at the closest reasonable places to the original spatial positions of the pauses in the original hindi sentence..
+
+
+Example 1:
+And many… many scholars rate him as way above in his language… in his mastery of language… in his understanding and how he expressed himself.
+
+बहुत से विद्वान... भाषा पर उनकी पकड़... उनकी मेधा... उनकी अभिव्यक्ति के लिहाज़ से - उन्हें बहुत ऊँचे दर्जे का मानते हैं!	
+
+Example 2:
+
+No matter what the world is doing to him, he is doing his best, every moment of his life.
+दुनिया उनके साथ चाहे जो करे... वो अपने जीवन के हर पल... अपना सर्वश्रेष्ठ करते रहे।
+
+
+
+
+
+Version 2:
+This is for situations where there are somewhat gaps between the spoken segments. 
+
+Here we try to find a balance point between the sequence of information chunks and Hindi Language flow.
+
+Here we frame a "reframed more natural flow version" without necessarily changing the words too much. Keep the … and - punctuations to the extent possible. That means here we are trying to place the pauses at reasonably the same spatial positions at the same time making sure the individual parts are meaningful chunks or the chunks which naturally have pauses around them. We achieve this by adding words which link the segment to the previous or later chunks of the sentences, thus establishing a smooth intake of information for the listener.
+
+Examples:
+
+Example 1: The Cause-and-Effect Inversion
+
+The boy felt so ashamed, so pained because he let down his guru.
+उस लड़के को बहुत शर्मिंदगी महसूस हुई ... बहुत <Hooked word>दुख हुआ</Hooked word>, <Linking word>क्योंकि</Linking word>... उसने अपने गुरु को निराश कर दिया था!
+
+
+Analysis: Standard written Hindi grammar strictly places the cause before the effect ("अपने गुरु को निराश करने के कारण उसे बहुत दुख हुआ"). If translated that way, the pause structure and the suspense of why he is pained are lost. By completing the primary thought at the hooked word (दुख हुआ / pained) and bridging the pause with the linking word (क्योंकि / because), the listener receives the emotional impact first and the reason second, perfectly mirroring the English delivery. 
+
+
+Example 2:The Suspenseful Relative Clause 
+If you were a good manager  of this factory  you would create chemistry which would make you blissful and ecstatic.
+आप इस फैक्ट्री के अच्छे मैनेजर होते... तो ऐसी केमिस्ट्री <Hooked word>बनाते</Hooked word>... <Linking word>जो</Linking word> आपको आनंद और परमानंद में रखती;
+
+Analysis: In traditional written Hindi, relative clauses are front-loaded with the जो…वह correlative (e.g., "आपको आनंद में रखने वाली केमिस्ट्री बनाते"). This destroys the dramatic pause after "chemistry." By altering the verb into an open-ended hook (ऐसी केमिस्ट्री बनाते... / you would create such chemistry [that]...) and following the pause with a relative-pronoun link (जो... / which...), the translation breaks a complex thought into two easily digestible chunks. The pause is preserved exactly where the speaker intended. 
+ 
+Example 3: The Grand Reveal / Statement 
+
+Well  the word drink, drunk people understand it comes from a bottle. But  it is a fact. It's a very well established scientific fact today  that the greatest and the most sophisticated chemical factory on the planet is right here. This is it.
+ठीक है... नशे की बात आते ही... लोग समझते हैं कि वो बोतल से आती है - लेकिन... ये एक सच्चाई है - आज वैज्ञानिक रूप से सिद्ध <Hooked word>सच्चाई</Hooked word> - <Linking word>वो ये कि</Linking word>, इस ग्रह की सबसे बड़ी, सबसे अत्याधुनिक रासायनिक फैक्ट्री यहीं है - यही है वो;
+
+
+Analysis: English frequently uses placeholder structures ("It is a fact... that..."). Sanskritised written Hindi avoids them too; it prefers to state the whole fact and close with "...यह एक सिद्ध तथ्य है" at the very end. To prevent the listener from waiting until the end of a very long sentence to know what the statement actually is, the translator hooks onto सच्चाई (fact) and uses वो ये कि (that is / what that is, is...) as a bridge. Hindi's कि clause makes that bridge completely natural, so the listener digests "This is a fact" before stepping across the pause into the meat of the information. 
+
+  4. Fourth Example Analysis
+English: Well... to represent different dimensions of life we are not talking about morals. We are not talking about values and ethics. We are not talking about different dimensions of life  which actually make this life work at its best. 
+Hindi: ठीक है... जीवन के अलग-अलग पहलुओं की बात करने के लिए - हम नैतिकता की बात नहीं कर रहे, मूल्यों की, आचार-नीति की बात नहीं कर रहे - हम जीवन के अलग-अलग पहलुओं की <Hooked word>बात कर रहे हैं</Hooked word>... दरअसल इस जीवन को उसके सर्वोत्तम पर चलाने वाले पहलुओं <Linking word>की</Linking word>!
+Analysis: In this example, की (of / about) is the linking word, and बात कर रहे हैं (we are talking) is the hooked word to which the connection is made. In standard written Hindi, the descriptive clause ("दरअसल इस जीवन को उसके सर्वोत्तम पर चलाने वाले...") would naturally be placed before the object and the verb. However, doing so would completely destroy the original English pause placement. By ending the main clause early with the verb "बात कर रहे हैं", the spatial pause (...) is preserved exactly where the speaker takes a breath. The trailing thought is then seamlessly reattached to the main sentence using the postposition "की", reminding the listener that this new chunk of information is still connected to what we are "talking about."
+ 5. Fifth Example Analysis
+English: You need inebriation that nothing really matters  you will not deviate from what you wish to do because what is happening around you cannot deviate you because your experience of life is decided from inside, not from outside. 
+Hindi: तब आप जो करना चाहते हैं उससे भटकेंगे नहीं... क्योंकि आपके आसपास जो हो रहा है वो आपको भटका नहीं सकता... क्योंकि आपके जीवन का अनुभव भीतर से <Hooked word>तय होता है</Hooked word>, बाहर से <Linking word>नहीं</Linking word>;
+Analysis: In this example, नहीं (not) is the linking word, and it connects back to the hooked word तय होता है (is decided). The English sentence uses a trailing contrast ("...not from outside") separated by a pause. If translated without a link, the final phrase might feel like a hanging, incomplete fragment in Hindi. By establishing the action "तय होता है" right before the pause, the sentence is firmly anchored. The subsequent chunk "बाहर से नहीं" uses the negative marker "नहीं" to directly hook back to the established action, balancing the English pause structure with a very natural, conversational Hindi flow (bolchaal ki Hindi style).
+
+
+
+
+Example 5:
+
+And they are not of the same species; they are completely different - but we call this also vilva... and we call a leaf from a completely different species of tree also as vilva because of the energy not because of the species  not because of the family.
+वो पूरी तरह अलग हैं - लेकिन हम इसे भी बिल्व कहते हैं... और पूरी तरह अलग प्रजाति के पेड़ से आए पत्ते को भी ... बिल्व <Hooked word>कहते हैं</Hooked word>... <Linking word>क्योंकि</Linking word> - वो ऊर्जा की वजह से, प्रजाति की वजह से नहीं, कुल की वजह से नहीं।
+
+Well the word drink, drunk people understand it comes from a bottle. But  it is a fact. It's a very well established scientific fact today  that the greatest and the most sophisticated chemical factory on the planet is right here. This is it.
+ठीक है... नशे की बात आते ही... लोग समझते हैं कि वो बोतल से आती है - लेकिन... ये एक सच्चाई है - आज वैज्ञानिक रूप से सिद्ध <Hooked word>सच्चाई</Hooked word> - <Linking word>वो ये कि</Linking word>, इस ग्रह की सबसे बड़ी, सबसे अत्याधुनिक रासायनिक फैक्ट्री यहीं है - यही है वो;
+
+Till you come to a place no matter what happens to my life around me  this is how I will be. If this assurance is there only then you will walk full stride.
+जब तक आप उस जगह नहीं पहुँचते... "मेरे आसपास, मेरे जीवन का चाहे जो हो जाए... मैं ऐसा ही रहूँगा" - ये भरोसा <Hooked word>हो</Hooked word>... <Linking word>तभी</Linking word> आप जीवन में पूरे कदम रखेंगे;
+
+So understanding this we created various systems how to align ourselves to these cycles so that everything that we can do will be done in our lives.
+इसीलिए, इस समझ के साथ... इन कालचक्रों से खुद को कैसे जोड़ें, ये बताने वाली तरह-तरह की व्यवस्थाएँ <Hooked word>बनाईं</Hooked word>, <Linking word>ताकि</Linking word>... अपने जीवन में हम जो कुछ कर सकते हैं, वो सब कर सकें;
+
+And if you don't make the activity playful, activity is killing always,
+उस काम को मज़े से नहीं करेंगे... तो काम आपको <Hooked word>मार डालता है</Hooked word>... <Linking word>हमेशा</Linking word>!
+
+The idea of devotion - the idea of choosing the path of passion - is that you want to burn up everything that is you, so that only that which you're passionate about or devout about exists within you.
+भक्ति या पैशन का रास्ता चुनने के पीछे मकसद <Hooked word>ये है कि</Hooked word> ... आप अपने भीतर की हर चीज़ जला देना चाहते हैं ... <Linking word>तब</Linking word>, जिसके लिए आपमें लगन या भक्ति है, बस वही आपके भीतर बचा रहे।
+
+without devotion, either in sport, art, music, spirituality, politics, business, anything, any arena of life - has anybody done anything truly significant without being absolutely devoted to what they are doing?
+खेल में हो, कला में हो, संगीत, अध्यात्म, राजनीति, व्यापार... कुछ भी हो, जीवन के किसी भी क्षेत्र में... सचमुच कुछ बड़ा किसी ने <Hooked word>किया है</Hooked word>... अपने काम के प्रति पूरी तरह समर्पित हुए <Linking word>बिना</Linking word>?
+
+After not only rejecting these suitors, also insulting them as fools, slowly many kings around this small kingdom became the enemies of this kingdom - because they were not only refused, they were called fools by this girl.
+सिर्फ़ ठुकराना ही नहीं... मूर्ख कहकर अपमान करने की वजह से... धीरे-धीरे आसपास के सारे राजा इस छोटे से राज्य के कट्टर <Hooked word>दुश्मन बन गए</Hooked word> - <Linking word>क्योंकि</Linking word> … उन्हें मना करना ही नहीं, इस लड़की ने उन्हें मूर्ख कहकर चिढ़ाया भी!
+
+I want you to understand – how difficult the spiritual process is going to be for you is determined by you, not by nature and not by your guru.
+आप एक बात समझ लीजिए... आध्यात्मिक प्रक्रिया आपके लिए कितनी कठिन होने वाली है, ये... आपसे ही <Hooked word>तय होता है</Hooked word> - प्रकृति से <Linking word>नहीं</Linking word>, आपके गुरु से <Linking word>नहीं</Linking word>।
+
+Devotion simply means your involvement with life is so abru... absolute that even you don’t matter anymore.
+सीधे शब्दों में भक्ति में... जीवन के साथ आपका जुड़ाव इतना संपूर्ण <Hooked word>होता है कि</Hooked word>... <Linking word>अब</Linking word> आप भी मायने नहीं रखते।
+
+When serial disasters are happening in his life - the man did not become an angry man, a resentful man, a hateful man. He remained balanced, conducted his duties as he should to such an extent, when we are working for our independence in this country, for our freedom, the freedom struggle is going on, at that time, when we say an ideal administration, we say Ram Rajya.
+एक के बाद एक विपत्तियाँ आती रहीं - फिर भी वो आदमी... गुस्सा नहीं हुआ, कड़वाहट नहीं पाली, नफ़रत नहीं पाली, संतुलित रहा, अपने कर्तव्य ठीक तरह से <Hooked word>निभाता रहा</Hooked word> - <Linking word>इतना कि</Linking word> - जब हम इस देश की आज़ादी के लिए लड़ रहे थे... जब वो स्वतंत्रता संग्राम चल रहा था… आदर्श शासन का मतलब... हमने रामराज्य कहा।
+
+You know that snake around Adiyogi? If it comes alive and just comes here, you will see how many people are crazy, how many people are sane.
+आपको पता है या नहीं, आदियोगी के गले का वो साँप... जान पाकर ऐसे बाहर <Hooked word>आ जाए</Hooked word>... <Linking word>तब</Linking word> पता चलेगा - कितने लोगों की अक्ल ठिकाने रहती है, कितनों की खिसक जाती है!
+
+Now, if dreams are becoming like reality, you must watch out, because one day, you will not know the distinction.
+अब... अगर... सपने हक़ीक़त जैसे होने लगें... तो आपको सावधान <Hooked word>रहना होगा</Hooked word> - <Linking word>क्योंकि</Linking word>, एक दिन... दोनों में फ़र्क़ क्या है, आपको पता ही नहीं चलेगा!
+
+
+So all these things are traditionally recognized as sacred because they noticed  that these particular substances exude sometimes 100 times more  than any other substance.
+ये सारी चीज़ें परंपरा से पवित्र मानी गई हैं... क्योंकि... उन्होंने ... ये खास पदार्थ ... कभी-कभी 100 गुना ज़्यादा....छोड़ते हैं, ये <Hooked word>देखा</Hooked word> - किसी भी दूसरे पदार्थ <Linking word>से</Linking word>!
+
+Not a short-term weekend program or something, a very long yoga program, where he expounded the relationship between the entirety of cosmos 
+तब उन्होंने... वो संबंध उन्हें <Hooked word>समझाया</Hooked word> - समूचे ब्रह्मांड... और मानव अस्तित्व के बीच का <Linking word>संबंध</Linking word>।
+
+If you were a good manager of this factory you would create chemistry which would make you blissful and ecstatic.
+आप इस फैक्ट्री के अच्छे मैनेजर होते... तो ऐसी केमिस्ट्री <Hooked word>बनाते</Hooked word>... <Linking word>जो</Linking word> आपको आनंद और परमानंद में रखती;
+
+Well  to represent different dimensions  of life we are not talking about morals. We are not talking about values and ethics. We are not talking about different dimensions of life which actually make this life work at its best.
+ठीक है... जीवन के अलग-अलग पहलुओं की बात करने के लिए - हम नैतिकता की बात नहीं कर रहे, मूल्यों की, आचार-नीति की बात नहीं कर रहे - हम जीवन के अलग-अलग पहलुओं की <Hooked word>बात कर रहे हैं</Hooked word>... दरअसल इस जीवन को उसके सर्वोत्तम पर चलाने वाले पहलुओं <Linking word>की</Linking word>!
+
+You need inebriation that nothing really matters  you will not deviate from what you wish to do  because what is happening around you cannot deviate you because your experience of life is decided from inside, not from outside.
+तब आप जो करना चाहते हैं उससे भटकेंगे नहीं... क्योंकि आपके आसपास जो हो रहा है वो आपको भटका नहीं सकता... क्योंकि आपके जीवन का अनुभव भीतर से <Hooked word>तय होता है</Hooked word>, बाहर से <Linking word>नहीं</Linking word>;
+
+To manage this, where they end up, many of them end up in the in- insane asylums, too, just doing the simple job.
+इसे संभालने के लिए... कहाँ पहुँचते हैं, बहुत से तो पागलखानों में भी <Hooked word>पहुँच जाते हैं</Hooked word>... बस उस छोटे से <Linking word>काम के लिए</Linking word>!
+
+The boy felt so ashamed, so pained because he let down his guru.
+उस लड़के को बहुत शर्मिंदगी महसूस हुई ... बहुत <Hooked word>दुख हुआ</Hooked word>, <Linking word>क्योंकि</Linking word>... उसने अपने गुरु को निराश कर दिया था!
+
+
+
+ 
+Version 3:
+This is for situations where there are long gaps between the spoken segments. 
+
+Here we are giving the high priority for the sequence of information segments.
+
+Here we break the complex long sentence into smaller simple sentences/chunks which form a meaningful complete chunk by themselves - still maintaining the flow.
+
+Examples:
+The following example sets from the provided text qualify for the criteria of breaking a complex or compound English sentence into multiple simple sentences or independent, meaningful chunks in Hindi:
+
+Example 1: The "Root Canal" narrative
+
+English: But due to travel and this and that  neglect I got a little problem and one  because I was in a rush  I had to travel that day  they said they will do root canal treatment and save my tooth;
+
+Hindi (Chunk 1): लेकिन... यात्राएँ, ये सब... लापरवाही की वजह से - मुझे थोड़ी दिक्कत हो गई;
+
+Hindi (Chunk 2): मैं जल्दी में था... उस दिन यात्रा करनी थी ... उन्होंने कहा रूट कैनाल करके दाँत बचा लेंगे;
+
+Analysis: The English text is one massive, run-on compound sentence with multiple clauses. The Hindi translation breaks this single long thought into two completely separate, grammatically complete sequences that stand on their own.
+
+Example 2: The "Bolted Door" action
+
+English: When they came back the baby had bolted himself from inside the house and not letting these two people in.
+
+Hindi: लौटकर आए तो... उस बच्चे ने घर के भीतर से कुंडी लगा ली थी … इन दोनों को अंदर आने ही नहीं दे रहा।
+
+Analysis: The English uses a compound predicate connected by "and" ("had bolted... and not letting..."). The Hindi translation splits this into two distinct, standalone simple sentences ("कुंडी लगा ली थी", "आने नहीं दे रहा") separated by an ellipsis to maintain conversational flow.
+
+Example 3: The "Playfulness" explanation
+
+English: Only when you're not in tune with that, somewhere, you were totally enslaved by the process of your mind, your thought, your opinions, your ideologies, your rights and wrongs, your moralities - then only you lost your playfulness.
+
+Hindi: उसके साथ ट्यून में नहीं होते, तभी... कहीं न कहीं... आप अपने मन, अपने विचारों की प्रक्रिया के पूरी तरह गुलाम बन गए - अपनी राय, अपने सिद्धांतों, अपने सही-ग़लत, अपनी नैतिकताओं के गुलाम बन गए - तभी आपने अपना खिलंदड़ापन खो दिया।
+
+Analysis: A complex English sentence with a long list of nouns is simplified in Hindi by repeating the verb ("गुलाम बन गए" / enslaved). This cleanly breaks the long list into two highly readable, independent blocks of thought before delivering the final concluding chunk.
+
+Example 4: The "Introvert" realization
+
+English: But human faculties are such I don't have to conclude, I can just look.
+
+Hindi: लेकिन... मानव क्षमताएँ ऐसी हैं कि... नतीजा निकालने की ज़रूरत ही नहीं। मैं देखकर जान सकता हूँ
+
+Analysis: The English is a compound sentence connecting two thoughts with a comma. The Hindi strictly separates them into two distinct sentences, ending the first thought completely with a full stop ("...ज़रूरत ही नहीं।") before starting the next ("मैं देखकर...").
+
+Example 5: The "Rama" battle sequence
+
+English: And then crosses over, fights, burns down a beautiful city, kills many people. Many of his people get killed.
+
+
+Hindi: समुद्र पार करता है .. . युद्ध करता है ... एक खूबसूरत नगरी जला देता है… बहुतों को मार डालता है ... उसके अपने भी बहुत से मारे जाते हैं;
+
+Analysis: The English groups multiple verbs into a single sentence ("crosses over, fights, burns down..."). The Hindi transforms each action into its own fully formed simple sentence/chunk ("पार करता है... युद्ध करता है... जला देता है... मार डालता है..."), segmenting the heavy sequence of events into standalone logical blocks.
+
+
+
+
+
+
+
+
+
+One example output:
+Corresponding English line:
+Buy a nice pen, which writes smoothly on paper, which is comfortable to handle
+
+Original hindi line:
+एक अच्छा पेन खरीदिए … जो पेपर पर स्मूथ लिखे … जो पकड़ने में आरामदायक हो
+
+
+Suggestion Version 1:
+एक अच्छा  - पेपर पर स्मूथ लिखने वाला - और पकड़ने में आरामदायक पेन खरीदिए।
+
+
+Suggestion Version 2:
+एक अच्छा पेन खरीदिए … वो पेपर पर स्मूथ लिखना चाहिए  … पकड़ने में आरामदायक होना चाहिए।
+
+
+Suggestion Version 3: 
+एक अच्छा पेन खरीदिए … पेपर पर स्मूथ लिखने वाला पेन खरीदिए  … पकड़ने में आरामदायक पेन खरीदिए।
+
+
+
+
+================================================================================
+END OF REFERENCE
+================================================================================
+
+Some of the different Different scenarios of Case B
+
+Scenario 1:
+Setence seem very literal and doesnt add anything relevant to the context. These are the scenarios where there is a Need to identify the actual intention of the speaker behind the spoken words.
+
+Scenario 2:
+This is a case where, the word used seems not contextually rich. These are the scenarios where there is a Need to find a word that is more contextually apt and conveys the actual specifics the speaker is intending to convey.
+
+Scenario 3:
+This is a case where the ending part or phsrase of the sentence seems not connected to the previous part of the sentence.  These are the scenarios where there is a Need to somehow link it to the idea or subject of the preceeding portion of the sentence. essentilly closing the point at the end, and making the last part connected to the previous portion of the sentence.
+
+
+Prioritize Conversational Flow (bolchaal ki Hindi): When generating your ranked Case B suggestions, strictly avoid formal Sanskritised written Hindi. Utilize implicit pronouns, natural Sandhi contractions, and phrasing that mimics how a native speaker actually talks in a casual setting. If a common English word (like "access", "shift", "adjust") feels more natural in a modern spoken Hindi sentence than a pure Sanskritised Hindi equivalent, use the English loan word.
+
+
+FOR EACH IDENTIFIED SENTENCE, RETURN THESE SIX THINGS, IN THIS ORDER
+1. The corresponding sentence from the English transcript, exactly as it appears there — copied word for word. Do not translate the Hindi back into English, and do not paraphrase, shorten, re-order or tidy the transcript's wording.
+2. The detected sentence/phrase, exactly as it appears in the script.
+3. The description of the detected issue.
+4. Suggestion Version 1 (the portion that would exactly replace the selected part of the sentence)
+5. Suggestion Version 2 (the portion that would exactly replace the selected part of the sentence)
+6. Suggestion Version 3 (the portion that would exactly replace the selected part of the sentence)
+
+What versions 1, 2 and 3 mean depends on the case you decided for that sentence:
+
+CASE A — flow / sentence-structure issue. Three different treatments, NOT ranked:
+  
+Version 1 — no gaps between the spoken segments. Authentic Hindi flow gets priority; write the sentence the way Hindi naturally wants it, then place the pause markers and hyphens at the closest reasonable positions to where they were.
+
+Version 2 — some gaps between the spoken segments. Balance the sequence of information against Hindi flow. Reframe for natural flow without changing the words too much, keep … and - as far as possible, place the pauses at reasonably the same spatial positions, and use hooked words and linking words to bridge across them.
+
+Version 3 — long gaps between the spoken segments. Sequence of information gets priority; break the long complex sentence into smaller simple sentences or chunks, each meaningful and complete on its own, still maintaining the flow.
+
+CASE B — any other kind of issue. Three best renderings, RANKED best first:
+  Version 1 — your best rendering of what the speaker actually means.
+  Version 2 — the next best.
+  Version 3 — the next after that.
+  In all three, keep the … ; and - markers where they already are, and change only what has to change to fix the meaning or the word choice.
+
+CASE C — gesture alignment. Exactly Case A's three treatments above, with one requirement binding all three:
+  the phrase the note names must sit at relatively the same position within the Hindi sentence as the corresponding part does within the English sentence.
+  In Version 3, where the sentence is broken into smaller sentences, measure that position across the whole set, not within whichever smaller sentence the phrase happens to land in.
+
+WHAT EACH VERSION MUST COVER - this applies to Case A, Case B and Case C alike
+
+Whichever version the reviewer picks REPLACES the identified text in the script, word for word. Nothing around it is touched. So every version has to be a complete drop-in replacement for exactly the text you were given - starting where that text starts and ending where that text ends.
+
+Do not return only the part you changed. If the selected hindi text has five clauses and only the last one is wrong, every version still contains all five: the four that were already fine, carried across as they were, plus the fixed one.
+
+Do not drop anything off the front or the back. Nothing that was in the identified text may simply disappear from your version - unless removing it IS the fix (a redundant word, a repeated pronoun), and even then the meaning it was carrying still has to be there.
+
+Do not reach beyond it either. Do not pull in the sentence before it or the sentence after it, even if that would make your version read better on its own.
+
+This holds at whatever size you were given. If you were given a whole sentence, your versions are whole sentences. If you were given only a phrase or a part of a sentence, your versions are phrases that slot into that exact spot - not the whole rewritten sentence. The full script is given above for context: use it to understand the surroundings, never to extend or shrink what you return.
+
+Before you answer, read each version back against the identified text it replaces, and check that everything that was in the original is still accounted for - either carried across, or deliberately changed as part of the fix.
+
+When the note did not name a problem, use the case you diagnosed for it (see "SOME NOTES DO NOT NAME THE PROBLEM" near the top).
+
+Always return all three versions, even when one of them suits that particular sentence less well — the reviewer picks which to use.
+
+Keep the language simple, daily, conversational Hindi. Do not add explanation, analysis or commentary of your own — only the five items above, in the JSON shape described next.
+
+
+

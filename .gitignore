@@ -1,0 +1,18 @@
+# keys and personal files: never commit these
+access_keys.json
+access_keys_json/
+openaiapi.txt
+geminiapi.txt
+api.txt
+elevenlabsttsapi.txt
+CartesiaApi.txt
+cartesiaPVCAPI.txt
+ClickupApi.txt
+vertex_key.json
+TTS_Key.json
+drive_key.json
+
+# clutter
+*.bak*
+__pycache__/
+Dropped Audio/
