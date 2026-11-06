@@ -46,7 +46,9 @@ ALL_PRESETS = ISSUE_PRESETS + [NOT_OKAY_PRESET]
 
 # ── Output contracts, appended to the prompt files at call time ──────────
 # They live in code rather than the .txt because the parsers below depend on
-# them: they are a code-level contract, not a content choice.
+# them: they are a code-level contract, not a content choice. {{LANGUAGE}} is
+# filled in with the app's language at call time (server.fill_language); the
+# JSON key names ("telugu", "not_in_telugu") are fixed whatever the language.
 JSON_CONTRACT = """
 
 === OUTPUT FORMAT (STRICT — THIS OVERRIDES ANY FORMAT DESCRIBED ABOVE) ===
@@ -55,7 +57,7 @@ after it.
 
 Each element must be an object with exactly these two keys:
 
-  "text"   The identified sentence or phrase, copied VERBATIM from the Telugu
+  "text"   The identified sentence or phrase, copied VERBATIM from the {{LANGUAGE}}
            script above — character for character, including every … ; - and
            comma. Do NOT translate it, re-punctuate it, shorten it, correct
            it, or tidy the spacing. It must be locatable in the script by an
@@ -67,8 +69,8 @@ Each element must be an object with exactly these two keys:
 
 The required shape:
 [
-  {"text": "<verbatim telugu sentence>", "issue": "<one line issue>"},
-  {"text": "<verbatim telugu phrase>",   "issue": "<one line issue>"}
+  {"text": "<verbatim {{LANGUAGE}} sentence>", "issue": "<one line issue>"},
+  {"text": "<verbatim {{LANGUAGE}} phrase>",   "issue": "<one line issue>"}
 ]
 
 If nothing needs improving, return exactly: []
@@ -88,14 +90,14 @@ one only where it applies:
                  answer is matched back to the sentence — it must be right.
 
   "english_n"    The NUMBER of the sentence in the numbered English
-                 transcript above that this Telugu corresponds to — the
-                 number alone, never the sentence itself. Where the Telugu
+                 transcript above that this {{LANGUAGE}} corresponds to — the
+                 number alone, never the sentence itself. Where the {{LANGUAGE}}
                  covers more than one, give them as an array, e.g. [3, 4].
                  You are choosing a line, not writing one: the app quotes
                  the transcript from the number you give, so there is
                  nothing to copy out and nothing you write can be shown.
 
-  "text"         The original Telugu sentence, copied VERBATIM from the
+  "text"         The original {{LANGUAGE}} sentence, copied VERBATIM from the
                  script — character for character.
 
   "suggestions"  An array of exactly three strings: version 1, version 2 and
@@ -112,7 +114,7 @@ The required shape:
 [
   {"n": 1,
    "english_n": 3,
-   "text": "<original telugu sentence>",
+   "text": "<original {{LANGUAGE}} sentence>",
    "suggestions": ["<version 1>", "<version 2>", "<version 3>"]}
 ]
 and for a Case C sentence, the same with one key more:
@@ -120,7 +122,7 @@ and for a Case C sentence, the same with one key more:
   {"n": 1,
    "english_n": 3,
    "gesture_en": "<the words in sentence 3 the phrase corresponds to>",
-   "text": "<original telugu sentence>",
+   "text": "<original {{LANGUAGE}} sentence>",
    "suggestions": ["<version 1>", "<version 2>", "<version 3>"]}
 ]
 
@@ -138,7 +140,7 @@ One object per identified sentence, in the order the sentences appear in the
 script, with exactly these four keys:
 
   "text"         The identified sentence or phrase, copied VERBATIM from the
-                 Telugu script — character for character, including every … ;
+                 {{LANGUAGE}} script — character for character, including every … ;
                  - and comma. Do NOT translate it, re-punctuate it, shorten
                  it, correct it, or tidy the spacing.
 
@@ -152,9 +154,9 @@ script, with exactly these four keys:
 
   "english"      The corresponding sentence from the English transcript,
                  copied VERBATIM from it — character for character, the
-                 way "text" is copied from the Telugu. Do NOT translate the
-                 Telugu back into English, and do not paraphrase, shorten,
-                 re-order or tidy the transcript's wording. Where the Telugu
+                 way "text" is copied from the {{LANGUAGE}}. Do NOT translate the
+                 {{LANGUAGE}} back into English, and do not paraphrase, shorten,
+                 re-order or tidy the transcript's wording. Where the {{LANGUAGE}}
                  covers more than one English sentence, copy all of them;
                  where it covers part of one, copy that part.
 
@@ -164,7 +166,7 @@ script, with exactly these four keys:
 
 The required shape:
 [
-  {"text": "<verbatim telugu sentence>",
+  {"text": "<verbatim {{LANGUAGE}} sentence>",
    "issue": "<one line issue>",
    "english": "<corresponding english sentence>",
    "suggestions": ["<version 1>", "<version 2>", "<version 3>"]}
@@ -172,6 +174,92 @@ The required shape:
 
 If nothing needs improving, return exactly: []
 """
+
+
+# The Book tab's "Corrections to sync with new version": every sentence the
+# editors touched (tagged C1, C2 … in the English, from the chapter's helper
+# file) answered one by one with the {{LANGUAGE}} for the final English.
+SYNC_CONTRACT = """
+
+=== OUTPUT FORMAT (STRICT — THIS OVERRIDES ANY FORMAT DESCRIBED ABOVE) ===
+Return ONLY a JSON array. No markdown code fence, no commentary before it or
+after it.
+
+One object per id (or per group of ids that share one {{LANGUAGE}} sentence), in
+page order, with exactly these keys:
+
+  "ids"         Array of the id(s) this answers, e.g. ["C3"] or ["C3","C4"].
+  "para"        The number of the TE paragraph the {{LANGUAGE}} is in.
+  "status"      One of "update", "same", "delete", "add", "not_in_telugu",
+                "elsewhere".
+  "telugu"      (the key is always spelt "telugu", whatever the language)
+                The approved {{LANGUAGE}} this answers, copied VERBATIM from that
+                TE paragraph — character for character, including every
+                … ; - and comma. Not translated, re-punctuated, shortened or
+                tidied. "" for "add", "not_in_telugu" and "elsewhere".
+  "after"       For "add" only: the last few words of the {{LANGUAGE}} sentence
+                the new one follows, copied VERBATIM ("" at the paragraph's
+                start). "" for every other status.
+  "suggestion"  The {{LANGUAGE}} for the final English: a complete drop-in
+                replacement for "telugu" (for "add", the new sentence).
+                For "same" it is identical to "telugu". "" for "delete",
+                "not_in_telugu" and "elsewhere".
+  "note"        One line, in English, for the reviewer.
+
+Every id listed under "Ids to answer" must appear in exactly one object.
+
+The required shape:
+[
+  {"ids": ["C1"], "para": 2, "status": "update",
+   "telugu": "<verbatim {{LANGUAGE}} sentence>", "after": "",
+   "suggestion": "<the {{LANGUAGE}} for the final english>",
+   "note": "<one line>"}
+]
+"""
+
+
+def parse_sync(raw):
+    """(items, note) for the sync reply: [{"ids", "para", "status",
+    "telugu", "after", "suggestion", "note"}]. A reply cut off part way is
+    salvaged up to its last complete object, and says so in `note`."""
+    if not raw:
+        return [], "the model returned an empty response"
+    s = _strip_fence(raw)
+    i = s.find("[")
+    if i < 0:
+        return [], "the response was not a JSON array"
+    data, truncated = (None, False)
+    j = s.rfind("]")
+    if j > i:
+        data, truncated = _loads_array(s[i:j + 1])
+    if data is None:
+        data, truncated = _loads_array(s[i:])
+    if not isinstance(data, list):
+        return [], "could not parse the JSON"
+    out = []
+    for el in data:
+        if not isinstance(el, dict):
+            continue
+        ids = el.get("ids")
+        if isinstance(ids, str):
+            ids = [ids]
+        ids = [str(x).strip().upper() for x in (ids or []) if str(x).strip()]
+        if not ids:
+            continue
+        try:
+            para = int(el.get("para") or 0)
+        except (TypeError, ValueError):
+            para = 0
+        out.append({
+            "ids": ids, "para": para,
+            "status": str(el.get("status", "") or "").strip().lower(),
+            "telugu": str(el.get("telugu", "") or "").strip(),
+            "after": str(el.get("after", "") or "").strip(),
+            "suggestion": str(el.get("suggestion", "") or "").strip(),
+            "note": str(el.get("note", "") or "").strip()})
+    note = ("the reply was cut off — the last, incomplete answer was dropped"
+            if truncated else "")
+    return out, note
 
 
 # ── Grapheme clusters ────────────────────────────────────────────────────
@@ -268,6 +356,88 @@ def locate(haystack, needle, used):
         from_i = j + 1
 
 
+# ── A version's closing mark ─────────────────────────────────────────────
+# locate() stretches a span over the "." "," ";" "!" or "?" right after it,
+# and a model's quote or a reviewer's selection can take in an ellipsis too,
+# so the marks a span ends in are part of what a version replaces.
+END_MARKS = ".,;!?…"
+_OWN_ENDS = ".,;:!?…-–—"          # a version ending in one of these chose its own end
+_CLOSERS = "\"'”’»)]"
+
+
+def end_marks(text):
+    """The run of END_MARKS a text ends in ("," / "." / "..." / "?!"); "" for none."""
+    t = (text or "").rstrip()
+    return t[len(t.rstrip(END_MARKS)):]
+
+
+def _own_end(text):
+    """The closing mark a version chose itself, looking past closing quotes
+    and brackets ("అనుగ్రహం (Grace)" has none); "" when it has none."""
+    t = (text or "").rstrip().rstrip(_CLOSERS)
+    return t[-1:] if t[-1:] and t[-1:] in _OWN_ENDS else ""
+
+
+def keep_end_mark(span_text, versions):
+    """`versions`, each ending in the span's own closing marks where the model
+    left them off.
+
+    A whole-sentence version carries the mark itself, but a one- or two-word
+    version rarely does ("ఆశిస్తారు," → "ఆకాంక్షిస్తారు"), and Version 1 is
+    applied straight away — so the mark would silently go, and two sentences
+    run into one. A version that ends in a mark of its own is left as it is:
+    the model changed the mark on purpose."""
+    mark = end_marks(span_text)
+    if not mark:
+        return list(versions)
+    out = []
+    for v in versions:
+        v = (v or "").rstrip()
+        out.append(v + mark if v and not _own_end(v) else v)
+    return out
+
+
+def restore_end_marks(page):
+    """Put back, in one saved batch page, the marks Version 1 dropped before
+    keep_end_mark existed. Returns how many went back into the page text.
+
+    Every finding whose versions lack its original's closing marks gets them
+    added, as keep_end_mark does for new ones. Where the span still holds one
+    of those versions exactly as it came and no punctuation follows it, the
+    marks go back into `current` right after the span, and every span after
+    it moves along. A span the reviewer typed over, or put back to its
+    original, keeps its text. A second run finds nothing: the versions end in
+    the marks by then."""
+    cur = page.get("current")
+    if not isinstance(cur, str):
+        return 0
+    found = [f for f in page.get("findings") or [] if isinstance(f, dict)]
+    put = 0
+    for f in sorted(found, key=lambda f: -int(f.get("end") or 0)):
+        opts = [o for o in f.get("options") or [] if isinstance(o, str)]
+        mark = end_marks(f.get("orig"))
+        if not opts or not mark:
+            continue
+        bare = {o.strip() for o in opts if o.strip() and not _own_end(o)}
+        if not bare:
+            continue
+        f["options"] = keep_end_mark(mark, opts)
+        s, e = int(f.get("start") or 0), int(f.get("end") or 0)
+        nxt = cur[e:e + 1]
+        if cur[s:e].strip() in bare and not (
+                nxt and unicodedata.category(nxt).startswith("P")):
+            cur = cur[:e] + mark + cur[e:]
+            for g in found:
+                if g is not f and int(g.get("start") or 0) >= e:
+                    g["start"] = int(g["start"]) + len(mark)
+                    g["end"] = int(g["end"]) + len(mark)
+            f["end"] = e + len(mark)
+            f["current"] = cur[s:e + len(mark)]
+            put += 1
+    page["current"] = cur
+    return put
+
+
 # ── Parsing what comes back ──────────────────────────────────────────────
 def _strip_fence(raw):
     s = (raw or "").strip()
@@ -362,6 +532,8 @@ def parse_oneshot(raw):
                      or "(no description given)",
             "english": str(el.get("english", "") or "").strip(),
             "suggestions": sug,
+            # Only the sync prompt (SYNC_CONTRACT) asks for this.
+            "category": str(el.get("category", "") or "").strip(),
         })
     note = ("the reply was cut off — the last, incomplete finding was dropped"
             if truncated else "")
@@ -665,7 +837,8 @@ EXPORT_NO_BASELINE = (
     "it was cleared and started again.\n")
 
 
-def export_changes_text(telugu, findings, when=None, baseline=None):
+def export_changes_text(telugu, findings, when=None, baseline=None,
+                        language="Telugu"):
     """The whole change log, as one string.
 
     `findings` is a list of dicts in the order they should be written, each
@@ -804,13 +977,13 @@ def export_changes_text(telugu, findings, when=None, baseline=None):
           "the end — past that they are sentences changed by typing into\n"
           "the script, with no selection behind them. Issue is the note a\n"
           "selection was flagged with — a reason button's wording, or\n"
-          "whatever was typed into the Findings box. The two Telugu lines\n"
+          "whatever was typed into the Findings box. The two %s lines\n"
           "are the whole sentence the selection sits in — sentences end\n"
           "at . ? ! or ; — as it was before the review and as the script\n"
           "stands now. The parts that differ are wrapped in <Focus> tags;\n"
           "where the two have almost nothing in common the whole line is\n"
           "wrapped. The English line is the one recorded against the\n"
-          "selection when its suggestions were fetched.\n\n")
+          "selection when its suggestions were fetched.\n\n" % language)
 
     tail = ""
     if not usable:
@@ -846,6 +1019,8 @@ def export_changes_text(telugu, findings, when=None, baseline=None):
 
 PROOFED_ENGLISH_HEAD = "=== ENGLISH TRANSCRIPTION ==="
 PROOFED_TELUGU_HEAD = "=== PROOFED TELUGU TRANSLATION ==="
+# The writer names the language in the header; any language is read back.
+_PROOFED_TRANS_HEAD_RE = re.compile(r"=== PROOFED [A-Z]+ TRANSLATION ===")
 PROOFED_SUGG_HEAD = "=== SUGGESTIONS ==="
 
 # "--- [3]", and the tail the writer adds when Version 1 could not be put in.
@@ -855,12 +1030,21 @@ _PROOFED_ENTRY_RE = re.compile(r"^---\s*\[(\d+)\](.*)$")
 _PROOFED_FIELD_RE = re.compile(r"^\s*\d+\.\s*([A-Za-z0-9 ]+?)\s*:\s?(.*)$")
 _PROOFED_FIELDS = {
     "english sentence": "english",
-    "original telugu": "orig",
+    # "Original Telugu", "Original Hindi" … — any language, see _proofed_field
     "issue": "issue",
     "version 1": "v1",
     "version 2": "v2",
     "version 3": "v3",
 }
+
+
+def _proofed_field(name):
+    """The entry field a "4. Original Hindi :" line sets, whatever the
+    language the writer named."""
+    name = name.strip().lower()
+    if name.startswith("original "):
+        return "orig"
+    return _PROOFED_FIELDS.get(name)
 
 
 def parse_proofed_script(text):
@@ -877,11 +1061,13 @@ def parse_proofed_script(text):
         return "", "", [], "the file is empty"
     body = text.replace("\r\n", "\n").replace("\r", "\n")
     i_en = body.find(PROOFED_ENGLISH_HEAD)
-    i_te = body.find(PROOFED_TELUGU_HEAD)
+    m_te = _PROOFED_TRANS_HEAD_RE.search(body)
+    i_te = m_te.start() if m_te else -1
+    head_te = m_te.group(0) if m_te else PROOFED_TELUGU_HEAD
     i_sg = body.find(PROOFED_SUGG_HEAD)
     if i_te < 0:
         return "", "", [], ("this does not look like a proofed script — "
-                            "there is no \"%s\" section" % PROOFED_TELUGU_HEAD)
+                            "there is no \"=== PROOFED <LANGUAGE> TRANSLATION ===\" section")
 
     def section(start, head, *ends):
         if start < 0:
@@ -891,7 +1077,7 @@ def parse_proofed_script(text):
         return body[start:stop].strip()
 
     english = section(i_en, PROOFED_ENGLISH_HEAD, i_te, i_sg)
-    telugu = section(i_te, PROOFED_TELUGU_HEAD, i_sg)
+    telugu = section(i_te, head_te, i_sg)
 
     entries, cur, field = [], None, None
     for line in (body[i_sg:].split("\n") if i_sg >= 0 else []):
@@ -909,7 +1095,7 @@ def parse_proofed_script(text):
             continue
         m = _PROOFED_FIELD_RE.match(line)
         if m:
-            field = _PROOFED_FIELDS.get(m.group(1).strip().lower())
+            field = _proofed_field(m.group(1))
             if field:
                 cur[field] = m.group(2).strip()
             continue
@@ -929,7 +1115,7 @@ def parse_proofed_script(text):
 
     note = ""
     if not telugu:
-        note = "the Telugu section is empty"
+        note = "the translation section is empty"
     elif i_sg < 0:
         note = "there is no suggestions section, so nothing is highlighted"
     return english, telugu, out, note

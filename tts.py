@@ -70,6 +70,13 @@ ENGINES = ["Standard", "WaveNet", "Chirp3"]
 DEFAULT_ENGINE = "Standard"
 
 LANGUAGE_NAMES = list(TTS_LANGUAGES)
+# The languages the whole app can work in — the prompts, the labels on the
+# page, the file formats, the voices. Every language with a voice table
+# except English, which is only ever read aloud, never proofed. Adding a
+# language = adding its voice table in _voices_literal.py; its prompts are
+# made from Prompts/_template the first time it is chosen (see
+# server.load_prompt).
+APP_LANGUAGES = [n for n in LANGUAGE_NAMES if n != "English"]
 
 # The ElevenLabs key: elevenlabsttsapi.txt, the file made for it, and
 # api.txt — the name it had before — only when that one is not here.
@@ -185,6 +192,11 @@ def default_platform():
 
 def language_code(language):
     return TTS_LANGUAGES.get(language, {}).get("code", "te-IN")
+
+
+def lang_tag(language):
+    """The bare BCP-47 tag for the page's lang= attributes: "hi" for Hindi."""
+    return language_code(language).split("-")[0]
 
 
 def voices_for(language, engine):

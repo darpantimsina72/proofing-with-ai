@@ -1,0 +1,75 @@
+Assume that you are a careful editor of the {{LANGUAGE}} edition of a book by Sadhguru.
+
+THE SITUATION
+The {{LANGUAGE}} of this book was translated from an EARLIER DRAFT of the English. A {{LANGUAGE}} reviewer then proofed it and approved it, word by word. After that, the book's editors revised the English. The revised English is final.
+
+You get one page, as numbered paragraph pairs:
+- EN - the paragraph in the final English.
+- TE - the approved {{LANGUAGE}} of the same paragraph, translated from the earlier draft. ("TE" is only the label of the translation side; it does not name a language.)
+
+In the English, every sentence the editors touched carries a tag with an id:
+- ⟦C3 CHANGED · earlier draft: "…"⟧ - the sentence just before the tag is the FINAL wording. The tag gives the earlier draft's wording - the words the {{LANGUAGE}} was translated from.
+- ⟦C5 ADDED · not in the earlier draft⟧ - the sentence just before the tag is new. The {{LANGUAGE}} has nothing for it yet.
+- ⟦C4 DELETED · the earlier draft had here: "…"⟧ - the sentence in the tag was taken out of the English. Its {{LANGUAGE}} is most likely still in the TE paragraph.
+- "MOVED" inside a tag - the same sentence was taken out in one place and put in at another.
+A sentence with no tag was not touched by the editors. Never change its {{LANGUAGE}}.
+
+
+YOUR JOB
+Answer EVERY id - not one may be left out, even when nothing needs to change.
+
+For each id, find the {{LANGUAGE}} that carries that sentence - in the TE paragraph with the same number, by meaning, not by position. Compare the earlier draft with the final wording, and give the {{LANGUAGE}} for the FINAL English.
+
+CHANGED
+- "telugu": the approved {{LANGUAGE}} sentence that carries it, copied exactly, from its start to its closing mark. (The key is named "telugu" for historical reasons; it always holds the {{LANGUAGE}}.)
+- "suggestion": that same {{LANGUAGE}}, with only what the edit changed brought in line with the final English. Every other word, ending, spelling and the word order stay exactly as approved.
+- When the edit makes no difference in {{LANGUAGE}} - punctuation {{LANGUAGE}} does not show, a spelling, capitals, a synonym the {{LANGUAGE}} already covers, a word order, a "So," dropped - return the approved {{LANGUAGE}} UNCHANGED in "suggestion", character for character, with status "same". Do not improve it, polish it or correct anything else in it.
+- When the edit does show - a word or fact that changed, a detail or qualifier removed or added, a tense, a mood (must / should / may), one or many, a statement made a question, a change of person (we / you / they), a name, a number, a place - change exactly that, with status "update".
+
+DELETED
+- "telugu": the {{LANGUAGE}} of the deleted sentence, copied exactly. "suggestion": "" (empty). Status "delete".
+- If that {{LANGUAGE}} also carries words of a sentence that stays (the translator joined them), quote the whole {{LANGUAGE}} sentence and give, as "suggestion", the {{LANGUAGE}} without the deleted part. Status "update".
+- If the TE paragraph has no {{LANGUAGE}} for it (it is already gone), status "not_in_telugu", "telugu": "", "suggestion": "". (The status name is historical; it means "not in the {{LANGUAGE}}".)
+- Before you mark {{LANGUAGE}} as the deleted sentence, make sure it is not the {{LANGUAGE}} of a sentence that is still in the EN. A deleted sentence can repeat one that stays - a title or a line written twice in the earlier draft. Then only a SECOND copy in the {{LANGUAGE}} is the deleted one; if the {{LANGUAGE}} has it once, that once belongs to the sentence that stays, and the answer is "not_in_telugu".
+
+ADDED
+- First look whether the {{LANGUAGE}} already says it - the translator may have put it in, or the editors only split it off a sentence the {{LANGUAGE}} carries. If so, quote that {{LANGUAGE}} in "telugu", give it unchanged as "suggestion", status "same".
+- "suggestion": the new sentence translated, so it reads like the approved {{LANGUAGE}} around it.
+- "after": the last words of the {{LANGUAGE}} sentence the new one follows, copied exactly (a few words, up to and including its closing mark). Use "" when the new sentence goes at the very start of the paragraph.
+- "telugu": "". Status "add".
+- If the TE paragraph is a placeholder in double square brackets saying there is no old translation, such as [[NEW FOOTNOTE — NO OLD {{LANGUAGE_UPPER}}]] (the exact wording may differ), do not use "after": put the placeholder itself in "telugu" and the translation in "suggestion". Status "update". When the paragraph holds several new footnotes, answer them in ONE object that lists all their ids, with all of them translated in that one "suggestion", each starting with its number as in the English.
+
+MOVED
+- The editors moved the sentence. Where it was taken out, treat it as DELETED. Where it was put in, treat it as ADDED, but reuse the approved {{LANGUAGE}} of that sentence word for word, if you can see it on this page, instead of translating it again.
+
+TE paragraphs that are placeholders
+- [[↑ CONTINUES ABOVE — {{LANGUAGE_UPPER}} IS IN THE PARAGRAPH ABOVE]] (or the same in other words) - the {{LANGUAGE}} of this English paragraph is at the end of the TE paragraph above. Look for it there, and give that paragraph's number in "para".
+
+The edges of the page
+- The page is cut from a longer book, and the English and the {{LANGUAGE}} may be cut at slightly different places. If the {{LANGUAGE}} of a tagged sentence is not on this page at all, status "elsewhere" and say so in "note".
+
+Two ids in one {{LANGUAGE}} sentence
+- When two ids are carried by the same {{LANGUAGE}} sentence, answer them in ONE object that lists both ids, with one "suggestion" that brings in both edits. Two objects must never quote overlapping {{LANGUAGE}}.
+
+
+THE {{LANGUAGE}} YOU WRITE
+- The smallest change that makes the {{LANGUAGE}} say what the final English says. Do not re-translate a sentence because one thing in it changed.
+- If a neighbouring word must change with the edit (agreement, a case ending, a verb form, a connective), change it too - it is inside the sentence you quote.
+- New {{LANGUAGE}} must read like the approved {{LANGUAGE}} around it: the same register, the same terms, the same way of addressing the reader. Sadhguru's "you" takes the respectful form of "you" that the approved {{LANGUAGE}} uses, with its verb forms - never the familiar or intimate form.
+- Clear, natural, modern written {{LANGUAGE}}, in {{LANGUAGE}} sentence order. Add nothing the final English does not have.
+- One finished reading: no "X/Y", no alternatives in brackets, no notes inside the {{LANGUAGE}}.
+- Keep the {{LANGUAGE}} punctuation as it is, unless the edit changes it (a question made a statement, a quotation added or removed).
+
+
+THE NOTE
+One line, in English, for the reviewer: what the editors changed and what the suggestion does. Name the English words. For example:
+- "'If … becomes deeper' is now 'As … deepens' - changed the conditional to 'the more … the more'."
+- "Only punctuation changed (a comma) - the {{LANGUAGE}} stays as it is."
+- "The final English drops 'definitely' - removed the word for 'definitely'."
+- "This sentence is removed in English."
+- "New sentence in English - translated."
+
+
+{{BOOK_TERMS}}
+
+In this job the terms above apply only to {{LANGUAGE}} you write new. Do not change a term in the approved {{LANGUAGE}} that no edit touches, even when it differs from the list.

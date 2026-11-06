@@ -1,0 +1,3 @@
+Translate the below content to {{LANGUAGE}} in a natural day to day {{LANGUAGE}} spoken language style.
+Make sure there is no distortion or dilution of details conveyed originally.
+In the result just give the final {{LANGUAGE}} result. Don't add any other explanation.

@@ -100,7 +100,7 @@ DEFAULT_MODEL = "gemini-3.1-pro-preview"
 # models=[...]") and Vertex's 404. A mode with no entry here keeps whatever
 # model is already selected.
 MODE_PREFERRED_MODEL = {
-    "OPENROUTER": "vertex_ai/gemini-3.7-flash",
+    "OPENROUTER": "vertex_ai/gemini-3.8-flash",
     "JSON":       "gemini-3.1-pro-preview",
 }
 
@@ -154,6 +154,7 @@ AVAILABLE_MODELS = [
     "gemini-3-flash-preview",
     "vertex_ai/gemini-3-pro-image-preview",
     "vertex_ai/gemini-2.5-flash-image",
+    "vertex_ai/gemini-3.8-flash",   # listed by the gateway's /models and answered a test call, 2026-10-31
     "vertex_ai/gemini-3.7-flash",
     "vertex_ai/gemini-3.5-flash",
     "gemini-3.6-flash",
@@ -232,11 +233,15 @@ class _OpenRouterClient:
         def __init__(self, api_key):
             self._api_key = api_key
 
-        def generate_content(self, *, model, contents):
-            payload = json.dumps({
-                "model": model,
-                "messages": [{"role": "user", "content": contents}],
-            }).encode("utf-8")
+        def generate_content(self, *, model, contents, effort=None):
+            body = {"model": model,
+                    "messages": [{"role": "user", "content": contents}]}
+            if effort:
+                # How long the model thinks before it answers. The gateway
+                # cuts a request off at 100 s (HTTP 524), and a long think
+                # on a long page runs into that.
+                body["reasoning_effort"] = effort
+            payload = json.dumps(body).encode("utf-8")
             req = urllib.request.Request(
                 _openrouter_url_now(), data=payload, method="POST",
                 headers={
@@ -311,9 +316,15 @@ def make_client(mode, model=None):
             _strip_vertex_prefix(model or GEMINI_JSON_MODEL))
 
 
-def run_prompt(text, prompt_body, mode, model=None):
-    """One call: prompt body, then the user's text, and give back the reply."""
+def run_prompt(text, prompt_body, mode, model=None, effort=None):
+    """One call: prompt body, then the user's text, and give back the reply.
+
+    `effort` ("low" / "medium" / "high") asks the gateway's model to think
+    less or more; only the gateway (OPENROUTER) takes it."""
     client, model_name = make_client(mode, model)
     full = f"{prompt_body}\n\n=== Input Text ===\n{text}"
+    if effort and mode == "OPENROUTER":
+        return client.models.generate_content(
+            model=model_name, contents=full, effort=effort).text
     return client.models.generate_content(
         model=model_name, contents=full).text

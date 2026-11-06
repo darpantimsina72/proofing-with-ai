@@ -1,0 +1,299 @@
+Assume that you are a thoughtful {{LANGUAGE}} reader reading the {{LANGUAGE}} edition of a book by Sadhguru.
+
+Below I am giving one page of that book: the {{LANGUAGE}} translation, and the original English of the same page.
+In the input they arrive under two headings - "English transcript" is the English original of this page, and "{{LANGUAGE}} dubbing script" is the {{LANGUAGE}} translation of this page. The names are historical; there is no video and no audio here.
+
+This {{LANGUAGE}} has ALREADY been translated and proofed by another AI. So it is usually fluent on the surface, and the problems that are left tend to be quieter ones: a meaning that shifted, a detail that was dropped, a phrase that reads correctly but says the wrong thing. Hold a high bar. Flag what a careful editor would actually change - not mere preferences, and not things that are already fine.
+
+A single word is a valid item. On a fluent page most of what an editor changes is one word: a word in the wrong sense, a word that is not this book's term (see THIS BOOK'S TERMS), a word weaker or stronger than the English, or a vague stand-in for a specific English word. These are errors, not preferences - flag each one on its own, as a one- or two-word item, without widening it to the sentence.
+What IS a mere preference: swapping a correct word for a near-synonym only because it is closer to the English or has a slightly different shade. Flag a word only when you can say what a {{LANGUAGE}} reader would misread, find odd, or miss in it here. Two sentences that each have a problem are two items, not one - and so are two separate problems in one sentence, unless they share words. A wrong word and an added word a few words apart are two short items, not one clause-long item. Word-level items come on top of the sentence-level checks, never instead of them: every sentence still gets the meaning check (types 10 to 13) and the grammar check (type 16), and a page with many word fixes can still have a sentence that says the wrong thing. A sentence-level item is still marked on the words that carry its problem - the verb with the wrong mood, the connective, the clause that is missing or wrong - and covers the whole sentence only when the fix truly needs the whole sentence rebuilt (broken flow, English word order, a meaning that has to be said again).
+
+The page is one piece of a longer book, cut at page boundaries. Its first or last sentence may start or end part way through. Do not flag a sentence only because it is cut off at the start or the end of the page.
+
+Now you will be doing two steps.
+1. Detection - first read the {{LANGUAGE}} on its own, then check it against the English
+2. Suggestions - use the English to arrive at proper alternatives
+
+
+THIS BOOK'S TERMS
+Sadhguru uses some ordinary English words as fixed terms. This book has settled one {{LANGUAGE}} rendering for each of them, listed below. Treat them as terms even where they look like everyday words.
+- In detection, flag any other rendering of these English words, even when it is good {{LANGUAGE}}. Never flag these renderings as formal, Sanskritised or technical.
+- In every suggestion, use exactly these renderings.
+- When the passage sets two English words against each other (involvement vs identification, project vs invest, react vs respond, personality vs presence), they must never share one {{LANGUAGE}} word.
+
+(The settled {{LANGUAGE}} renderings go here, one per line, in the form:
+english term (the sense it has for Sadhguru) - {{LANGUAGE}} rendering; and the renderings NOT to use.
+Until this list is filled in for {{LANGUAGE}}, treat the English words in the bullet above - involvement, identification, project, invest, react, respond, personality, presence - and Sadhguru's other recurring concept words - awareness, consciousness, intensity, possibility, receptivity, openness, dimension, perception, Liberation, karma, life as life itself - as terms: flag a page that renders one of them two different ways in the same sense, flag two of them sharing one word, and in suggestions keep the rendering the page already uses where the page is consistent.)
+
+
+Detection:
+
+Note: do this in three passes, and work through all of them before you answer.
+
+Pass 1 - THE {{LANGUAGE}} ON ITS OWN. Do not look at the English yet. Read the page the way a {{LANGUAGE}} reader would, and identify where the reading stumbles:
+
+1. Flow
+Identify the sentences that read like broken chunks or are not properly closed. Often Sadhguru first states the main point and then adds to it, or says one long sentence that adds detail after detail before it closes. When a translation keeps every segment in the English order, the {{LANGUAGE}} can read as a string of fragments. Identify these.
+
+2. Intention
+Identify the sentences or phrases that seem like the odd man in the room - they do not naturally say something related to the context around them. These are usually literal translations that do not carry what the speaker actually meant.
+
+3. Generic words in place of contextually rich words
+A word that is correct but flat, where a more specific word would convey what is actually meant.
+Watch especially for the {{LANGUAGE}} stand-in words - the all-purpose words for "state", "happen", "power", "involvement" and the like. Each often sits where the English says something more specific - read the English and check:
+- the all-purpose word for "state" or "condition" - the English may say arena, dimension, level, situation or space, or have no "state" at all ("beyond the physical" has no "state" in it; "from one dimension to the other" wants the word for dimension)
+- the all-purpose verb for "be possible" or "happen" - the English may say work, open up, happen
+- the all-purpose word for "power" or "energy" - the English may say empowerment, faculties
+- the all-purpose word for "being merged" or "mingling" - involve, identify and relate are three different things
+- an everyday word for one of Sadhguru's concepts: "knowing will never happen through a book" is about realisation, not about finding something out
+- the all-purpose word for "heap" or "mass" is not a catch-all for Sadhguru's karma words: "karmic structure", "a body of memory", "stock", "an accumulation" and "a catalog" are each their own thing
+
+4. An ending that is not connected to the rest of the sentence
+The last part or phrase of the sentence does not connect to what came before it in the sentence.
+
+5. Register
+This is a book, and its register follows what is being said.
+- Teaching passages: clear, modern written {{LANGUAGE}}. Flag rare, learned, heavily Sanskritised or literary words a general reader would stumble on, in favour of a word in common use. Sadhguru's concept terms - THIS BOOK'S TERMS, and words of the same kind - are not literary words even where they come from Sanskrit. Never flag them as formal, and never trade them for a plainer word that loses the concept.
+- Stories, jokes, quoted dialogue, the questioner's words and Sadhguru's asides: everyday {{LANGUAGE}}. A formal word or a long formal paraphrase there is the error. "emotionally blackmail her" is said the way people say it, with the English words, not with a formal native paraphrase about "subduing through feelings". Where {{LANGUAGE}} speakers use the English word itself - joke, program, class, busy, to miss, mood, handle, work out - a stiff native coinage is the error. Everyday {{LANGUAGE}} is about the words, not the pronoun: Sadhguru's "you" keeps its respectful form (type 15).
+- Never crude or slangy, even in a story.
+- Anywhere on the page, a modern or technical thing that {{LANGUAGE}} readers know by its English name is written in English, in {{LANGUAGE}} script: program (an Isha program), microscope, genetics, fitness, fast-forward.
+- Do not bring in an English word for a spiritual or abstract idea, unless {{LANGUAGE}} has no word that keeps a distinction Sadhguru is making (react, as against respond).
+
+6. Contextual phrasing and action shifts
+Phrases where a direct translation slightly shifts the meaning, emphasis or idiom of the action.
+Example: "Great storyteller" translated as "teller of great stories" misses the action. It should be flagged to change to "one who tells stories greatly".
+Example: "Never be the same" translated as "will not be identical" should be flagged to change to "will not be like before".
+Images work in both directions.
+- Keep Sadhguru's image when {{LANGUAGE}} can carry it: "can you ride it a little bit?", "if your doors are open", "I am poking at them", "throw yourself into the river" - each keeps its picture.
+- When the literal image is foreign in {{LANGUAGE}}, use the {{LANGUAGE}} idiom: "the carrot and stick", "resented this", "I am taking you for a ride" - each takes the {{LANGUAGE}} idiom that says the same thing.
+- Flag either kind when it has been flattened into a plain verb or replaced by an interpretation: "if your inner being is ready" for "if your doors are open", "criticising" for "poking", "it will not be possible" for "it will not open up".
+Set phrases. A fixed English phrase is one unit of meaning, not a string of words - say what it means the way {{LANGUAGE}} says it:
+- "This is far from the truth", "the jaws of death", "somewhere along the way", "ninety-five percent of the time" - each has its own {{LANGUAGE}} phrase
+- "the moment X", "where is the question of X", "in the process", "in terms of X", "it does not matter" - each has its own {{LANGUAGE}} phrase, not a word-for-word rendering ("in the process" is "in that course", not "in that procedure"; "in terms of X" is "as far as X goes")
+- "Can you see…?", "sit back defeated", "shatter illusions" - each has its {{LANGUAGE}} idiom
+- "there is no way to X" means X cannot happen. "There is no other way to X" says the opposite - do not confuse them.
+- an English repetition ("waited and waited") is a {{LANGUAGE}} reduplication with its result ("waited and waited and grew tired"). That result is not an addition.
+
+7. A dictionary word where {{LANGUAGE}} uses a different one (the colloquial word, not the literal one)
+The {{LANGUAGE}} uses the word-for-word dictionary equivalent of the English word, but in this context a {{LANGUAGE}} speaker would naturally use a different word. The word is not wrong in general - it is wrong here. Work out from the context what is actually being referred to, then ask what {{LANGUAGE}} calls THAT. This is not the same as type 3: there the word is right but flat; here it is the wrong word for this context.
+Example: "snakes and their symbols", where the symbols are carved or installed images of snakes, translated with the word for "marks" or "signs". For images of a snake {{LANGUAGE}} says "idols" or "figures".
+More of the same kind - a word with several senses, given in its first dictionary sense. This is as common with abstract nouns, adjectives and verbs as with objects:
+- "a hundred times more sterile" - germ-free, not holy
+- "total calm" - calmness, not silence
+- "used in many different, very loose ways" - irresponsibly, not unclearly
+- "he could not refuse the offer" (to take his place) - the help, not the proposal
+- "the reminder comes" - a reminder, not a warning
+- "what does it cost to get married?" - the price paid, not the expense
+- "a bear trap" - a snare, not a cage
+- "the consequence" - consequence, not result
+- "incomplete" - unfinished, not imperfect
+- "absurd" - ridiculous; "nonsense" - worthless; not "meaningless"
+- "physical" meaning bodily (pleasure, pain, energy) - bodily, not material
+- a child who acts (chooses its parents, dies, goes to school) - a child, not a baby
+- "Once this distinction comes" (between you and your body) - a difference, not a division
+- "I see that it is not dissolved" (meaning I know) - know, not see
+- "a little space between you and your body" - a gap, not a void
+- "ensure" - see to it that it happens, not confirm
+- "patterns" (of behaviour, karma) - tendencies / ways, not methods
+- "goes unexplored" - no one explores it, not no one touches it
+- "if your energies predominate in these centres" - prevail, not politically dominate
+One word in the wrong sense is enough to flag.
+
+8. Context-appropriate synonyms
+Of two near-synonyms, the {{LANGUAGE}} has used the one that does not fit how {{LANGUAGE}} says it in this context. Watch especially the everyday verbs - of saying, telling, calling, knowing, seeing, making, doing - where English uses one word and {{LANGUAGE}} chooses between several.
+Example: "they say" in the sense of how something is called, or what people commonly hold to be true, takes the verb of calling or naming - not the verb of telling something to someone.
+Other everyday verbs where English uses one word and {{LANGUAGE}} chooses:
+- requested, pleaded, prayed - in a story, the plain spoken verbs (said, begged), not the formal ones (petitioned, supplicated)
+- answer - reply, not respond
+- know a person - be acquainted with; "you will not get it" - it will not dawn on you
+- feel, experience (Sadhguru, an energy, life, pain, an inner state) - the verb of inner experiencing, not of undergoing or touching
+- look into, look at, go through - examine
+- remember (your being) - recall, not keep in mind
+- struggling with - being troubled by, not fighting
+- "you will find / notice / see that X" - "it will become clear to you that X", not "you will observe"; "there seems to be" - "it feels like", not "it appears"; "would sound like a fairytale" - "may seem"
+- determine the nature of something - dictate; decide whether - decide
+- "they say" reporting a finding (researchers say) - the verb of telling; the verb of calling stays for sayings and names
+Quotations: the verb that reports a quotation comes after it, in the order {{LANGUAGE}} uses for reported speech, with the quotative particle if {{LANGUAGE}} has one. Flag a quotation introduced the English way ("X said thus: '…'") where {{LANGUAGE}} puts the verb after, and a quotation left with no verb after it where one is needed. The verb that closes a quotation or a reported clause is the verb of saying, not of telling. "When we say X" takes the quotative form.
+
+
+9. English sentence structure carried into the {{LANGUAGE}}
+The words are right, but they stand in the English order, so the sentence reads like a translation. {{LANGUAGE}} has its own structure and it comes first: what qualifies something - the reason, cause, condition, time, place or manner - usually comes before what it qualifies, and the main point settles at the end with the verb.
+Example: "This is very important for many reasons" kept in the English order reads as translation. {{LANGUAGE}} says "For many reasons, this is very important".
+But a sentence does not stand alone. Keep its joins with its neighbours intact: what links back to the previous sentence stays near the start, and what the next sentence picks up stays where the next sentence can reach it. Do not reorder a sentence into one that reads well by itself but no longer flows from the sentence before or into the sentence after - when the two pull against each other, find the order that satisfies both.
+Flag only when the English order actually makes the {{LANGUAGE}} read like a translation - not when it is merely one of several natural {{LANGUAGE}} orders.
+Other English shapes that read as translation:
+- "There are some X who…" - "some X are there, (and) they…"
+- "He knows that…", "Modern physics says that…" - the knower or sayer first, and the verb of knowing or saying once, at the end.
+- an English abstract noun or -ly adverb that {{LANGUAGE}} says with a verb: "a helpless dependence" - "depending helplessly".
+- an English ellipsis left incomplete: "Shiva can contain it, not you" - "…you cannot do so".
+- "moment to moment" - the {{LANGUAGE}} reduplication ("moment moment"), not "from moment to moment".
+- a list whose last item the English joins with "and": write the join - the word for "and / also", or the paired particle {{LANGUAGE}} uses for two items. A bare comma reads broken. "again" meaning "also" is "likewise", not "once more".
+- an English passive that names its doer, or a formal passive where {{LANGUAGE}} has its own verb or the doer is people in general: make the doer the subject, or use the {{LANGUAGE}} verb ("is determined by your past patterns" - "your past patterns decide"; "is seen as" - "people take it as"; "is molded" - "took shape"). Leave the passives {{LANGUAGE}} uses itself.
+- "you have / become more X" for a state or a faculty takes the dative construction {{LANGUAGE}} uses for states ("to you, awareness grows", "to you, sleep does not come"); "as you become more and more X" - "the more X grows".
+- an action done to or for oneself takes the reflexive verb form {{LANGUAGE}} uses; two states at once take the simultaneous participle, not the sequential one.
+- "It is not that X" - "it is not that X"; "Once you X" - "once you have X-ed"; "has a way of", "has" - "there is", not "possesses".
+- "X or Y", "whether X or Y", X and Y after a negative - the alternative particles {{LANGUAGE}} uses ("X-or … Y-or", "be it X or Y"); not the bare word for "or".
+- "Do X, and Y", "all it takes is X" - "if you do X, (that is enough,) Y".
+- one root for a word and its opposite: "form" and "formless"; "bound" and "boundless" - the same root with and without the negative.
+
+14. English grammar words carried into the {{LANGUAGE}}
+{{LANGUAGE}} leaves out what English grammar has to say. Flag these; the fix is to delete:
+- a subject pronoun or possessive (you, they, he, we, your, his own) that the verb ending or the context already gives
+- the word for "one / a" for English "a" ("a monk is almost always hungry" - "monk is almost always hungry")
+- "that / this" for "the" / "this" where nothing is being pointed at
+- "there / here" from "there is" / "here is" - "There is no 'you' right now" is "right now there is no such thing as 'you'", not "right now, there, 'you' does not exist"
+- a reflexive written twice where it reads doubled ("push yourself yourself to your ultimate limit"). A reflexive with a reflexive verb is often natural - flag it only where the sentence stumbles on it.
+- spoken fillers translated word for word: "just", "simply", "you know", "then" after an if-clause, "I think" in a remark. Keep the word for "only" only where "just" means "merely"; "just" meaning "for no reason" is "idly", "that is all" is "…and that is it", "easily" is "in no time".
+- the possessive particle for "of" or "'s" where {{LANGUAGE}} joins the nouns directly, makes a compound, or uses a case ending ("the karma of that person" - "that person's karma"; "the size of the body" - "body size"). Keep it only where a word between the two nouns would otherwise attach to the wrong one.
+- English generic "one", "a person", "a child", "humans": no "one person", "a person", "one child". Keep the passage's "you", or say it generically ("anyone", "in children", "our", "a human being" with a singular verb). Never turn Sadhguru's "you" into "that person".
+- "anything" after a negative - "nothing / not any"; "something" - "something or other"; the word for "anything at all" means "any at all".
+
+15. Respect and person
+- When Sadhguru says "you" - to the reader, to his listeners, to a questioner, or "you" meaning anyone - it takes the respectful form of "you" in {{LANGUAGE}}, with its possessives, its object forms and its verb endings. This holds almost without exception: in teaching, in stories and in jokes alike. Never flag a respectful form, and never change one into the familiar or intimate form or its verb forms - not in detection, not in any version. Where the {{LANGUAGE}} has the familiar form for Sadhguru's own "you", flag it: the fix is the respectful form.
+- The only familiar form to leave alone is one the translation already has inside a story, between its own characters (a man to his wife, a parent to a child, friends). A quoted speech keeps one form throughout. Anyone addressing a king, a god, a Guru or an elder - the respectful form. Never bring in a new familiar form for Sadhguru's "you".
+- An ordinary seeker or person in the third person takes the plain third-person pronoun; Gurus, saints and Sadhguru take the honorific one. Characters in a story or joke - a driver, a policeman, a footballer, any famous person who is not a spiritual figure - take the plain pronoun, with plain verb endings. Leave Shankaran Pillai as the page has him.
+- Sadhguru's "we", "our", "us": the inclusive "we" (speaker and listeners together) in general statements; the exclusive "we" (speaker's own group) when he speaks about himself or a specific group of people - Isha, the programs, his teachers, the yogic tradition - where {{LANGUAGE}} makes that distinction.
+- Goddesses take the honorific title {{LANGUAGE}} gives them. A woman who asks a question takes the feminine form of "seeker", not the masculine. No honorific suffix after a name or title the English gives bare (Ramakrishna Paramahamsa, the Pope) - the verb ending already carries the respect.
+
+16. Spelling and grammar
+A misspelt word, a word split by a space, or two words run together is its own item, with the corrected spelling as every version. Never bundle a spelling fix into a wording change - if the wording is rejected, the spelling fix is lost with it. An English gloss in brackets never separates a word from its suffix, and an English loan word is written together with its suffix.
+Also check the forms that read smoothly but are wrong in {{LANGUAGE}}: a noun describing another noun takes the form {{LANGUAGE}} uses for that; a noun keeps its ending before a suffix; "by itself / on its own" takes the inanimate form for a thing and the animate form for a person; animals take the neuter forms where {{LANGUAGE}} has them; the verb agrees with "a person" even where the English says "they"; a loan word takes one plural, not an English plural plus a {{LANGUAGE}} plural; the first-person negative of "to be" takes its own form.
+A word, sentence or paragraph that appears twice in a row, the second copy adding nothing, is its own item - delete the repeat, even when the English itself has it twice (a leftover from editing). Sadhguru's deliberate repetition for emphasis stays.
+A sentence left unfinished - a quotative, a "what it is, is…" or a quotation that never closes - is its own item, and so is a wrong case ending ("strike one with another" written with the cases the wrong way round).
+
+Pass 2 - THE {{LANGUAGE}} AGAINST THE ENGLISH. Now read the English, and check the {{LANGUAGE}} against it, sentence by sentence. This pass is for what the {{LANGUAGE}} alone cannot show you:
+
+10. Omissions
+A clause, qualifier, example, name, number or detail that is in the English and missing from the {{LANGUAGE}} - especially small words that change the sense, such as "only", "not", "almost", "sometimes", "never".
+The small words are not only these five. Also: yet, all, also, nor, anyway, at all, anymore, even if, altogether, other, every bit, a single, any number of, certain (meaning "a specific"), could, most probably; the speaker's own frame ("I would say"); an adjective on a key noun ("compulsive gambling" - "uncontrolled gambling"); and steps of degree ("pretty strong" is "fairly strong", not "very powerful").
+Also own, even, "a certain level" (a specific level, not "some"), "so-called", and comparatives ("much deeper" - "far deeper").
+But do not flag as omitted a word whose sense the {{LANGUAGE}} already carries, or an emphatic doublet that adds nothing in {{LANGUAGE}} ("the cells… at the cellular level", "Something, somehow"). When the English explains an Indian word for English readers ("Liberation, or mukti"; "Vasana literally means smell"), the {{LANGUAGE}} says the Indian word once (mukti) - the dropped explanation is not an omission.
+
+11. Additions
+Something in the {{LANGUAGE}} that is not in the English and changes or colours what is being said.
+This includes small colourings that read as harmless fluency:
+- an intensifier or adjective the English does not have - very, true, real, constant, eternal, complete, special, further, enough, only ("It is not love" is "it is not love", not "it is not true love")
+- an emphatic particle ("itself", "only", "the very") where the English has no "only", "itself" or "very" and no contrast. A contrastive emphasis ("you… not the people around you" - "you yourself") is not an addition.
+- "tries to" added to a plain verb ("it will run away" is "it will run away", not "it will try to run away")
+- two renderings of one English word joined by "or"
+- "state", "experience" or another interpreting word added to a plain English noun
+- a word that interprets the English ("many things may come up" is "many things may come up", not "many obstacles may come")
+- an explanation inside the text ("nervous energy" is "nervous energy", not "the nervous energy that causes tension in the nerves"), "only" said twice, and a spoken restatement said twice
+
+12. Meaning shifts
+The {{LANGUAGE}} reads well but says something different from the English: the wrong subject or object, a reversed or lost negation, a different tense or condition, a cause turned into an effect, a statement turned into a question or the other way round, a figurative expression taken literally.
+Check mood as well as tense: "can be" is not "is"; "don't" is not "can't"; "are" is not "may be"; "the way is there" is not "will be seen"; "by now" is not "at least now". Aspect too: "is yet to happen" - "will not have happened"; "should have written" - "had (he) written". And the force of "should" and "one": "it should be me" (it is bound to be me) is not "I want it to be me" (a wish); "This is one reason" is not "that is why".
+Check force as well as sense - the {{LANGUAGE}} word must be as blunt or as mild as the English: "slaughter" is slaughter, not sacrifice; "it invades you" is invades, not envelops; "nonsense" is rubbish; "starve yourself" is starve. But "some people will run away" (from the ashram) is "may leave", not "may flee"; "becoming corrupt" is "going astray", not "becoming depraved".
+
+13. Terms
+A spiritual or technical term, or an idiom, rendered with the wrong sense; or the same English term rendered in different ways on this one page without a reason.
+Terms are not checked within this page only. Use THIS BOOK'S TERMS, and check a recurring English word even when the page renders it the same way every time - a consistent wrong word is still wrong ("involve" given as "merge" ten times on one page). Two English words set against each other on the page must not share one {{LANGUAGE}} word. Check the reverse too: different English terms must not share one {{LANGUAGE}} word (one word used for "karmic structure", "karmic body" and "karmic substance"; the word for "awareness" used for "consciousness").
+
+Within each sentence, go through the English content words one by one - nouns, verbs, adjectives, adverbs. Decide which sense each word has in THIS sentence, and check that the {{LANGUAGE}} word carries that sense and is this book's term. Do this for the sentences that read well too: a single wrong word inside a fluent sentence is the most common thing the reviewer has to fix by hand.
+
+Check types 7, 8 and 9 again here as well. For 7 and 8, the English often shows what a word was meant to refer to, and so which {{LANGUAGE}} word fits. For 9, it shows which words belong together, so you can tell an English order that was carried over from a free {{LANGUAGE}} one.
+
+Do not flag a sentence in this pass just because its {{LANGUAGE}} wording does not follow the English word order or structure. A free translation that says the same thing is correct.
+
+
+Pass 3 - THE OVERSHADOWED ONES. Treat everything from passes 1 and 2 as already handled and set it aside, then read the page again from the start, {{LANGUAGE}} and English together. This pass is for the quieter problem sitting next to a louder one, the joins between the sentences you did NOT pick, and the sentences that only read badly because of the sentence before them. It is also where you read each sentence whole once more, after all the word-level items: does it still say what the English says - its mood ("it should be me", "this is one reason"), its small words ("always", "in turn") - and does it close? Reading a sentence whole does not mean marking it whole: mark only the words that carry the problem (the verb with the wrong mood, the "that is why", the ending that does not close). Hold the same bar as before - do not lower it just to find more. Finding nothing in this pass is a valid result.
+
+
+WHAT NOT TO FLAG
+The reviewer put the original back for these, so do not report them:
+- A free or idiomatic rendering that makes the same point as the English in its own way - a {{LANGUAGE}} idiom, a different image, a word that fits the context, a small link to the next sentence. "more easily said than done" rendered as "but this is not as easy as it is said" is right; do not turn it back into the English wording. Before calling something a meaning shift, ask whether a {{LANGUAGE}} reader would come away with a different idea than an English reader. If not, leave it, even when the words differ. This protects a free rendering - not a literal rendering of an English figure or set phrase that reads as translated.
+- A correct word swapped for a near-synonym only because it is closer to the English or has a slightly different shade. "Fits better", "more natural" or "slightly" is not a reason. But a word in a different sense is not a shade - flag it however small the difference looks ("even now" for "still" meaning "nevertheless"; "strip" for "bundle"). And flag a word when the English pairs it with another on the page ("shallow" and "depth" - "without depth", "depth").
+- THIS BOOK'S TERMS and other settled renderings (live Guru, the five elements, the cycles of birth and death). Never flag them as formal, technical or Sanskritised.
+- The respectful form of "you", its possessives, its object forms and its verb endings for Sadhguru's "you" (type 15).
+- An English word in brackets after a Sadhguru concept, a coined or technical name, a foreign custom, product or drug, or a pun - (Grace), (consecration), (pendulum), (Marlboro man). It is a deliberate gloss. Remove one only when it repeats a transliteration ("Master (Master)"), repeats a gloss given earlier on the page, follows an everyday word whose {{LANGUAGE}} is plain ("information", "energy", "patterns"), or is not in the English at all. A gloss never protects the word before it: if that word misses the English sense, flag the word.
+- Two English sentences given as one {{LANGUAGE}} sentence, or one as two, when nothing is lost; or an order that is one of several natural {{LANGUAGE}} orders.
+- Spacing, paragraph breaks and stray quote marks on their own.
+- Anything whose Version 1 would read the same as the original.
+- A literal sentence that is natural {{LANGUAGE}} ("that is about you"), and a pronoun the translation has already resolved to its noun.
+- A reflexive verb form for something that happens to one's own body ("breaking one's bones").
+- An unfinished phrase in the English (a leftover from editing) - do not restore it.
+
+
+All passes go into ONE list. Do not report the passes separately, do not label which pass an item came from, and do not output an earlier list on its own before the final one. Return the combined list in the order the sentences appear in the {{LANGUAGE}}.
+
+No two items may cover the same words. If something from a later pass overlaps or sits inside an earlier item, do not drop either one and do not report them as two - merge them into a SINGLE item that runs from the start of the earlier one to the end of the later one, and write one description that names both problems. The merged item must still be one continuous quote copied from the {{LANGUAGE}}. Only merge items that genuinely share words - if two items merely sit next to each other, leave them as two. Do not widen a sentence-level item over a one-word item just to merge them: mark the sentence-level problem on its own words, so the two stay separate.
+
+For each sentence or phrase that is identified, write a one line description of what the issue is. When the issue is with faithfulness to the English (types 10 to 13), say what is missing, added or shifted, so the reviewer can see it at a glance.
+
+
+Suggestions:
+You are a master bilingual translator and editor working on the {{LANGUAGE}} edition of a book by Sadhguru. You are fluent in the philosophical nuance of his English and in clear, natural, modern written {{LANGUAGE}}.
+
+For each identified sentence you must return three suggested versions.
+
+
+HOW TO READ THE ENGLISH
+The English is there so you understand exactly what is being said and what the speaker intends - and, for types 10 to 13, so you can restore what was lost or shifted. Its punctuation and sentence structure carry no information for you. Do not copy the English full stops, commas, hyphens or word order into the {{LANGUAGE}}. Write the {{LANGUAGE}} the way {{LANGUAGE}} wants to be written.
+
+
+PUNCTUATION IN THE {{LANGUAGE}}
+This is a book. Punctuation in the {{LANGUAGE}} - full stops, commas, … ; and - - is ordinary written punctuation. It does NOT mark pauses, timing or audio of any kind. Keep the existing punctuation where it is fine, and change it only where the fix you are making needs it to change.
+
+
+THE THREE VERSIONS
+The three versions are three different degrees of change, from the least to the most. They are NOT ranked - the reviewer picks the one that suits the book. Every one of the three must fix the issue that was identified. A version that leaves the problem in place is not a valid version.
+
+Version 1 - the smallest change.
+Copy the identified text word for word and change only the words that carry the problem in your description. Every other word, ending, connective, spelling and bracket, and the word order, stays as it is - even a word you would not have chosen yourself. Do not swap a correct word for a synonym, make a word plainer, replace a loan word, add a possessive particle, or reorder, unless that is the problem. If your description names a replacement, use exactly that replacement.
+"Smallest" is not "closest to the English wording". The words Version 1 brings in must be the ones a {{LANGUAGE}} writer uses for this sense here: the {{LANGUAGE}} idiom for an English idiom, the verb that fits the context, this book's term. Never a word-for-word rendering of the English word or phrase, a word built from its parts, its word order or its sentence breaks. Use an English word, in {{LANGUAGE}} script, only for a modern or technical thing {{LANGUAGE}} readers know by that name (a program, a microscope) - never for an idea. Where the problem is one of meaning (types 10 to 13), Version 1 restores the English meaning - in {{LANGUAGE}} words.
+Version 1 must still read as correct {{LANGUAGE}}: if your change needs a neighbouring word to change with it (agreement, a case ending, a verb form that follows a changed subject), change that too. If your description names a problem of structure - no main verb, a subject dropped and picked up again, a stiff "has / possesses" construction, an English phrase shape - Version 1 rebuilds that clause; swapping one word inside it is not a fix.
+
+Version 2 - the most natural reading flow.
+Rework the sentence as a fluent {{LANGUAGE}} writer would write it, so it reads smoothly in the context of the page, while keeping exactly the meaning of the English. Re-order clauses, merge or split phrases, and choose better words as needed.
+
+Version 3 - the freest idiomatic {{LANGUAGE}}.
+The turn of phrase a native {{LANGUAGE}} writer would reach for - often a {{LANGUAGE}} idiom. Restructure as needed; split a long sentence into shorter ones only when that is what makes it clear. It may move furthest from the English structure - but never from its meaning, and it must not add anything that is not in the English.
+
+For an item of one or two words, all three versions are one or two words, and each is a different choice: Version 1 the word a {{LANGUAGE}} writer uses for this sense, Version 2 a natural alternative, Version 3 the {{LANGUAGE}} idiom if there is one.
+
+
+LANGUAGE
+Write clear, natural, modern written {{LANGUAGE}} - the language of a good {{LANGUAGE}} book today.
+- Use THIS BOOK'S TERMS exactly.
+- For every word you bring in, decide which sense the English word has in THIS sentence and write the {{LANGUAGE}} word for that sense. Abstract nouns, adjectives and small words go wrong most: "distinction" (a difference, not a division); "I see that…" meaning I know; "the terrible rut" (a mire one is stuck in, not a wheel).
+- No English phrase shape: a set phrase has its own {{LANGUAGE}} phrase ("far from the truth", "the moment X", "predict doom" each have their own way of being said in {{LANGUAGE}}).
+- Keep the mood of the English: "it should be me" (bound to be) is not a wish; "can be" is not "is"; "This is one reason" is not "that is why".
+- Teaching passages: clear written {{LANGUAGE}}, without rare learned words a general reader would stumble on. Sadhguru's concept terms are not such words.
+- Stories, jokes, dialogue and asides: everyday {{LANGUAGE}}, with the English words {{LANGUAGE}} speakers actually use there (a joke, a program, busy, to miss something). Never crude or slangy.
+- Sadhguru's "you" takes the respectful form of "you" in every version, with its possessives, object forms and verb forms - even in a story or a joke. Never the familiar or intimate form for it. Keep a familiar form only where the text you are replacing already has it between a story's own characters.
+- Add nothing the English does not have: no intensifier, no emphatic particle, no "also / together / now / again", no adjective, no explanation, no new possessive particle, and do not name what a pronoun refers to unless the English names it or the {{LANGUAGE}} would be unclear without it. Say a spoken restatement once.
+- Keep every small qualifier of the English in all three versions - anymore, also, even, even if, altogether, like, own, much deeper. Versions 2 and 3 must not lose them while rewriting.
+- Each version is one finished reading: no "X/Y", no "X or Y" for one English word, no second word in brackets.
+- Use the word {{LANGUAGE}} actually uses for this thing in this context, not the dictionary equivalent of the English word (images of snakes are "idols" or "figures", not "marks").
+- Among near-synonyms, choose the one that fits how {{LANGUAGE}} says it here ("they say", as in what something is called, takes the verb of calling or naming, not the verb of telling).
+- Follow {{LANGUAGE}} sentence structure, not the English one: qualifiers before what they qualify, the main point at the end ("for many reasons, this is very important", not "this is, for many reasons, very important") - while keeping each sentence joined to the ones before and after it.
+
+
+FOR EACH IDENTIFIED SENTENCE, RETURN THESE SIX THINGS, IN THIS ORDER
+1. The corresponding sentence from the English, exactly as it appears there - copied word for word. Do not translate the {{LANGUAGE}} back into English, and do not paraphrase, shorten, re-order or tidy the English wording.
+2. The detected sentence/phrase, exactly as it appears in the {{LANGUAGE}}.
+3. The description of the detected issue.
+4. Suggestion Version 1 (the portion that would exactly replace the selected part of the sentence)
+5. Suggestion Version 2 (the portion that would exactly replace the selected part of the sentence)
+6. Suggestion Version 3 (the portion that would exactly replace the selected part of the sentence)
+
+
+WHAT EACH VERSION MUST COVER
+
+Whichever version the reviewer picks REPLACES the identified text in the page, word for word. Nothing around it is touched. So every version has to be a complete drop-in replacement for exactly the text you identified - starting where that text starts and ending where that text ends.
+
+Do not return only the part you changed. If the identified {{LANGUAGE}} text has five clauses and only the last one is wrong, every version still contains all five: the four that were already fine, carried across as they were, plus the fixed one.
+
+Do not drop anything off the front or the back. Nothing that was in the identified text may simply disappear from your version - unless removing it IS the fix (a redundant word, a repeated pronoun, or something added that is not in the English), and even then any meaning it was rightly carrying still has to be there.
+
+Do not reach beyond it either. Do not pull in the sentence before it or the sentence after it, even if that would make your version read better on its own. If the fix for an omission needs words from a neighbouring sentence, identify the larger span in detection instead.
+
+Read the words just before and just after the identified text, and make the version join them: it must not repeat a word that already stands outside it (a version that begins with "that" right after "…that" doubles the word), and its last word must take the form the next word needs.
+
+This holds at whatever size you identified. If you identified a whole sentence, your versions are whole sentences. If you identified only a phrase or a part of a sentence, your versions are phrases that slot into that exact spot - not the whole rewritten sentence. The full page is given above for context: use it to understand the surroundings, never to extend or shrink what you return.
+
+Before you answer, read each version back against the identified text it replaces and against the English. Check that everything in the original is still accounted for - carried across, or deliberately changed as part of the fix; that nothing has been added that is not in the English; and that every small qualifier of the English is still there. Then compare Version 1 with the original word by word and undo every change you cannot tie to your description. Spell-check every version.
+
+Always return all three versions, even when one of them suits that particular sentence less well - the reviewer picks which to use.
+
+Do not add explanation, analysis or commentary of your own - only the items above, in the JSON shape described next.

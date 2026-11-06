@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="te"><head><meta charset="utf-8">
+<html lang="{{LANG_TAG}}"><head><meta charset="utf-8">
 <title>Proofing with AI</title>
 <style>
 :root{
@@ -11,7 +11,7 @@
 body{margin:0;background:var(--bg);color:var(--text);
      font-family:Consolas,"Courier New",monospace;font-size:13px}
 /* The app keeps its exact one-screen layout; the SPACER below it is what
-   makes the page scrollable, far enough that the Telugu box can reach the
+   makes the page scrollable, far enough that the {{LANGUAGE}} box can reach the
    top of the window. Its height is computed at runtime because the panels
    above wrap differently at different widths. */
 .app{min-height:100vh;display:flex;flex-direction:column}
@@ -102,7 +102,7 @@ button:disabled{opacity:.45;cursor:default}
         white-space:nowrap}
 .grid{flex:0 0 auto;display:grid;
       /* minmax(0,1fr), not a bare 1fr: 1fr will not shrink a column below
-         its widest item, and the Telugu toolbar is wide enough that it
+         its widest item, and the {{LANGUAGE}} toolbar is wide enough that it
          would steal the width back off the video box beside it. */
       /* 25% | 45% | 30% across the top, and the bottom row still has to
          break at the halfway mark — so the tracks are cut where all three
@@ -110,13 +110,13 @@ button:disabled{opacity:.45;cursor:default}
       grid-template-columns:minmax(0,5fr) minmax(0,5fr)
                             minmax(0,4fr) minmax(0,6fr);
       /* 3.3fr, not the 3fr the reference row is measured against: the
-         Telugu row carries 10% more height than an even 3:1 split gives
+         {{LANGUAGE}} row carries 10% more height than an even 3:1 split gives
          it. sizeGrid() grows the whole grid by the 7.5% that row gained,
          so the extra comes out of the page rather than out of the
          reference row underneath. */
       grid-template-rows:3.3fr 1fr;gap:8px;padding:6px 10px 10px;
       min-height:70vh;position:relative}
-/* The handle in the gap under the Telugu box: drag it down for a taller
+/* The handle in the gap under the {{LANGUAGE}} box: drag it down for a taller
    box, up for a shorter one (see the row-height code). It spans the whole
    gap between the two rows, so it never covers text. */
 .rowsplit{position:absolute;left:10px;right:10px;height:8px;
@@ -141,7 +141,7 @@ button:disabled{opacity:.45;cursor:default}
 .bsplit:hover,.bsplit.drag{background:#c4b5fd}
 .bsplit:hover::after,.bsplit.drag::after{background:#7c3aed}
 /* Every panel but the video and the suggestions spans two tracks:
-   Telugu takes 5fr+4fr (45%), English 5fr+5fr and Findings 4fr+6fr — the
+   {{LANGUAGE}} takes 5fr+4fr (45%), English 5fr+5fr and Findings 4fr+6fr — the
    two halves of the reference row. The video keeps the first track (25%)
    and the suggestions the last (30%). */
 #teluguCell,#englishCell,#findingsCell{grid-column:span 2}
@@ -150,7 +150,7 @@ button:disabled{opacity:.45;cursor:default}
    drops to the reference row. Done with `order` — grid places items in
    order-modified document order — rather than by moving the elements,
    because moving the <video> would drop the loaded file and stop playback.
-   Only the two of them move; Telugu, Suggestions and Findings stay put. */
+   Only the two of them move; {{LANGUAGE}}, Suggestions and Findings stay put. */
 .grid.textref #englishCell {order:-1;grid-column:span 1}
 .grid.textref #videoCell   {order:1; grid-column:span 2}
 .grid.textref #findingsCell{order:2}
@@ -174,6 +174,17 @@ button:disabled{opacity:.45;cursor:default}
 .hl{cursor:pointer;border-radius:2px}
 .hl.ai{background:var(--flag)} .hl.ai.on{background:var(--sel)}
 .hl.man{background:var(--man)} .hl.man.on{background:var(--mansel)}
+/* Corrections to sync with new version: light green while not yet checked,
+   darker green once a row is ticked; the selected one outlined. */
+.hl.ai.sync{background:#dcfce7} .hl.ai.sync.dec{background:#86efac}
+.hl.ai.sync.on{outline:2px solid #15803d;outline-offset:1px}
+#btSugg .txt[data-ph]:empty::before{content:attr(data-ph);color:var(--muted);font-style:italic}
+.synclist{margin:4px 0 10px;padding-left:16px;font-size:11px;line-height:1.5}
+.synclist li{margin-bottom:6px}
+/* The English change of a sync correction: added on red, removed struck. */
+mark.sdin{background:#fecaca;color:#991b1b;border-radius:2px;padding:0 1px}
+del.sdout{color:#b91c1c;text-decoration:line-through;text-decoration-thickness:2px}
+.sdold{margin-bottom:4px;color:var(--muted)}
 /* the phrase the note names, inside the sentence the note flags */
 .hl b{font-weight:700}
 /* The row is no longer one big click target: applying a version and
@@ -203,10 +214,10 @@ button:disabled{opacity:.45;cursor:default}
 .opt .txt mark.wd.out{background:#fecdd3}
 .meta{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.6}
 /* The English reference line. It used to be a hint in .meta's small grey;
-   it is now the thing the Telugu is read against, so it carries the same
+   it is now the thing the {{LANGUAGE}} is read against, so it carries the same
    weight as a version row. */
 .engline{font-size:14px;color:var(--text);margin-bottom:10px;line-height:1.7}
-/* The matched pair — the English words and the Telugu phrase that
+/* The matched pair — the English words and the {{LANGUAGE}} phrase that
    corresponds to them — marked identically in both places so the eye
    pairs them without being told to. */
 .engline b,.opt .txt b{font-weight:700;background:#fde68a;
@@ -244,17 +255,17 @@ select:disabled{opacity:.5}
 /* ---- batch ---------------------------------------------------------------
    Its own section at the foot of the page, with its own boxes: nothing in
    it reads or writes the review above, and nothing above touches it.
-       Pages | English | Telugu (current) | Suggestions
+       Pages | English | {{LANGUAGE}} (current) | Suggestions
 
-   English and Telugu side by side, each three quarters as wide as the
-   Telugu box was on its own, is wider than the window — so the whole
+   English and {{LANGUAGE}} side by side, each three quarters as wide as the
+   {{LANGUAGE}} box was on its own, is wider than the window — so the whole
    section, its button strip included, is laid out a quarter as wide again
    and scrolls sideways under one scroll bar of its own. The strip scrolls
    WITH the boxes, which keeps the Next / Play buttons at its right end
    above the Suggestions box they drive. Pages and Suggestions keep the
    widths they had: 2 + 5.25 + 5.25 + 5 parts of 17.5 at 125% gives them
-   exactly the 2 and 5 parts of 14 at 100% they had, and English and Telugu
-   5.25 each where Telugu had 7.                                           */
+   exactly the 2 and 5 parts of 14 at 100% they had, and English and {{LANGUAGE}}
+   5.25 each where {{LANGUAGE}} had 7.                                           */
 .panel .name.pink{color:#be185d}
 /* The band between the single-script review and the batch: space above, a
    heavy ocean-green rule, and a line saying what lies below. */
@@ -279,9 +290,13 @@ select:disabled{opacity:.5}
 #sharedPanels{display:contents}
 #tabBatch .secband{margin-top:0}
 #tabBatch{padding-bottom:10px}
-/* The reason bar sits between the Telugu box's title and its text. */
+/* The reason bar sits between the {{LANGUAGE}} box's title and its text. */
 #btTeluguCell>.head{border-top:0;border-bottom:1px solid var(--border)}
 #btSuggCell>.head,#suggCell>.head{border-top:0;border-bottom:1px solid var(--border)}
+/* The English box's top bar and the {{LANGUAGE}} box's title + reason bar are kept
+   the same height (btLevelTops); whichever is made taller keeps its buttons
+   at the top, level with the other box's. */
+#btEnglishCell>.title,#btTeluguCell>.head{align-content:flex-start}
 /* The two Previous / Next pairs, in the colours of the highlights they step
    through: yellow for the AI's, blue for the hand-marked. */
 .b-navai{background:var(--flag);color:#854d0e;border-color:#fde68a}
@@ -299,7 +314,7 @@ select:disabled{opacity:.5}
 #btSuggCell>#btSugg{flex:1 1 0;min-height:0}
 .issuebox{display:flex;flex-direction:column;border:1px solid var(--border);
           border-radius:3px;background:#fff;margin:0 0 7px}
-.issuebox #btIssue{height:72px;flex:1 1 auto;min-width:0;width:auto}
+.issuebox #btIssue{height:216px;flex:1 1 auto;min-width:0;width:auto}
 .issuebox .ititle{font-size:11px;font-weight:bold;color:var(--green);
                   padding:4px 9px;flex:0 0 auto}
 #btIssue{flex:1 1 auto;min-height:0;margin:0 8px 8px;resize:none;
@@ -308,7 +323,7 @@ select:disabled{opacity:.5}
 #btIssue:disabled{background:#f8fafc}
 .bscroll{overflow-x:auto;overflow-y:hidden}
 .bwide{width:125%}
-/* The handle on the right edge of the English and Telugu boxes: drag it to
+/* The handle on the right edge of the English and {{LANGUAGE}} boxes: drag it to
    change that box's width (see the splitter code). It sits in the gap
    between the boxes, so it never covers text. */
 #btEnglishCell,#btTeluguCell,#btSuggCell{position:relative}
@@ -323,7 +338,7 @@ select:disabled{opacity:.5}
    while it has the focus — the highlights are the same as ever. */
 #btTelugu[contenteditable="true"]{cursor:text}
 #btTelugu[contenteditable="true"]:focus{box-shadow:inset 0 0 0 1px #93c5fd}
-#btEnglish{font-size:14px} #btSugg{font-size:13px;font-family:Consolas,monospace}
+#btEnglish{font-size:15px} #btSugg{font-size:13px;font-family:Consolas,monospace}
 .blist{flex:1 1 auto;overflow:auto;padding:4px 0}
 .pg{padding:5px 9px;cursor:pointer;font-size:12px;display:flex;gap:6px;
     align-items:center;border-left:3px solid transparent}
@@ -338,7 +353,7 @@ select:disabled{opacity:.5}
 .pg .sg{font-size:10px;font-weight:bold;flex:0 0 auto}
 .sg.running{color:var(--blue)} .sg.ready{color:var(--green)}
 .sg.failed{color:#dc2626} .sg.waiting{color:var(--amber)}
-/* Read-aloud: its buttons sit at the right of the Telugu box's top bar, and
+/* Read-aloud: its buttons sit at the right of the {{LANGUAGE}} box's top bar, and
    the sentence being read is UNDERLINED - a mark of its own kind, so it never
    covers the yellow and amber of the corrections it runs through. Drawn with
    the CSS Highlight API, which marks text without changing the page's
@@ -392,7 +407,7 @@ select:disabled{opacity:.5}
 <div class="app">
 <div class="tabs" role="tablist">
   <button type="button" role="tab" data-tab="single" class="on" aria-selected="true"
-          title="One script: the video, the Telugu and English boxes, AI Review"
+          title="One script: the video, the {{LANGUAGE}} and English boxes, AI Review"
           >Video script proofing</button>
   <button type="button" role="tab" data-tab="batch" aria-selected="false"
           title="A book, page by page: load, proof and review every page"
@@ -402,7 +417,7 @@ select:disabled{opacity:.5}
 <div class="tabpane" id="tabSingle" role="tabpanel">
 <div class="hdr">
   <b>PROOFING WITH AI</b>
-  <span class="sub">Telugu renders with full shaping here &mdash; the caret never breaks a character.</span>
+  <span class="sub">{{LANGUAGE}} renders with full shaping here &mdash; the caret never breaks a character.</span>
   <div id="bDropScript" class="dropbox" tabindex="0" role="button"
        title="Drop the proofed script here &mdash; the _Proofed.txt the
               pipeline writes. Both boxes and every flagged sentence, with
@@ -444,20 +459,20 @@ select:disabled{opacity:.5}
     </div>
   </div>
   <div class="cell" id="teluguCell">
-    <div class="title">Telugu translation &nbsp;(this is what gets analysed)</div>
+    <div class="title">{{LANGUAGE}} translation &nbsp;(this is what gets analysed)</div>
     <div id="telugu" class="body" contenteditable="true" spellcheck="false"
-         data-placeholder="Paste the Telugu dubbing script here…"></div>
+         data-placeholder="Paste the {{LANGUAGE}} dubbing script here…"></div>
     <div class="head">
       <select id="issuePick"
               title="Select a sentence or phrase below, then pick what is wrong with it"></select>
       <button id="bRealMeaning" class="b-real"
-              title="The Telugu is too literal — ask for what the speaker actually meant"
+              title="The {{LANGUAGE}} is too literal — ask for what the speaker actually meant"
               >&#9673; Real Meaning</button>
       <button id="bRightWord" class="b-word"
               title="The word is not contextually rich enough — ask for a more apt one"
               >&#10003; Right word</button>
       <button id="bGesture" class="b-gest"
-              title="The selected phrase lines up with a gesture on screen — ask for the sentence to be reframed so the Telugu lands in the same place"
+              title="The selected phrase lines up with a gesture on screen — ask for the sentence to be reframed so the {{LANGUAGE}} lands in the same place"
               >&#9755; Match Gesture</button>
       <button id="bNotOkay" class="b-nok"
               title="Flag the selected sentence without naming the problem"
@@ -491,20 +506,20 @@ select:disabled{opacity:.5}
             ><span class="track"></span>Auto-play</button>
     <span class="navgap"></span>
     <button id="sgPrevAi" class="b-navai"
-            title="Previous AI correction in the Telugu, and read it: its Version 1,
+            title="Previous AI correction in the {{LANGUAGE}}, and read it: its Version 1,
                    the original, then the English, a second apart">&#11013; Previous AI</button>
     <button id="sgNextAi" class="b-navai"
-            title="Next AI correction in the Telugu, and read it: its Version 1,
+            title="Next AI correction in the {{LANGUAGE}}, and read it: its Version 1,
                    the original, then the English, a second apart">Next AI &#10140;</button>
     <button id="sgRepeatAi" class="b-navai"
             title="Read this correction again: its Version 1, then the
                    original, then the English, a second apart">&#8635; Repeat</button>
     <span class="navgap"></span>
     <button id="sgPrevMan" class="b-navman"
-            title="Previous hand-marked correction in the Telugu, and read it: its
+            title="Previous hand-marked correction in the {{LANGUAGE}}, and read it: its
                    Version 1, the original, then the English, a second apart">&#11013; Previous manual</button>
     <button id="sgNextMan" class="b-navman"
-            title="Next hand-marked correction in the Telugu, and read it: its
+            title="Next hand-marked correction in the {{LANGUAGE}}, and read it: its
                    Version 1, the original, then the English, a second apart">Next manual &#10140;</button>
     <button id="sgRepeatMan" class="b-navman"
             title="Read this correction again: its Version 1, then the
@@ -524,7 +539,7 @@ select:disabled{opacity:.5}
     <div class="title" id="findTitle">Findings</div>
     <div id="findings" class="body" contenteditable="false"></div>
   </div>
-  <div class="rowsplit" id="teRowSplit" title="Drag to make the Telugu box taller or shorter — double-click for the default height"></div>
+  <div class="rowsplit" id="teRowSplit" title="Drag to make the {{LANGUAGE}} box taller or shorter — double-click for the default height"></div>
 </div>
 </div><!-- /.gscroll -->
 <!-- The control panels sit BELOW the grid: the two script boxes are
@@ -533,6 +548,17 @@ select:disabled{opacity:.5}
 <!-- GEMINI, TTS SETTINGS and SUGGESTIONS TTS SETTINGS: one set, shared by
      both tabs, moved into the open one (showTab). -->
 <div id="sharedSlotSingle"><div id="sharedPanels">
+<div class="panel">
+  <span class="name">LANGUAGE</span><span class="bar"></span>
+  <div class="rows">
+    <div class="row">
+      <span class="cfgname">Proofing in:</span>
+      <select id="cfgLang"
+              title="The language of the script being proofed. Changes the AI prompts (one folder per language under Prompts), every label on this page, the file formats, and what both TTS panels read in. The page reloads."></select>
+      <span id="statusLang" class="status"></span>
+    </div>
+  </div>
+</div>
 <div class="panel">
   <span class="name">GEMINI</span><span class="bar"></span>
   <div class="rows">
@@ -606,7 +632,7 @@ select:disabled{opacity:.5}
   <span class="name">AI REVIEW</span><span class="bar"></span>
   <div class="rows"><div class="row">
     <button id="bTranslate" class="b-tr"
-            title="Send the English script to Gemini and put the Telugu it returns in the box below"
+            title="Send the English script to Gemini and put the {{LANGUAGE}} it returns in the box below"
             >&#8644; Translate</button>
     <button id="bProof" class="b-proof">&#9889; Do AI Proofing</button>
     <button id="bProof1" class="b-one"
@@ -620,12 +646,12 @@ select:disabled{opacity:.5}
             title="Removes every highlight — the script text is never changed"
             >&#10006; Clear all</button>
     <button id="bExport" class="b-exp"
-            title="Copy every selection &mdash; the English line, the Telugu
-                   sentence before the review, and the Telugu sentence as it
+            title="Copy every selection &mdash; the English line, the {{LANGUAGE}}
+                   sentence before the review, and the {{LANGUAGE}} sentence as it
                    stands now &mdash; ready to paste into your notes"
             >&#9112; Copy changes made</button>
     <button id="bExportJson" class="b-exp"
-            title="Save everything here &mdash; the English, the Telugu as it
+            title="Save everything here &mdash; the English, the {{LANGUAGE}} as it
                    came in and as it stands, every correction with its
                    versions and notes &mdash; as a JSON file that Import
                    progress JSON opens again"
@@ -664,8 +690,8 @@ select:disabled{opacity:.5}
            English because that is what it is checked against as it reads. -->
       <span class="rdbar">
         <span id="rdPos" class="rdpos"></span>
-        <button id="rdNextPage" class="rd" title="Go to the next page and start reading its Telugu aloud, as &#9654; Play would">Next page &#10140;</button>
-        <button id="rdPlay" class="rd" title="Read the Telugu of this page aloud, a sentence at a time — from the selected correction's sentence, or from the top">&#9654; Play</button>
+        <button id="rdNextPage" class="rd" title="Go to the next page and start reading its {{LANGUAGE}} aloud, as &#9654; Play would">Next page &#10140;</button>
+        <button id="rdPlay" class="rd" title="Read the {{LANGUAGE}} of this page aloud, a sentence at a time — from the selected correction's sentence, or from the top">&#9654; Play</button>
         <button id="rdPause" class="rd" disabled title="Pause, and carry on from the same spot">&#9208; Pause</button>
         <button id="rdRepeat" class="rd" disabled title="Read the current sentence again">&#8634; Repeat</button>
         <button id="rdRegen" class="rd" disabled title="Make the current sentence's audio again — a new take from the TTS — and play it">&#10227; Regenerate</button>
@@ -677,17 +703,17 @@ select:disabled{opacity:.5}
     <div class="splitter" data-col="en" title="Drag to widen or narrow the English box — double-click for the default width"></div>
   </div>
   <div class="cell" id="btTeluguCell">
-    <div class="title" id="btTeTitle">Telugu (current)</div>
+    <div class="title" id="btTeTitle">{{LANGUAGE}} (current)</div>
     <!-- Marking by hand, as in the box at the top of the page: select a
          sentence or phrase below, pick what is wrong with it. -->
     <div class="head btreason">
       <select id="btIssuePick"
               title="Select a sentence or phrase below, then pick what is wrong with it"></select>
       <button id="btRealMeaning" class="b-real"
-              title="The Telugu is too literal — ask for what is actually meant"
+              title="The {{LANGUAGE}} is too literal — ask for what is actually meant"
               >&#9673; Real Meaning</button>
       <button id="btRightWord" class="b-word"
-              title="The word is not contextually rich enough — ask for a more apt one"
+              title="The word is not contextually rich enough — ask for a more apt one (Insert)"
               >&#10003; Right word</button>
       <button id="btNotOkay" class="b-nok"
               title="Mark the selected sentence without naming the problem"
@@ -704,13 +730,13 @@ select:disabled{opacity:.5}
       <span id="btManStatus" class="status">Select a sentence below, then pick a reason.</span>
     </div>
     <div id="btTelugu" class="body"></div>
-    <div class="splitter" data-col="te" title="Drag to widen or narrow the Telugu box — double-click for the default width"></div>
+    <div class="splitter" data-col="te" title="Drag to widen or narrow the {{LANGUAGE}} box — double-click for the default width"></div>
   </div>
   <div class="cell" id="btSuggCell">
     <div class="title">Suggestions</div>
     <!-- Moving between corrections, above the box they fill: one pair for
          the AI's corrections, one for the hand-marked ones, each in the
-         colour of its highlights in the Telugu box. -->
+         colour of its highlights in the {{LANGUAGE}} box. -->
     <div class="head">
     <button class="refsw on sgAutoSw" type="button" aria-pressed="true"
             title="On: Previous / Next read the correction they land on — its
@@ -768,6 +794,29 @@ select:disabled{opacity:.5}
             title="AI Proofing in one step, on every page that is not done
                    yet, one after the other"
             >&#9889; Do AI Proofing in One step for all Entries</button>
+    <button id="bBatchSkip" class="b-one"
+            title="Skip AI Proofing: every page that is not done yet becomes
+                   done at once, with its {{LANGUAGE}} as it is and no AI
+                   corrections &mdash; ready for marking by hand"
+            >&#9193; Skip AI Proofing</button>
+    <button id="bBatchHelper" class="b-sugg"
+            title="Choose the chapter's sync helper file (Chapter N - sync
+                   helper.json). It lists every sentence the editors changed,
+                   deleted or added between the earlier English and the final
+                   English; the batch's pages are found in it by their text.
+                   Remembered with the batch's progress."
+            >&#128206; Open helper file</button>
+    <button id="bBatchSync" class="b-one"
+            title="For a batch whose pages hold the FINAL English and the
+                   approved {{LANGUAGE}}, with the chapter's helper file open: on
+                   every page not done yet, every sentence the editors touched
+                   goes to the AI, which answers each one with the {{LANGUAGE}} for
+                   the final English (the same {{LANGUAGE}} where nothing needs to
+                   change). VERSION 1 goes in straight away: tick it to mark
+                   it checked, or tick ORIGINAL to put the approved {{LANGUAGE}}
+                   back. A deleted sentence's version takes it out; an added
+                   one goes in at its place."
+            >&#8644; Corrections to sync with new version</button>
     <button id="bBatchSugg" class="b-man2"
             title="Get suggestions on every page, one page after the other:
                    versions for each hand-marked sentence that has none yet.
@@ -788,27 +837,27 @@ select:disabled{opacity:.5}
   <div class="rows"><div class="row">
     <button id="bFinalExport" class="b-exp"
             title="Copy the whole batch as a table — page number, English,
-                   and the Telugu as it stands in the Telugu box, one row per
+                   and the {{LANGUAGE}} as it stands in the {{LANGUAGE}} box, one row per
                    page — ready to paste into a Google Doc with Ctrl+V"
             >&#9112; Copy Final Script</button>
     <button id="bFinalJson" class="b-exp"
             title="Save the whole batch as a JSON file in the same shape as
                    the file Load pages takes &mdash; Page Number, English
-                   Script, Telugu Script &mdash; with the Telugu as it stands
-                   in the Telugu box"
+                   Script, {{LANGUAGE}} Script &mdash; with the {{LANGUAGE}} as it stands
+                   in the {{LANGUAGE}} box"
             >&#8681; Export Final Script</button>
     <button id="bBatchCopyChanges" class="b-exp"
             title="Copy every changed sentence for a Google Doc &mdash; page,
-                   English, the original Telugu and the Telugu now, with the
+                   English, the original {{LANGUAGE}} and the {{LANGUAGE}} now, with the
                    words that changed marked: red in the original, green in
                    the new one"
             >&#9112; Copy changes</button>
     <button id="bBatchExport" class="b-exp"
             title="Save every sentence that has changed as JSON &mdash; page,
-                   English, the Telugu as it came in and the Telugu now &mdash;
+                   English, the {{LANGUAGE}} as it came in and the {{LANGUAGE}} now &mdash;
                    whether a version, a hand edit or a hand mark changed it"
             >&#8681; Export changes</button>
-    <span id="finalStatus" class="status">Copies the batch as a table: page, English, final Telugu. Then paste it into your Google Doc with Ctrl+V.</span>
+    <span id="finalStatus" class="status">Copies the batch as a table: page, English, final {{LANGUAGE}}. Then paste it into your Google Doc with Ctrl+V.</span>
   </div></div>
 </div>
 
@@ -821,6 +870,9 @@ select:disabled{opacity:.5}
 
 <script>
 const TOKEN="__TOKEN__", $=id=>document.getElementById(id);
+// The app's language, filled in by the server when it serves this page —
+// every "{{LANGUAGE}}" in the markup and the strings below was filled the same way.
+const LANG="{{LANGUAGE}}";
 let STATE={english:"",telugu:"",findings:[]}, SELECTED=null, PRESETS=[];
 let SYNC_TIMER=null, DIRTY=false;
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -986,15 +1038,15 @@ function select(id){
   renderSuggestions();
 }
 /* One step through the single script's corrections of one kind — "ai" or
-   "man" — in the order they sit in the Telugu: `dir` 1 the next, -1 the
+   "man" — in the order they sit in the {{LANGUAGE}}: `dir` 1 the next, -1 the
    one before; the other kind is stepped over. From nothing selected, Next
    goes to the first and Previous to the last. The highlight is brought
-   into view in the Telugu box. */
+   into view in the {{LANGUAGE}} box. */
 function singleStep(dir, kind){
   const fs=(STATE.findings||[]).filter(f=>(f.kind==="man")===(kind==="man"))
                                .sort((a,b)=>a.start-b.start);
   const what=kind==="man"?"hand-marked correction":"AI correction";
-  if(!fs.length){ say3("There is no "+what+" in the Telugu.","warn"); return false; }
+  if(!fs.length){ say3("There is no "+what+" in the {{LANGUAGE}}.","warn"); return false; }
   const cur=SELECTED!==null?byId(SELECTED):null;
   let to;
   if(!cur) to=dir>0 ? fs[0] : fs[fs.length-1];
@@ -1042,12 +1094,12 @@ function renderSuggestions(){
   const f=SELECTED!==null?byId(SELECTED):null, box=$("sugg");
   // Another correction on screen: what was being read of the last stops.
   try{ if(SG.box===box) sgStop(); }catch(e){}
-  if(!f){box.innerHTML='<div class="meta">Click a highlighted sentence in the Telugu box.</div>';return;}
+  if(!f){box.innerHTML='<div class="meta">Click a highlighted sentence in the {{LANGUAGE}} box.</div>';return;}
   if(!f.options||!f.options.length){
     box.innerHTML='<div class="meta">['+(f.label||f.id)+'] No suggestions fetched for this one yet.<br>Click <b>Get suggestions</b>.</div>';return;}
   /* The part of the English line that the gesture phrase corresponds to
      is bolded, so its position along that line can be compared by eye with
-     the bolded phrase in the Telugu box. Found by substring rather than by
+     the bolded phrase in the {{LANGUAGE}} box. Found by substring rather than by
      offsets the model would have had to count: it either matches or the
      line simply renders plain. */
   let h="";
@@ -1175,7 +1227,7 @@ function refresh(){
 }
 
 /* ---- live editing ------------------------------------------------------
-   The Telugu box is a contenteditable, so the browser moves the highlight
+   The {{LANGUAGE}} box is a contenteditable, so the browser moves the highlight
    elements along with the text as it is typed. That makes the DOM the
    authority on where each span now sits: we read the offsets back rather
    than trying to predict them. Delete a highlight outright and its finding
@@ -1438,7 +1490,7 @@ async function pushScripts(){
   await api("/api/setscripts",{english:STATE.english, telugu:d.text});
 }
 /* Every call from this tab sends the English transcript as the model's
-   meaning reference. With the box empty it is working from the Telugu
+   meaning reference. With the box empty it is working from the {{LANGUAGE}}
    alone, which quietly weakens every suggestion — and Match Gesture
    cannot work at all, since CASE C measures the phrase against the English
    sentence. So it is stopped here rather than spending the call. */
@@ -1461,7 +1513,7 @@ async function doDetect(chain){
   }catch(e){ say("Error: "+e.message,"err"); }
   finally{ busy(false); }
 }
-/* English in, Telugu out. Replaces whatever is in the Telugu box, so it asks
+/* English in, {{LANGUAGE}} out. Replaces whatever is in the {{LANGUAGE}} box, so it asks
    first when there is something there to lose. */
 async function doTranslate(){
   await pushScripts();
@@ -1470,7 +1522,7 @@ async function doTranslate(){
     return;
   }
   if((STATE.telugu||"").trim() &&
-     !confirm("This replaces everything in the Telugu box, and clears every "
+     !confirm("This replaces everything in the {{LANGUAGE}} box, and clears every "
              +"highlight with it.\n\nTranslate anyway?")) return;
   busy(true, "Translating the English script…");
   try{
@@ -1479,7 +1531,7 @@ async function doTranslate(){
     SELECTED=null; $("findings").textContent="";
     $("findTitle").textContent="Findings"; renderSuggestions();
     say("\u2714 Translated \u2014 "+(s.telugu||"").length+" characters in the "
-       +"Telugu box. Read it through, then proof it.","ok");
+       +"{{LANGUAGE}} box. Read it through, then proof it.","ok");
   }catch(e){ say("Error: "+e.message,"err"); }
   finally{ busy(false); }
 }
@@ -1573,11 +1625,11 @@ async function applySelectedPart(id, txtEl, i){
    a hand-marked one keeps kind "man" and its label. Load pages in the
    book tab takes the file as progress and carries on from it.          */
 async function exportSingleJson(){
-  try{ await syncNow(); }catch(e){}     // typing in the Telugu goes in first
+  try{ await syncNow(); }catch(e){}     // typing in the {{LANGUAGE}} goes in first
   const fs=(STATE.findings||[]).slice().sort((a,b)=>a.start-b.start);
   const cur=STATE.telugu||"";
   if(!cur.trim() && !fs.length){ say("Nothing to export yet — the boxes are empty.","warn"); return; }
-  // Back to the Telugu as it came in: from the end, so earlier offsets hold.
+  // Back to the {{LANGUAGE}} as it came in: from the end, so earlier offsets hold.
   let orig=Array.from(cur);
   for(const f of fs.slice().reverse())
     orig=orig.slice(0,f.start).concat(Array.from(f.orig||""), orig.slice(f.end));
@@ -1614,7 +1666,7 @@ async function applyVersion(id,i,text){
 async function addIssue(desc){
   await syncNow();                       // offsets must match the server's copy
   const r=selectionOffsets();
-  if(!r){ say3("Select the sentence or phrase in the Telugu box first.","warn");
+  if(!r){ say3("Select the sentence or phrase in the {{LANGUAGE}} box first.","warn");
           resetPicker(); return; }
   /* A reason whose wording depends on what was selected passes a function
      instead of a string; it is given the same text the offsets were taken
@@ -1643,7 +1695,7 @@ async function addIssue(desc){
 /* Copy changes made — the record of what the review did, on the clipboard.
 
    The server writes the text: widening a selection to its sentence and
-   diffing the two Telugu versions is the same code the Review tab in the
+   diffing the two {{LANGUAGE}} versions is the same code the Review tab in the
    main app runs, so it lives in Python and is not written twice. All that
    happens here is the sync — the server's copy of the script has to be the
    one on screen — and handing what comes back to the clipboard.
@@ -1729,7 +1781,7 @@ $("bCopyEn").onclick=async()=>{
 };
 
 /* ---- loading a proofed script -----------------------------------------
-   The file is the Proofing stage's own deliverable: the English, the Telugu
+   The file is the Proofing stage's own deliverable: the English, the {{LANGUAGE}}
    with Version 1 already in it, and every flagged sentence with its
    original, its note and its three versions. All of that comes back as a
    session, so the reviewer carries on from where the pipeline stopped —
@@ -1780,7 +1832,7 @@ async function importProgressJson(file){
   catch(e){ say("Could not read "+file.name+" — it is not JSON ("+e.message+").","err"); return; }
   const pages=data && Array.isArray(data.pages) ? data.pages : null;
   if(!pages || !pages.length || !pages.every(p=>p && typeof p==="object" && "telugu" in p)){
-    say(file.name+" is not a progress file — it has no pages with Telugu.","err"); return; }
+    say(file.name+" is not a progress file — it has no pages with {{LANGUAGE}}.","err"); return; }
   if(pages.length>1){
     say(file.name+" holds "+pages.length+" pages — a book's progress file, not one "
        +"saved with Export JSON here. Nothing was imported.","err"); return; }
@@ -1973,7 +2025,7 @@ $("bReloadVoices").onclick=async()=>{
 /* ---- Suggestions TTS Settings ----------------------------------------------
    The voice the ▶ buttons in the book's Suggestions box read with: the
    issue description, the English and every version row. Its own settings
-   on the server ("profile":"sugg") — Google's Standard Telugu voice until
+   on the server ("profile":"sugg") — Google's Standard {{LANGUAGE}} voice until
    changed — so nothing here touches TTS SETTINGS, and the reverse. Every
    part is read in the panel's language, the English included: there is no
    switching. A part is one clip (/api/tts/sentence), kept, so a second ▶
@@ -2289,7 +2341,7 @@ async function startTts(fromCursor){
   let text=readDom().text;
   if(fromCursor){
     const off=caretOffset();
-    if(off===null){ ttsSay("Click in the Telugu box to place the cursor first.","warn"); return; }
+    if(off===null){ ttsSay("Click in the {{LANGUAGE}} box to place the cursor first.","warn"); return; }
     text=text.slice(off);
   }
   if(!text.trim()){ ttsSay("There is nothing to read.","warn"); return; }
@@ -2301,7 +2353,7 @@ async function startTts(fromCursor){
     JOB=r.id; TOTAL=r.total; playChunk(0);
   }catch(e){ ttsSay("Could not start: "+e.message,"err"); }
 }
-/* Where the caret sits in the Telugu box, as a character offset. Uses the
+/* Where the caret sits in the {{LANGUAGE}} box, as a character offset. Uses the
    same scan as everything else: Range.toString() drops the newlines a block
    boundary stands for, which would start the read-aloud a few characters off
    for every line break above the caret. */
@@ -2325,6 +2377,15 @@ $("bPause").onclick =async()=>{
 let CONFIG=null;
 function buildConfig(cfg){
   CONFIG=cfg;
+  const L=$("cfgLang"); L.innerHTML="";
+  for(const name of (cfg.languages||[])){
+    const opt=document.createElement("option");
+    opt.value=name; opt.textContent=name;
+    if(name===cfg.language) opt.selected=true;
+    L.appendChild(opt);
+  }
+  $("statusLang").textContent="prompts: "+(cfg.prompts_dir||"")+"  ·  the TTS panels follow it";
+  $("statusLang").className="status";
   const m=$("cfgMode"); m.innerHTML="";
   for(const o of cfg.modes){
     const opt=document.createElement("option");
@@ -2390,6 +2451,19 @@ $("cfgMode").onchange=function(){
   saveConfig();
 };
 $("cfgModel").onchange=saveConfig;
+/* A change of language is a reload: the server fills the language into
+   every label when it serves the page. The scripts, findings, batch and TTS
+   settings all live on the server, so nothing is lost. */
+$("cfgLang").onchange=async function(){
+  const lang=this.value;
+  if(lang===(CONFIG&&CONFIG.language)) return;
+  try{
+    $("statusLang").textContent="switching to "+lang+"…"; $("statusLang").className="status";
+    await api("/api/config",{language:lang});
+    location.reload();
+  }catch(e){ $("statusLang").textContent="Could not change: "+e.message;
+             $("statusLang").className="status err"; }
+};
 
 /* ---- video playback -----------------------------------------------------
    A reference video beside the script. It is never uploaded: the dropped
@@ -2511,7 +2585,7 @@ VSTAGE.addEventListener("drop", e=>{
 });
 /* A file dropped anywhere else would navigate the tab to it and take the
    session with it. Only file drags are swallowed — dragging text about
-   inside the Telugu box still works. */
+   inside the {{LANGUAGE}} box still works. */
 for(const ev of ["dragover","drop"])
   window.addEventListener(ev, e=>{
     if(vidHasFiles(e) && !VSTAGE.contains(e.target)) e.preventDefault();
@@ -2533,12 +2607,12 @@ for(const ev of ["mousedown","focus"])
    than the window and the spacer computes to zero — you simply scroll down
    to reach them. The spacer earns its keep only if the window is tall enough
    to show everything at once: then it adds just enough room to pull the
-   Telugu box up to the top of the window. Recomputed on resize because the
+   {{LANGUAGE}} box up to the top of the window. Recomputed on resize because the
    panels wrap differently at different widths.                            */
 /* Both script rows at 60% of the height they would otherwise take. They keep
    their 1:3 proportion to each other — this scales the pair. */
 const SCRIPT_ROWS=0.6;
-/* The Telugu row is 10% taller than the 3:1 split would make it (the rows
+/* The {{LANGUAGE}} row is 10% taller than the 3:1 split would make it (the rows
    are 3.3fr 1fr for that). The grid has to gain the height that row gained
    — it is 3/4 of the grid, so 0.75 x 10% — or the extra would simply be
    taken off the reference row below instead of off the page. */
@@ -2549,7 +2623,7 @@ const TALL_TELUGU=1.075;
    box instead overshoots by 0.075 of it, which is a row 10.2% taller
    rather than 10%. */
 const GRID_CHROME=24;
-/* Set by dragging the handle under the Telugu box: the two row heights in
+/* Set by dragging the handle under the {{LANGUAGE}} box: the two row heights in
    px, or TE_ROW 0 for the default split worked out below. */
 let TE_ROW=0, REF_ROW=0;
 function sizeGrid(){
@@ -2570,7 +2644,7 @@ function sizeGrid(){
   const top=g.getBoundingClientRect().top + window.scrollY;
   const oneScreen=Math.max(320, window.innerHeight - top);
   // Rows are 1fr 3fr. 4/3 of oneScreen would leave the top row at the height
-  // it had and make the Telugu row 1.5x its old share; SCRIPT_ROWS scales both
+  // it had and make the {{LANGUAGE}} row 1.5x its old share; SCRIPT_ROWS scales both
   // of those down together, which is what keeps their 1:3 proportion while
   // making room for the control panels underneath to sit on screen.
   const wasTall=oneScreen * 4 / 3 * SCRIPT_ROWS;
@@ -2581,13 +2655,13 @@ function sizeSpacer(){
   const sp=$("spacer"), te=$("telugu").closest(".cell");
   if(!sp||!te) return;
   if($("tabSingle").hidden){ sp.style.height="0px"; return; }
-  // Scrolling should reach the Telugu panel's top and no further than is
+  // Scrolling should reach the {{LANGUAGE}} panel's top and no further than is
   // useful, so the maximum scroll wants to equal that panel's offset from the
   // top of the document:
   //
   //     maxScroll = docHeight - viewport = need     =>   spacer = need + viewport - appHeight
   //
-  // .app is taller than one viewport — the Telugu row is 1.5x and the control
+  // .app is taller than one viewport — the {{LANGUAGE}} row is 1.5x and the control
   // panels sit below the grid — so its height has to be measured rather than
   // assumed to be 100vh. The spacer is a sibling of .app, so measuring .app
   // does not include it. When .app already exceeds that, this goes negative
@@ -2604,8 +2678,8 @@ function sizeSpacer(){
 }
 function sizeAll(){ sizeGrid(); sizeSpacer(); }
 
-/* ---- Telugu box height -----------------------------------------------------
-   Drag the handle in the gap under the Telugu box to change that row's
+/* ---- {{LANGUAGE}} box height -----------------------------------------------------
+   Drag the handle in the gap under the {{LANGUAGE}} box to change that row's
    height. The reference row underneath keeps the height it has on screen,
    so the page gets longer or shorter by what was dragged. A double-click
    puts the default split back. Kept for as long as the page is open.     */
@@ -2613,7 +2687,7 @@ function sizeAll(){ sizeGrid(); sizeSpacer(); }
   const h=$("teRowSplit"), te=$("teluguCell"), ref=$("findingsCell");
   if(!h||!te||!ref) return;
   const MIN=200;
-  // The handle fills the 8px gap directly below the Telugu row.
+  // The handle fills the 8px gap directly below the {{LANGUAGE}} row.
   const place=()=>{ h.style.top=(te.offsetTop + te.offsetHeight)+"px"; };
   new ResizeObserver(place).observe(te);
   place();
@@ -2655,7 +2729,7 @@ new ResizeObserver(()=>sizeSpacer()).observe(document.querySelector(".app"));
    Offsets are CODE POINTS, as everywhere else on this page: `start`/`end`
    index Array.from(page.current), never the string itself.
 
-   The Telugu view is read-only. A correction changes only by picking one of
+   The {{LANGUAGE}} view is read-only. A correction changes only by picking one of
    its rows, so the spans never have to be re-read from the DOM.          */
 const BATCH_LABELS=["ORIGINAL","VERSION 1","VERSION 2","VERSION 3"];
 let BATCH=null, BATCH_RUNNING=false, BATCH_STOP=false;
@@ -2716,15 +2790,29 @@ async function batchRestore(){
     renderBatch(); sgWarm();
     const done=b.pages.filter(p=>p.status==="done").length;
     batchSay("Reopened "+(b.source||"the batch")+" — "+done+" of "
-            +b.pages.length+" page(s) done · progress in "+(r.name||""), "ok");
+            +b.pages.length+" page(s) done · progress in "+(r.name||"")
+            +(b.helper?" · helper file: "+b.helper.name:"")
+            +batchMarksNote(r.marks), "ok");
+    if(Object.keys(r.marks||{}).length) batchSave();   // keep what was put back
   }catch(e){ /* a broken save is ignored, not fatal */ }
 }
-function batchLoadedSay(b, where){
+/* What the server put back as the batch opened ("marks": {page: count}) —
+   punctuation that Version 1 had dropped; see restore_end_marks in
+   review_core.py. "" when it put back nothing. */
+function batchMarksNote(m){
+  const pages=Object.keys(m||{});
+  if(!pages.length) return "";
+  const n=pages.reduce((a,k)=>a+m[k],0);
+  return " · put back "+n+" punctuation mark"+(n===1?"":"s")+" that Version 1 had dropped (page"
+        +(pages.length===1?" ":"s ")+pages.slice(0,15).join(", ")+(pages.length>15?" …":"")+")";
+}
+function batchLoadedSay(b, where, extra){
   const done=b.pages.filter(p=>p.status==="done").length;
   const blank=b.pages.filter(p=>!(p.telugu||"").trim()).length;
   batchSay("✔ Loaded "+(b.source||"the batch")+" — "+b.pages.length+" page(s)"
-          +(done?", "+done+" done":"")+(blank?", "+blank+" with no Telugu":"")
-          +" · progress in "+where, blank?"warn":"ok");
+          +(done?", "+done+" done":"")+(blank?", "+blank+" with no {{LANGUAGE}}":"")
+          +" · progress in "+where+(b.helper?" · helper file: "+b.helper.name:"")
+          +(extra||""), blank?"warn":"ok");
 }
 /* Load pages: a Windows dialog, opened by the server, which — unlike this
    page — knows where the chosen file lives, and so saves its progress
@@ -2766,7 +2854,7 @@ async function batchLoadPick(){
     }
     const u=await batchUse(r.progress_path);
     BATCH=b; batchSave(); renderBatch(); sgWarm();
-    batchLoadedSay(b, u.name);
+    batchLoadedSay(b, u.name, batchMarksNote(r.marks));
   }catch(e){ batchSay("Could not load — "+e.message,"err"); }
   finally{ btn.disabled=BATCH_RUNNING; }
 }
@@ -2792,7 +2880,8 @@ function parseBatchJson(text){
     if(!el || typeof el!=="object") return;
     const page=batchField(el,["pagenumber","page","pageno"]);
     const en=batchField(el,["englishscript","english"]);
-    const te=batchField(el,["teluguscript","telugu"]);
+    const te=batchField(el,[LANG.toLowerCase()+"script", LANG.toLowerCase(),
+                             "teluguscript","telugu","targetscript","translationscript","translation"]);
     pages.push({page: page===undefined||page===null ? String(i+1) : String(page),
                 english: String(en||""), telugu: String(te||""),
                 status:"pending", error:"", current:String(te||""),
@@ -2824,6 +2913,107 @@ function suggTag(p){
   else if(st==="ready"){ cls="ready"; txt="✎ Ready"; }
   return txt ? '<span class="sg '+cls+'" title="'+esc(tip).replace(/"/g,"&quot;")+'">'+txt+'</span>' : "";
 }
+/* A synced page in the Pages list: how many of its corrections are still
+   to be ticked, and how many changes could not be placed at all. */
+const syncLeft=p=>p.findings.filter(f=>f.sync&&!f.sync.decided).length;
+function syncTag(p){
+  const left=syncLeft(p), bad=(p.missedList||[]).length;
+  return (left?" · "+left+" to check":" · ✔ checked")+(bad?" · "+bad+" not placed":"");
+}
+/* ---- what the editors changed, in red --------------------------------------
+   A sync correction's English line, marked against the earlier draft: words
+   and punctuation the final English has that the draft did not, on red; and
+   under it the earlier draft, with what was taken out struck through in red.
+   The earlier draft is read from the correction's issue lines ("… earlier
+   draft: “…”" / "… removed in English: “…”"), so pages synced before this
+   existed show it too. Lined up in order (longest common run), so a word that
+   only moved is marked as well. */
+const SYNC_RE_DEL=/(removed in English(?: \([^)]*\))?): “(.*)”\s*$/,
+      SYNC_RE_CHG=/ — earlier draft: “(.*)”\s*$/;
+function syncOld(f, what){
+  if(f.sync && f.sync.old!==undefined) return what==="del" ? f.sync.oldDel||"" : f.sync.old||"";
+  const re=what==="del" ? SYNC_RE_DEL : SYNC_RE_CHG, g=what==="del"?2:1;
+  return (f.issue||"").split("\n").map(l=>(l.match(re)||[])[g]).filter(Boolean).join(" ");
+}
+/* The earlier draft moves out of the issue text into the correction itself
+   (f.sync.old / oldDel): it is shown, marked, above the English, so the
+   issue box keeps only the label and the model's note. Done once per
+   correction, the first time it is shown — pages synced before this too. */
+function syncTidy(f){
+  if(!f || !f.sync || f.sync.old!==undefined) return false;
+  const old=syncOld(f,"chg"), oldDel=syncOld(f,"del");   // both before either is stored
+  f.sync.old=old; f.sync.oldDel=oldDel;
+  f.issue=(f.issue||"").split("\n").map(l=>l.replace(SYNC_RE_CHG,"").replace(SYNC_RE_DEL,"$1")).join("\n");
+  return true;
+}
+const sdTok=s=>(s||"").match(/\s+|[\p{L}\p{M}\p{N}’'\-]+|[^\s\p{L}\p{M}\p{N}]/gu)||[];
+function syncDiff(a, b){
+  const A=sdTok(a), B=sdTok(b), n=A.length, m=B.length;
+  const key=t=>/^\s+$/.test(t)?" ":t;
+  const L=Array.from({length:n+1},()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--)
+    L[i][j]= key(A[i])===key(B[j]) ? L[i+1][j+1]+1 : Math.max(L[i+1][j],L[i][j+1]);
+  const inA=new Array(n).fill(false), inB=new Array(m).fill(false);
+  let i=0,j=0;
+  while(i<n&&j<m){
+    if(key(A[i])===key(B[j])){ inA[i]=inB[j]=true; i++; j++; }
+    else if(L[i+1][j]>=L[i][j+1]) i++; else j++;
+  }
+  // Runs of marked tokens become one mark, spaces between them included.
+  const paint=(T,kept,open,close)=>{
+    const sp=t=>/^\s+$/.test(t);
+    const marked=T.map((t,k)=>!sp(t)&&!kept[k]);
+    // A space between two marked words joins them into one mark.
+    for(let k=1;k+1<T.length;k++) if(sp(T[k])&&marked[k-1]&&marked[k+1]) marked[k]=true;
+    let h="", run="";
+    T.forEach((t,k)=>{
+      if(marked[k]){ run+=t; return; }
+      if(run){ h+=open+esc(run)+close; run=""; }
+      h+=esc(t);
+    });
+    if(run) h+=open+esc(run)+close;
+    return h;
+  };
+  return {old:paint(A,inA,'<del class="sdout">','</del>'),
+          new:paint(B,inB,'<mark class="sdin">','</mark>')};
+}
+function syncEnglishHtml(f){
+  const k=f.sync.kind;
+  if(k==="del"){
+    const old=syncOld(f,"del")||f.english.replace(/^\(removed in the final English\)\s*/,"");
+    return 'Removed in English: <del class="sdout">'+esc(old)+'</del>';
+  }
+  const old=syncOld(f,"chg");
+  if(!old) return 'English (new): <mark class="sdin">'+esc(f.english)+'</mark>';
+  const d=syncDiff(old, f.english);
+  return '<div class="sdold">Earlier draft: '+d.old+'</div>English: '+d.new;
+}
+/* The Suggestions box for a synced page with no correction selected: what
+   came back for every change on it — so nothing is quietly dropped. */
+function syncSummary(p){
+  const s=p.syncInfo||{}, left=syncLeft(p);
+  const li=(r,why)=>'<li><b>'+esc((r.ids||[]).join(", "))+'</b> — '+esc(why||"")
+    +(r.english?'<br>English: '+esc(r.english):'')
+    +(r.telugu?'<br>{{LANGUAGE}}: '+esc(r.telugu):'')
+    +(r.suggestion?'<br>Suggested: '+esc(r.suggestion):'')
+    +(r.issue?'<br><span style="color:var(--muted)">'+esc(r.issue).replace(/\n/g,"<br>")+'</span>':'')+'</li>';
+  let h='<div class="meta">'+(s.changes||0)+" change(s) in the English on this page · "
+    +(s.answered||0)+" answered · "+p.findings.length+" correction(s) in the {{LANGUAGE}}"
+    +(p.findings.length?" — "+(left?left+" not checked yet. Click a highlight, or press Next.":"all checked ✔"):"")
+    +'</div>';
+  if((p.missedList||[]).length)
+    h+='<div class="meta err"><b>Not placed — check these by hand:</b></div><ul class="synclist">'
+      +p.missedList.map(r=>li(r,r.why)).join("")+'</ul>';
+  if((s.unfound_en||[]).length)
+    h+='<div class="meta err"><b>English not found in the helper file — check by hand:</b></div><ul class="synclist">'
+      +s.unfound_en.map(t=>'<li>'+esc(t)+'</li>').join("")+'</ul>';
+  if((s.not_in_telugu||[]).length)
+    h+='<div class="meta"><b>Removed in English, and already not in the {{LANGUAGE}}:</b></div><ul class="synclist">'
+      +s.not_in_telugu.map(r=>li(r,"nothing to take out")).join("")+'</ul>';
+  if(s.paired===false)
+    h+='<div class="meta">This page\'s English and {{LANGUAGE}} paragraphs do not pair one to one, so the {{LANGUAGE}} was found by meaning.</div>';
+  return h;
+}
 function renderBatch(listOnly){
   const list=$("btPages");
   if(!BATCH){ list.innerHTML=""; renderBatchPage(); return; }
@@ -2834,7 +3024,8 @@ function renderBatch(listOnly){
     '<div class="pg'+(BATCH.sel.p===i?" on":"")+'" data-i="'+i+'" title="'
     +esc(p.error||"").replace(/"/g,"&quot;")+'"><span class="pn">Page '+esc(p.page)+'</span>'
     +'<span class="st '+p.status+'">'+L[p.status]
-    +(p.status==="done"?" · "+p.findings.length:"")+'</span>'+suggTag(p)+'</div>').join("");
+    +(p.status==="done"?" · "+p.findings.length:"")
+    +(p.status==="done"&&p.synced?syncTag(p):"")+'</span>'+suggTag(p)+'</div>').join("");
   for(const el of list.querySelectorAll(".pg"))
     el.onclick=()=>batchSelect(parseInt(el.dataset.i,10), null);
   if(!listOnly) renderBatchPage();
@@ -2849,6 +3040,15 @@ function batchNextPage(){
   $("btTelugu").scrollTop=0;
   return true;
 }
+// And the one before it (Ctrl+Shift+7).
+function batchPrevPage(){
+  if(!BATCH||!BATCH.pages.length){ batchSay("Press Load pages to choose a batch JSON first.","warn"); return false; }
+  const pi=(BATCH.sel&&BATCH.sel.p!=null?BATCH.sel.p:0)-1;
+  if(pi<0){ batchSay("This is the first page.","warn"); return false; }
+  batchSelect(pi, null);
+  $("btTelugu").scrollTop=0;
+  return true;
+}
 $("btNextPage").addEventListener("click", batchNextPage);
 // The one above the English, beside ▶ Play, starts reading the new page
 // at once — from its first sentence — as Play would.
@@ -2858,15 +3058,15 @@ function renderBatchPage(){
   if(!p){
     te.contentEditable="false";
     te.innerHTML='<div class="meta">Press Load pages above to choose a batch JSON.</div>';
-    $("btEnglish").textContent=""; $("btTeTitle").textContent="Telugu (current)";
+    $("btEnglish").textContent=""; $("btTeTitle").textContent="{{LANGUAGE}} (current)";
     renderBatchSugg(); return;
   }
-  $("btTeTitle").textContent="Telugu (current) — page "+p.page
+  $("btTeTitle").textContent="{{LANGUAGE}} (current) — page "+p.page
     +(p.status==="done"?"  (editable)":"  ("+p.status+")");
   $("btEnglish").textContent=p.english;
   try{ enStepShow(false); }catch(e){}
   // Only a proofed page is editable: proofing works from the page's
-  // ORIGINAL Telugu, so an edit made before it would be lost to it.
+  // ORIGINAL {{LANGUAGE}}, so an edit made before it would be lost to it.
   te.contentEditable = p.status==="done" ? "true" : "false";
   te.spellcheck=false;
   BT_EDIT.dirty=false; clearTimeout(BT_EDIT.timer);  // the render IS the text now
@@ -2875,7 +3075,9 @@ function renderBatchPage(){
   p.findings.forEach((f,i)=>{
     if(f.start<at) return;
     h+=esc(cps.slice(at,f.start).join(""));
-    h+='<span class="hl '+(f.kind==="man"?"man":"ai")+(BATCH.sel.f===i?" on":"")+'" data-f="'+i+'">'
+    const sy=f.sync?" sync"+(f.sync.same?" same":"")+(f.sync.kind==="del"?" del":"")
+                      +(f.sync.decided?" dec":""):"";
+    h+='<span class="hl '+(f.kind==="man"?"man":"ai")+sy+(BATCH.sel.f===i?" on":"")+'" data-f="'+i+'">'
       +esc(cps.slice(f.start,f.end).join(""))+'</span>';
     at=f.end;
   });
@@ -2969,12 +3171,14 @@ function renderBatchSuggIn(){
   if(!p){ box.innerHTML=""; return; }
   if(p.status==="failed"){
     box.innerHTML='<div class="meta err">This page failed: '+esc(p.error||"")
-      +'<br>Press Do AI Proofing in One step for all Entries to try it again.</div>';
+      +'<br>Press '+(!BATCH.pages.some(q=>q.synced)
+          ?'Do AI Proofing in One step for all Entries':'Corrections to sync with new version')
+      +' to try it again.</div>';
     return; }
   if(p.status!=="done"){
     box.innerHTML='<div class="meta">Not proofed yet.</div>'; return; }
   if(!f){
-    box.innerHTML='<div class="meta">'+(p.findings.length
+    box.innerHTML=p.synced ? syncSummary(p) : '<div class="meta">'+(p.findings.length
       ? p.findings.length+" correction(s) on this page. Click a highlight, or press Next."
       : "Nothing was flagged on this page.")
       +(p.missed?"<br>"+p.missed+" more could not be located in the script.":"")
@@ -3000,23 +3204,33 @@ function renderBatchSuggIn(){
     plays.push([src,what]);
     return '<button class="bplay" data-pl="'+(plays.length-1)
       +'" title="Read '+what+' aloud">&#9654;</button>'; };
+  if(syncTidy(f)) batchSave();
   let h=f.english?'<div class="engrow"><div class="plcol">'+playBtn(f.english,"the English")
-      +'</div><div class="engline">English: '+esc(f.english)
+      +'</div><div class="engline">'+(f.sync?syncEnglishHtml(f):'English: '+esc(f.english))
       +'</div>'+copyBtn(f.english,"the English")+'</div>':"";
   // The issue itself goes under the last version (renderBatchSugg).
   if(!f.options.length)
     h+='<div class="meta">'+(f.kind==="man"
-      ? "No versions yet — press ✎ Get suggestions above the Telugu."
+      ? "No versions yet — press ✎ Get suggestions above the {{LANGUAGE}}."
       : "No versions came back for this one.")+'</div>';
   [f.orig].concat(f.options).forEach((t,i)=>{
     const cur=t.trim()===(f.current||"").trim();
     const label=BATCH_LABELS[i]||("VERSION "+i);
     const edit=i>0;
     const what="the "+label.charAt(0)+label.slice(1).toLowerCase();
+    // A sync correction is not decided until a row is ticked: until then
+    // the ORIGINAL is in the script only because nothing was applied.
+    const mark=!cur?"":(f.sync&&!f.sync.decided?"  ✓ in the script — not checked yet":"  ✓ in the script");
+    // What an empty row means: an added sentence has no ORIGINAL (ticking it
+    // takes the placeholder out); a deleted one's version is nothing.
+    const ph=!f.sync?"":(i===0&&f.sync.kind==="add"
+      ?"(nothing — ticking this takes the added sentence out)"
+      :(i>0&&f.sync.kind==="del"?"(removed — ticking this takes the sentence out)":""));
     h+='<div class="opt'+(cur?" cur":"")+'" data-i="'+i+'">'
       +'<div class="plcol">'+playBtn(edit?i:t,what)+'</div><div class="optbody">'
       +'<span class="lbl">'+label
-      +(cur?"  ✓ in the script":"")+'</span><span class="txt"'
+      +mark+'</span><span class="txt"'
+      +(ph?' data-ph="'+esc(ph).replace(/"/g,"&quot;")+'"':'')
       +(edit?' contenteditable="plaintext-only" spellcheck="false"'
              +' title="Click to edit this version, then Apply"':'')
       +'>'+(i ? wdHtml(t,[f.orig]) : wdHtml(t,f.options.slice(0,1),"out"))
@@ -3052,7 +3266,7 @@ function renderBatchSuggIn(){
     const btn=box.querySelector('.bapply[data-i="'+i+'"]');
     el.addEventListener("blur", repaint);
     el.addEventListener("input",()=>{
-      const dirty=live(i)!==f.options[i-1];
+      const dirty=live(i)!==(f.options[i-1]||"").trim();
       btn.disabled=!dirty; btn.classList.toggle("dirty",dirty);
       btn.title=dirty?"Apply your edit to the script":"Edit this version first, then apply it";
     });
@@ -3067,8 +3281,15 @@ function renderBatchSuggIn(){
   const commit=i=>{
     if(i>0){
       const t=live(i);
+      // A deleted sentence's version IS empty: ticking it takes the sentence out.
+      if(!t && f.sync && f.sync.kind==="del" && !f.options[i-1]){ batchApply(i); return; }
       if(!t){ batchSay("That version is empty — type something, or pick another.","warn"); return; }
-      if(t!==f.options[i-1]){ f.options[i-1]=t; return batchApply(i,true); }
+      // The box shows a version trimmed; a sync one keeps the space it
+      // stands in (an added sentence's " " before it).
+      const stored=f.options[i-1]||"";
+      if(t!==stored.trim()){
+        f.options[i-1]=f.sync ? stored.match(/^\s*/)[0]+t+stored.match(/\s*$/)[0] : t;
+        return batchApply(i,true); }
     }
     batchApply(i);
   };
@@ -3101,7 +3322,7 @@ function batchSelect(pi, fi, clicked){
   BATCH.sel={p:pi, f:fi};
   if(samePage){
     // The same page: light the chosen highlight without rebuilding the
-    // Telugu box, which would throw away the caret the click just placed.
+    // {{LANGUAGE}} box, which would throw away the caret the click just placed.
     for(const el of $("btTelugu").querySelectorAll(".hl"))
       el.classList.toggle("on", parseInt(el.dataset.f,10)===fi);
     renderBatch(true); renderBatchSugg();
@@ -3125,10 +3346,12 @@ function batchApply(i, edited){
   const delta=cpLen(text)-(f.end-f.start);
   p.current=cps.slice(0,f.start).join("")+text+cps.slice(f.end).join("");
   f.current=text; f.end=f.start+cpLen(text);
+  if(f.sync) f.sync.decided=true;      // ticked: checked, whichever row
   for(const o of p.findings)
     if(o!==f && o.start>=oldEnd){ o.start+=delta; o.end+=delta; }
   readRefresh();
   batchSave(); renderBatchPage();
+  if(f.sync) renderBatch(true);        // the page's "to check" count in the list
   batchSay("✔ Page "+p.page+" ["+(BATCH.sel.f+1)+"] set to "
           +(BATCH_LABELS[i]||i)+(edited?" (edited)":""),"ok");
 }
@@ -3165,8 +3388,8 @@ function batchStep(dir, kind){
   return false;
 }
 
-/* Every sentence of a page that is not what it was: the page's Telugu as it
-   came in the input JSON against the Telugu as it stands now, compared
+/* Every sentence of a page that is not what it was: the page's {{LANGUAGE}} as it
+   came in the input JSON against the {{LANGUAGE}} as it stands now, compared
    sentence by sentence — so a version applied, an edit inside a highlight,
    an edit outside every highlight and a hand mark all show alike. [{english,
    orig, current}].
@@ -3232,7 +3455,7 @@ function batchExport(){
     if(ch.length) pagesChanged++;
     for(const r of ch)
       rows.push({"Page Number":p.page, "English":r.english,
-                 "Original Telugu":r.orig, "Current Telugu":r.current});
+                 "Original {{LANGUAGE}}":r.orig, "Current {{LANGUAGE}}":r.current});
   }
   if(!rows.length){ finalSay("No sentence has changed yet.","warn"); return; }
   const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});
@@ -3249,7 +3472,8 @@ function batchExport(){
 
 function batchBusy(on){
   BATCH_RUNNING=on;
-  $("bBatchRun").disabled=on; $("bBatchStop").disabled=!on;
+  $("bBatchRun").disabled=on; $("bBatchSkip").disabled=on; $("bBatchStop").disabled=!on;
+  $("bBatchSync").disabled=on; $("bBatchHelper").disabled=on;
   $("bBatchLoad").disabled=on; $("bBatchSugg").disabled=on;
   try{ btManButtons(); }catch(e){}
 }
@@ -3259,11 +3483,24 @@ function batchBusy(on){
    finishing and the next being sent, to go easy on the API; Stop ends the
    wait at once. */
 const BATCH_GAP_S=10;
-async function batchRun(){
+/* `sync` runs Corrections to sync with new version instead of AI Proofing:
+   the same page-by-page run, but /api/batch/sync with the chapter's helper
+   file. Every sentence the editors touched comes back as a correction, its
+   {{LANGUAGE}} for the final English as Version 1, applied (still to be ticked). */
+async function batchRun(sync){
+  sync=sync===true;
   if(!BATCH){ batchSay("Load pages first.","warn"); return; }
   if(BATCH_RUNNING) return;
+  if(sync && !(BATCH.helper&&BATCH.helper.path)){
+    batchSay("Open the chapter's helper file first — 📎 Open helper file.","warn"); return; }
   const todo=BATCH.pages.map((p,i)=>i).filter(i=>BATCH.pages[i].status!=="done");
   if(!todo.length){ batchSay("Every page is already done.","ok"); return; }
+  if(sync && !confirm("Corrections to sync with new version, on "+todo.length+" page(s),"
+             +" with "+BATCH.helper.name+"?"
+             +"\n\nThe English of these pages must be the FINAL English, and the {{LANGUAGE}}"
+             +" the approved {{LANGUAGE}}. Every sentence the editors touched comes back as a"
+             +" correction, and its VERSION 1 goes in straight away. Tick VERSION 1 to"
+             +" mark it checked, or ORIGINAL to put the approved {{LANGUAGE}} back.")) return;
   BATCH_STOP=false; batchBusy(true);
   let ok=0, bad=0;
   try{
@@ -3271,21 +3508,29 @@ async function batchRun(){
       if(BATCH_STOP) break;
       const p=BATCH.pages[i];
       p.status="running"; p.error=""; renderBatch(BATCH.sel.p!==i);
-      batchSay("Proofing page "+p.page+" ("+(n+1)+" of "+todo.length+")…");
+      batchSay((sync?"Syncing page ":"Proofing page ")+p.page+" ("+(n+1)+" of "+todo.length+")…");
       try{
-        if(!p.telugu.trim()) throw new Error("this page has no Telugu");
+        if(!p.telugu.trim()) throw new Error("this page has no {{LANGUAGE}}");
         // Not api(): it throws a bare "HTTP 500" and the server's own
         // message — which is what says WHY the page failed — is lost.
-        const r=await fetch("/api/batch/oneshot?t="+encodeURIComponent(TOKEN),{
+        const r=await fetch((sync?"/api/batch/sync":"/api/batch/oneshot")+"?t="+encodeURIComponent(TOKEN),{
           method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({english:p.english, telugu:p.telugu})});
+          body:JSON.stringify(sync
+            // The pages before this one, so it is looked for after them in
+            // the chapter.
+            ? {english:p.english, telugu:p.telugu, helper:BATCH.helper.path,
+               before:BATCH.pages.slice(0,i).map(q=>q.english)}
+            : {english:p.english, telugu:p.telugu})});
         let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
         if(s.error) throw new Error(s.error);
         p.current=s.telugu;
         p.findings=(s.findings||[]).map(f=>({start:f.start, end:f.end,
           orig:f.orig, current:f.current, english:f.english||"",
-          issue:f.issue||"", options:f.options||[]}));
+          issue:f.issue||"", options:f.options||[],
+          ...(f.category!==undefined?{category:f.category||""}:{}),
+          ...(f.sync?{sync:f.sync}:{})}));
         p.missed=(s.missed||[]).length; p.note=s.note||"";
+        if(sync){ p.synced=true; p.syncInfo=s.sync||{}; p.missedList=s.missed||[]; }
         p.status="done"; ok++;
         // The page being looked at had its findings replaced under it.
         if(BATCH.sel.p===i) BATCH.sel.f=null;
@@ -3307,12 +3552,72 @@ async function batchRun(){
   }finally{ batchBusy(false); }
   const left=BATCH.pages.filter(p=>p.status!=="done").length;
   batchSay((BATCH_STOP?"■ Stopped — ":"✔ Run finished — ")
-          +ok+" page(s) proofed"+(bad?", "+bad+" failed":"")
+          +ok+(sync?" page(s) synced":" page(s) proofed")+(bad?", "+bad+" failed":"")
           +(left?" · "+left+" not done; press the button again to run them":""),
            bad?"warn":"ok");
 }
 
-$("bBatchRun").onclick=batchRun;
+/* Skip AI Proofing: every page not done yet is made done as the AI run
+   would leave it, only with nothing flagged — its {{LANGUAGE}} as it is, no
+   corrections — so it can be edited and marked by hand straight away.
+   Pages already done keep their corrections. */
+function batchSkipAi(){
+  if(!BATCH||!BATCH.pages.length){ batchSay("Load pages first.","warn"); return; }
+  if(BATCH_RUNNING) return;
+  const todo=BATCH.pages.filter(p=>p.status!=="done");
+  if(!todo.length){ batchSay("Every page is already done.","ok"); return; }
+  if(!confirm("Skip AI Proofing for "+todo.length+" page(s)?\n\nThey become done with no AI"
+             +" suggestions, so the AI Proofing run will not do them afterwards.")) return;
+  btSyncNow();
+  for(const p of todo){
+    p.status="done"; p.error=""; p.current=p.telugu;
+    p.findings=[]; p.missed=0; p.note="";
+  }
+  if(READ.on && todo.includes(BATCH.pages[READ.pi])) readStop();
+  if(todo.includes(batchPage())) BATCH.sel.f=null;
+  batchSave(); renderBatch();
+  batchSay("✔ AI Proofing skipped for "+todo.length+" page(s) — ready for marking by hand.","ok");
+}
+$("bBatchSkip").onclick=batchSkipAi;
+$("bBatchRun").onclick=()=>batchRun(false);
+$("bBatchSync").onclick=()=>batchRun(true);
+/* Open helper file: the chapter's sync helper, chosen in a Windows dialog
+   and kept with the batch (BATCH.helper), so reopening the batch keeps it. */
+async function batchHelperPick(){
+  if(!BATCH){ batchSay("Load pages first, then open the chapter's helper file.","warn"); return; }
+  if(BATCH_RUNNING) return;
+  const btn=$("bBatchHelper"); btn.disabled=true;
+  batchSay("Choose the helper file in the window that has opened… (it may be behind this one)");
+  try{
+    const r=await api("/api/batch/helper/pick",{});
+    if(r.cancelled){ batchSay("No helper file chosen.",""); return; }
+    if(r.error){ batchSay(r.error,"err"); return; }
+    BATCH.helper={path:r.path, name:r.name, chapter:r.chapter, title:r.title};
+    batchSave();
+    const c=r.counts||{};
+    batchSay("✔ Helper file: "+r.name+(r.title?" — Chapter "+(r.chapter||"?")+", "+r.title:"")
+            +" · "+(c.chg||0)+" changed, "+(c.del||0)+" deleted, "+(c.add||0)
+            +" added sentence(s) in the chapter","ok");
+  }catch(e){ batchSay("Could not open the helper file — "+e.message,"err"); }
+  finally{ btn.disabled=BATCH_RUNNING; }
+}
+$("bBatchHelper").onclick=batchHelperPick;
+/* Before anything leaves the app: a [NEW SENTENCE] placeholder still in a
+   page, or sync corrections not ticked yet. Returns whether to go on. */
+function syncExportOk(){
+  if(!BATCH) return true;
+  let ph=0, left=0; const pages=[];
+  for(const p of BATCH.pages){
+    if(p.status!=="done") continue;
+    const n=(p.current||"").split("[NEW SENTENCE]").length-1, l=p.synced?syncLeft(p):0;
+    if(n||l){ ph+=n; left+=l; pages.push(p.page); }
+  }
+  if(!ph && !left) return true;
+  return confirm((ph?ph+" [NEW SENTENCE] placeholder(s) are still in the {{LANGUAGE}}.\n":"")
+    +(left?left+" sync correction(s) are not checked yet.\n":"")
+    +"Page(s): "+pages.slice(0,20).join(", ")+(pages.length>20?" …":"")
+    +"\n\nExport anyway?");
+}
 $("bBatchLoad").onclick=batchLoadPick;
 $("bBatchStop").onclick=()=>{ BATCH_STOP=true;
   batchSay("Stopping after the page being proofed now…","warn"); };
@@ -3332,9 +3637,9 @@ $("bBatchExport").onclick=batchExport;
 
 /* ---- Copy Final Script -----------------------------------------------------
    The whole batch as one table on the clipboard — one row per page: its
-   number, its English, and its Telugu as it stands in the Telugu box, with
+   number, its English, and its {{LANGUAGE}} as it stands in the {{LANGUAGE}} box, with
    every version applied and every hand edit in. Pasted into a Google Doc it
-   becomes a real 3-column table. A page not proofed yet has no final Telugu,
+   becomes a real 3-column table. A page not proofed yet has no final {{LANGUAGE}},
    so its row carries the original and says so.
 
    Put on the clipboard twice over: as HTML, which is what a document pastes
@@ -3365,11 +3670,12 @@ async function putRichOnClipboard(html, text){
 async function finalExport(){
   if(!BATCH || !BATCH.pages.length){ finalSay("Load pages first.","warn"); return; }
   btSyncNow();                         // typing not yet read back goes in too
+  if(!syncExportOk()){ finalSay("Nothing copied.",""); return; }
   const cell=t=>esc(t||"").replace(/"/g,"&quot;").replace(/\r?\n/g,"<br>");
   const td='<td style="border:1px solid #999;padding:6px;vertical-align:top">';
   // A header row first, bold on a light grey, so the table reads on its own.
   const th='<td style="border:1px solid #999;padding:6px;font-weight:bold;background:#f1f5f9">';
-  let rows="<tr>"+th+"Page</td>"+th+"English</td>"+th+"Telugu</td></tr>",
+  let rows="<tr>"+th+"Page</td>"+th+"English</td>"+th+"{{LANGUAGE}}</td></tr>",
       plain=["Page\tEnglish\tTelugu"], pending=0;
   for(const p of BATCH.pages){
     const done=p.status==="done";
@@ -3386,7 +3692,7 @@ async function finalExport(){
   if(!ok){ finalSay("Clipboard blocked — the browser refused the copy.","err"); return; }
   const n=BATCH.pages.length;
   finalSay("✔ Copied "+n+" page(s) as a table — open your Google Doc and press Ctrl+V."
-          +(pending?" "+pending+" page(s) are not proofed yet; their rows carry the original Telugu.":""),
+          +(pending?" "+pending+" page(s) are not proofed yet; their rows carry the original {{LANGUAGE}}.":""),
            pending?"warn":"ok");
 }
 $("bFinalExport").onclick=finalExport;
@@ -3397,8 +3703,8 @@ $("bFinalExport").onclick=finalExport;
 
        N - Page: page number      (N counts the entries, from 1)
        English
-       original Telugu   (words that are not in the new one: on light red)
-       current Telugu    (words that are not in the original: on light green)
+       original {{LANGUAGE}}   (words that are not in the new one: on light red)
+       current {{LANGUAGE}}    (words that are not in the original: on light green)
 
    The words are compared the way the Suggestions box compares a version
    with the ORIGINAL (wdHtml): a word found anywhere in the other sentence
@@ -3449,18 +3755,19 @@ async function batchCopyChanges(){
 $("bBatchCopyChanges").onclick=batchCopyChanges;
 
 /* The finished batch as a file Load pages can take back in: the same list
-   of {Page Number, English Script, Telugu Script} as the input, with the
-   Telugu as it stands now. Loading it starts a fresh batch — the
+   of {Page Number, English Script, {{LANGUAGE}} Script} as the input, with the
+   {{LANGUAGE}} as it stands now. Loading it starts a fresh batch — the
    corrections and versions are not in it, only the final text. A page not
-   proofed yet goes out with the Telugu it came in with. */
+   proofed yet goes out with the {{LANGUAGE}} it came in with. */
 function finalJsonExport(){
   if(!BATCH||!BATCH.pages.length){ finalSay("Load pages first.","warn"); return; }
   btSyncNow();                         // typing not yet read back goes in
+  if(!syncExportOk()){ finalSay("Nothing exported.",""); return; }
   const rows=BATCH.pages.map(p=>({
     // A page number that was a number in the input goes back as one.
     "Page Number": /^\d+$/.test(p.page) ? Number(p.page) : p.page,
     "English Script": p.english||"",
-    "Telugu Script": p.current||""}));
+    "{{LANGUAGE}} Script": p.current||""}));
   const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -3469,13 +3776,13 @@ function finalJsonExport(){
   setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   const pending=BATCH.pages.filter(p=>p.status!=="done").length;
   finalSay("✔ Saved "+a.download+" — "+rows.length+" page(s)"
-          +(pending?"; "+pending+" not proofed yet carry their original Telugu":"")+".",
+          +(pending?"; "+pending+" not proofed yet carry their original {{LANGUAGE}}":"")+".",
            pending?"warn":"ok");
 }
 $("bFinalJson").onclick=finalJsonExport;
 
 /* ---- read-aloud ----------------------------------------------------------
-   The page in the Telugu box, read a sentence at a time. Each sentence is
+   The page in the {{LANGUAGE}} box, read a sentence at a time. Each sentence is
    its own clip (/api/tts/sentence), asked for when it is reached and the
    next two asked for while it plays — so one is always ready when the last
    ends and the reading never stops between sentences, without waiting for
@@ -3566,7 +3873,7 @@ function readButtons(){
   $("rdPos").textContent=here?"sentence "+(READ.i+1)+" / "+READ.sents.length:"";
 }
 /* Underline the sentence being read, and keep it in view. Re-run after
-   every render of the Telugu box, since that rebuilds its text nodes. */
+   every render of the {{LANGUAGE}} box, since that rebuilds its text nodes. */
 function readMark(){
   const hl=window.CSS && CSS.highlights;
   if(!hl) return;
@@ -3591,18 +3898,18 @@ function readMark(){
   if(r.top<b.top || r.bottom>b.bottom)
     box.scrollTop+=r.top-b.top-box.clientHeight/3;
 }
-/* ---- the English follows the Telugu --------------------------------------
+/* ---- the English follows the {{LANGUAGE}} --------------------------------------
    Every correction carries its English sentence, copied word for word, so
-   each one is an exact ANCHOR: its Telugu span <-> that sentence in the
+   each one is an exact ANCHOR: its {{LANGUAGE}} span <-> that sentence in the
    English box. Selecting a correction scrolls the English to its sentence
    and tints it. While reading aloud, a sentence that is a correction uses
    its own anchor; any other is placed between the anchors either side of
-   it — halfway between two corrections in the Telugu is taken as halfway
+   it — halfway between two corrections in the {{LANGUAGE}} is taken as halfway
    between their sentences in the English. Approximate between anchors,
    since the languages do not split into sentences one for one, but it
    keeps the English box at about the right place.
 
-   Telugu positions are code points; English ones are the string's own
+   {{LANGUAGE}} positions are code points; English ones are the string's own
    (UTF-16) offsets, which is what a Range wants.                          */
 function enFind(hay, needle){
   needle=(needle||"").trim();
@@ -3620,7 +3927,7 @@ function enFind(hay, needle){
   const j=N?H.s.indexOf(N):-1;
   return j<0 ? null : [H.at[j], H.at[j+N.length-1]+1];
 }
-/* [{t, e}] pairs, Telugu position -> English position, rising in both. */
+/* [{t, e}] pairs, {{LANGUAGE}} position -> English position, rising in both. */
 function enAnchors(p){
   const lt=cpLen(p.current||""), le=(p.english||"").length;
   const pts=[{t:0,e:0}];
@@ -3660,7 +3967,7 @@ function enShow(at, range){
   // better part of a second to even start.
   box.scrollTop=Math.max(0, box.scrollTop+rr.top-b.top-box.clientHeight/3);
 }
-/* Line the English up with whatever the Telugu is on now: the sentence
+/* Line the English up with whatever the {{LANGUAGE}} is on now: the sentence
    being read, else the selected correction. */
 function enSync(){
   const p=batchPage();
@@ -3681,7 +3988,7 @@ async function readPlay(i, fresh){
   try{ sgStop(); }catch(e){}
   READ.once=false;                     // readOnce sets it again after this
   // The yellow English sentence follows the reading one step at a time:
-  // on to the next Telugu sentence, the English moves on one too; back
+  // on to the next {{LANGUAGE}} sentence, the English moves on one too; back
   // one, back one. Anything else — Repeat, a fresh start — leaves it.
   // The languages do not split one for one, so it can drift; the wheel
   // over the English puts it right.
@@ -3737,7 +4044,7 @@ rplayer.addEventListener("ended", ()=>{
 });
 /* The end of a page: READ_NEXT_MS later, on to the next page and on with
    the reading, as the English box's Next page does — unless the reviewer
-   clicks in the English or the Telugu box first, or does anything else
+   clicks in the English or the {{LANGUAGE}} box first, or does anything else
    with the reading (Repeat, Previous, Regenerate, Stop, another page). */
 const READ_NEXT_MS=2000;
 let READ_NEXT={timer:null, left:0};
@@ -3748,7 +4055,7 @@ function readCarryOn(p){
   readCarryOnCancel();
   READ_NEXT.left=Math.round(READ_NEXT_MS/1000);
   const say=()=>batchSay("✔ Finished page "+p.page+" — next page in "+READ_NEXT.left
-                         +" s; click the English or Telugu to stay.","ok");
+                         +" s; click the English or {{LANGUAGE}} to stay.","ok");
   say();
   READ_NEXT.timer=setInterval(()=>{
     if(!READ.on || !READ.ended){ readCarryOnCancel(); return; }
@@ -3775,7 +4082,7 @@ function readStop(){
 function readStart(){
   btSyncNow();                         // read what is in the box now
   const p=batchPage();
-  if(!p || !(p.current||"").trim()){ batchSay("There is no Telugu on this page to read.","warn"); return; }
+  if(!p || !(p.current||"").trim()){ batchSay("There is no {{LANGUAGE}} on this page to read.","warn"); return; }
   if(READ.on && READ.pi===BATCH.sel.p && READ.paused && !READ.ended){ readTogglePause(); return; }
   stopPlayback(true);                 // the other player; also stops this one
   READ.pi=BATCH.sel.p; READ.paused=false;
@@ -3804,7 +4111,7 @@ function readTogglePause(){
 function readOnce(d){
   btSyncNow();
   const p=batchPage();
-  if(!p || !(p.current||"").trim()){ batchSay("There is no Telugu on this page to read.","warn"); return; }
+  if(!p || !(p.current||"").trim()){ batchSay("There is no {{LANGUAGE}} on this page to read.","warn"); return; }
   let i;
   if(READ.pi===BATCH.sel.p && READ.sents.length){
     i=READ.i+d;
@@ -3817,7 +4124,7 @@ function readOnce(d){
   if(i<0){ batchSay("That is the first sentence on this page.","warn"); return; }
   if(i>=READ.sents.length){
     if(d>0 && BATCH.sel.p+1<BATCH.pages.length){
-      // On to the next page, and its first sentence. The page's own Telugu
+      // On to the next page, and its first sentence. The page's own {{LANGUAGE}}
       // box starts at the top, as the Next page buttons leave it.
       if(batchNextPage()) readOnce(0);
       return;
@@ -3963,7 +4270,7 @@ const EN_HOVER=false;
    A page's first English sentence is tinted yellow when the page comes up.
    Page Up moves the tint on to the next sentence and Home — or a right click in the
    English box — back to the one before, bringing it into view if it is
-   out of sight: a finger along the lines while the Telugu is checked
+   out of sight: a finger along the lines while the {{LANGUAGE}} is checked
    against them. A left click there does nothing to it. The wheel scrolls
    the box as usual. The browser's own right-click menu is not shown there
    (Ctrl+C still copies). Each page keeps the sentence it had reached for
@@ -3999,6 +4306,17 @@ function enStep(d, quiet){
   enStepShow(true);
 }
 $("btEnglish").addEventListener("contextmenu", e=>{ e.preventDefault(); enStep(-1); });
+
+/* A right-click anywhere in a Suggestions box is its Next AI button: on to the
+   next AI correction (and read it, as that button does). The issue box's text
+   field keeps the browser's own menu (spelling, paste). */
+[["sugg","sgNextAi"],["btSugg","bBatchNext"]].forEach(([box,btn])=>{
+  $(box).addEventListener("contextmenu", e=>{
+    if(e.target.closest("textarea,input")) return;
+    e.preventDefault();
+    $(btn).click();
+  });
+});
 
 /* One read-aloud step, for → and ←: one sentence on (`d` 1) or back (-1).
    Reading this page: Next / Previous sentence. Not reading it: reading
@@ -4047,6 +4365,7 @@ window.addEventListener("blur", holdEnd);   // let go outside the window
    else it scrolls the page, Shift+Numpad 0 back up. */
 document.addEventListener("keydown", e=>{
   if(e.code!=="Numpad0" || e.ctrlKey || e.altKey || e.metaKey) return;
+  if(!$("tabBatch").hidden && BATCH && e.key==="Insert") return;
   e.preventDefault();
   const t=e.target;
   if(t && /^(TEXTAREA|INPUT)$/.test(t.tagName) && !t.readOnly && !t.disabled
@@ -4067,7 +4386,7 @@ document.addEventListener("keydown", e=>{
 /* ---- the single script's box widths ---------------------------------------
    A handle on the right edge of each box in the top row — the tall one on
    the left (the video, or the English with Reference is Video off), the
-   Telugu and the Suggestions — drags that box's width. The grid's columns
+   {{LANGUAGE}} and the Suggestions — drags that box's width. The grid's columns
    are what move, so the reference row underneath, which shares them,
    follows. On the first drag every column is pinned at the width it has
    on screen, so only the dragged one changes and the grid grows or shrinks
@@ -4079,7 +4398,7 @@ document.addEventListener("keydown", e=>{
   if(!grid) return;
   const MIN=160;
   // The column each handle closes: the first (the tall left box), the third
-  // (the Telugu's right half) and the fourth (the Suggestions).
+  // (the {{LANGUAGE}}'s right half) and the fourth (the Suggestions).
   const hs=[0,2,3].map(k=>{
     const h=document.createElement("div");
     h.className="colsplit"; h.dataset.k=k;
@@ -4162,7 +4481,7 @@ document.addEventListener("keydown", e=>{
 })();
 
 /* ---- box widths ------------------------------------------------------------
-   Drag the handle on the right edge of the English, Telugu or Suggestions box to
+   Drag the handle on the right edge of the English, {{LANGUAGE}} or Suggestions box to
    change its width. On the first drag every column is pinned at the width
    it has on screen, so only the dragged one changes, and the section grows
    or shrinks by the same amount, and its scroll bar follows.
@@ -4203,11 +4522,43 @@ document.addEventListener("keydown", e=>{
   }
 })();
 
+/* ---- the English and {{LANGUAGE}} tops, level -----------------------------------
+   The English box's top bar (its read-aloud buttons) is made as tall as the
+   {{LANGUAGE}} box's title and reason bar together, so the two texts start on the
+   same line - or, where the read-aloud buttons wrap onto more lines than the
+   reason bar, the reason bar is made as tall. The bars wrap differently as
+   the boxes or the window change width, and as the status texts in them
+   change, so it is done again whenever one of them changes size - on the
+   next frame, so that setting a height never re-enters the observer.      */
+function btLevelTops(){
+  const en=document.querySelector("#btEnglishCell>.title"), tt=$("btTeTitle"),
+        th=document.querySelector("#btTeluguCell>.head");
+  if(!en||!tt||!th) return;
+  en.style.minHeight=th.style.minHeight="";
+  const hgt=el=>el.getBoundingClientRect().height;
+  const e=hgt(en), t=hgt(tt)+hgt(th);
+  if(!e||!t) return;                          // the Book proofing tab is not showing
+  if(e<t) en.style.minHeight=t+"px";
+  else if(t<e) th.style.minHeight=(e-hgt(tt))+"px";
+}
+(function(){
+  let queued=false;
+  const soon=()=>{
+    if(queued) return;
+    queued=true;
+    requestAnimationFrame(()=>{ queued=false; btLevelTops(); });
+  };
+  const ro=new ResizeObserver(soon);
+  for(const el of [document.querySelector("#btEnglishCell>.title"), $("btTeTitle"),
+                   document.querySelector("#btTeluguCell>.head")])
+    if(el) ro.observe(el);
+})();
+
 /* ---- double-click selects the word, not the space after it ---------------
    On Windows a double-click takes the word AND the space that follows, so a
    word typed or dropped in by an input tool over it — which comes without a
    space of its own — runs into the next word. In every editable box (the
-   two Telugu boxes and the version rows) and in the read-only ORIGINAL row
+   two {{LANGUAGE}} boxes and the version rows) and in the read-only ORIGINAL row
    of the suggestions, the selection is pulled back past
    any trailing whitespace once the double-click has made it. Only
    whitespace is taken off, so a vowel sign or virama at the end of the word
@@ -4225,13 +4576,13 @@ document.addEventListener("dblclick", e=>{
   for(let k=0; k<n; k++) sel.modify("extend","backward","character");
 });
 
-/* ---- the Telugu box is editable -----------------------------------------
+/* ---- the {{LANGUAGE}} box is editable -----------------------------------------
    On a proofed page the box is a contenteditable: type, delete, paste,
    Enter for a new line. The browser carries the highlight elements along
    with the text as it is typed, so the DOM is the authority on where each
    correction now sits: a moment after the typing stops, the text and every
    highlight's offsets are read back (btScan) into the page — its current
-   Telugu, each correction's span and current text — and saved. The
+   {{LANGUAGE}}, each correction's span and current text — and saved. The
    export, Play, the copy buttons and the read-aloud all see the edit.
 
    Nothing is re-rendered while typing: rebuilding the box would move the
@@ -4362,7 +4713,7 @@ function btInsertPlain(text){
 
 /* ---- marking by hand -----------------------------------------------------
    The single-script review's manual flow, on a batch page: select a
-   sentence or phrase in the Telugu box, pick what is wrong with it, and it
+   sentence or phrase in the {{LANGUAGE}} box, pick what is wrong with it, and it
    becomes a hand-marked correction (sky blue, M1, M2 ...) with that reason
    as its issue — editable in the issue box under Suggestions. Get
    suggestions then asks for versions for the page's hand-marked ones that
@@ -4375,7 +4726,7 @@ function btInsertPlain(text){
 let BT_LAST_RANGE=null;
 const btManSay=(m,c)=>{ const s=$("btManStatus"); s.textContent=m; s.className="status "+(c||""); };
 
-// The last selection made in the Telugu box: a click on a reason can take
+// The last selection made in the {{LANGUAGE}} box: a click on a reason can take
 // the live one away before it is read.
 document.addEventListener("selectionchange", ()=>{
   const s=window.getSelection();
@@ -4398,7 +4749,7 @@ function btMark(desc){
   if(!p || p.status!=="done"){ btManSay("Marking works on a proofed page.","warn"); return; }
   btSyncNow();                         // the offsets are into the text as typed
   const r=btSelectionOffsets();
-  if(!r){ btManSay("Select the sentence or phrase in the Telugu box first.","warn"); return; }
+  if(!r){ btManSay("Select the sentence or phrase in the {{LANGUAGE}} box first.","warn"); return; }
   const cps=Array.from(p.current);
   let a=r.start, b=r.end;
   while(a<b && /\s/.test(cps[a])) a++;
@@ -4440,18 +4791,19 @@ for(const [id,label] of [["btRealMeaning","Real Meaning"],["btRightWord","Right 
 $("btDescribe").onclick=()=>btMark("");
 
 /* ---- playback keys and marking from the keyboard ------------------------
-   End reads the Telugu sentence before the current one once and
+   Page Up reads the {{LANGUAGE}} sentence before the current one once and
    stops, Page Down the next one (on a page not read yet, both its first);
    ▶ Play then reads on.
-   Page Up moves the yellow English sentence on and Home back.
+   End moves the yellow English sentence on and Home back.
    Ctrl+Shift+S marks a word or phrase selected with the mouse in the
-   Telugu box as Right word; with nothing selected there, it marks the
-   whole sentence being read as Real Meaning. The arrow keys do nothing
+   {{LANGUAGE}} box as Right word; with nothing selected there, it marks the
+   whole sentence being read as Real Meaning. Insert marks the selected
+   word or phrase as Right word. The arrow keys do nothing
    here. These go by the key's name (e.key), so the number pad
    with Num Lock off works too. While the page is being read all of these
-   work even in the Telugu box (Shift+arrows and the mouse still work there
+   work even in the {{LANGUAGE}} box (Shift+arrows and the mouse still work there
    as usual); in the other boxes they are left alone. */
-// A DOM range over code points [a, b) of the Telugu box's text.
+// A DOM range over code points [a, b) of the {{LANGUAGE}} box's text.
 function btRangeAt(a, b){
   const box=$("btTelugu"), range=document.createRange();
   const walk=document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
@@ -4471,7 +4823,7 @@ function btReadSentence(){
   if(!p || p.status!=="done" || READ.pi!==BATCH.sel.p || !READ.sents.length) return null;
   return READ.sents[READ.i] ? {si:READ.i, s:READ.sents[READ.i]} : null;
 }
-// Is there a selection inside the Telugu box right now? The range's text
+// Is there a selection inside the {{LANGUAGE}} box right now? The range's text
 // is read, not the selection's: that one reads "" in an unfocused window.
 function btHasSelection(){
   const s=window.getSelection();
@@ -4495,12 +4847,147 @@ function btMarkFromKeys(){
   }
   window.getSelection().removeAllRanges(); BT_LAST_RANGE=null;
 }
-/* Dragging with the RIGHT button across the Telugu box selects the text as
+/* Ctrl+Shift+6 marks the selected word or phrase as Right word — with
+   nothing selected, the word the caret is in. Pressed again straight
+   after, it takes that same mark plus the next word and marks that,
+   which replaces the shorter one (its label and issue text are kept).
+   A click in the {{LANGUAGE}} box, or a new selection, starts a fresh mark.
+   Ctrl+Shift+9 marks the whole sentence as Real Meaning: the sentence of
+   the selection, else the one being read, else the caret's, else the
+   selected correction's.
+   Ctrl+Shift+3 selects the current sentence's words one at a time: the
+   first press its first word, each press after it the next, and after
+   the last word the first again — for Ctrl+Shift+6, Insert or a reason
+   button to mark, or for typing over. The current sentence is the one
+   being read, else the caret's, else the selected correction's, else the
+   page's first. A word is selected as a double-click selects it, without
+   the punctuation or the space around it. A click in the {{LANGUAGE}} box,
+   another sentence or another page starts again at the first word. */
+let BT_GROW=null;                      // {p, f}: the mark Ctrl+Shift+6 made last
+let BT_STEP=null;                      // {p, a, k}: Ctrl+Shift+3's sentence (its start) and word
+$("btTelugu").addEventListener("mousedown", ()=>{ BT_GROW=null; BT_STEP=null; });
+// What a word is made of: letters, vowel signs and viramas, digits, ZWJ/ZWNJ.
+const BT_LETTER=/[\p{L}\p{M}\p{N}\u200c\u200d]/u;
+// Code-point offset of the caret in the {{LANGUAGE}} box, or -1.
+function btCaretPos(){
+  const s=window.getSelection();
+  if(!s || !s.rangeCount) return -1;
+  const r=s.getRangeAt(0);
+  if(!$("btTelugu").contains(r.startContainer)) return -1;
+  return btScan({node:r.startContainer, off:r.startOffset}).pos;
+}
+// Select code points [a, b) of the {{LANGUAGE}} box and mark them.
+function btMarkSpan(a, b, desc){
+  const r=btRangeAt(a, b);
+  if(!r) return null;
+  const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  BT_LAST_RANGE=r.cloneRange();
+  btMark(desc);
+  window.getSelection().removeAllRanges(); BT_LAST_RANGE=null;
+  const p=batchPage();
+  return p && BATCH.sel.f!=null ? p.findings[BATCH.sel.f] : null;
+}
+function btGrowWord(){
+  const p=batchPage();
+  if(!p || p.status!=="done"){ batchSay("Marking works on a proofed page.","warn"); return; }
+  btSyncNow();
+  const cps=Array.from(p.current), n=cps.length, ws=c=>/\s/.test(c);
+  const desc=presetDesc("Right word");
+  let f=null;
+  if(btHasSelection()){
+    btMark(desc);
+    window.getSelection().removeAllRanges(); BT_LAST_RANGE=null;
+    f=BATCH.sel.f!=null ? p.findings[BATCH.sel.f] : null;
+  }else if(BT_GROW && BT_GROW.p===p && p.findings.includes(BT_GROW.f)){
+    const g=BT_GROW.f;
+    let k=g.end;
+    // A comma or stop the mark ends just before (a word Ctrl+Shift+3 or a
+    // double-click selected) goes in with the next word, not on its own.
+    while(k<n && !ws(cps[k]) && !BT_LETTER.test(cps[k])) k++;
+    while(k<n && ws(cps[k])) k++;
+    if(k>=n){ btManSay("No word after this mark on the page.","warn"); return; }
+    while(k<n && !ws(cps[k])) k++;
+    f=btMarkSpan(g.start, k, desc);
+    if(f){
+      if(g.label==="M"+(p.manSeq-1)) p.manSeq--;   // the same mark, grown
+      f.label=g.label; f.issue=g.issue;
+      batchSave(); renderBatch();
+      btManSay("⊕ ["+f.label+"] grown by a word — Ctrl+Shift+6 again for one more.","");
+    }
+  }else{
+    const c=btCaretPos();
+    if(c<0){ btManSay("Select a word in the {{LANGUAGE}} box first.","warn"); return; }
+    let a=c, b=c;
+    while(a>0 && !ws(cps[a-1])) a--;
+    while(b<n && !ws(cps[b])) b++;
+    if(b<=a){ btManSay("Put the caret in a word, or select one.","warn"); return; }
+    f=btMarkSpan(a, b, desc);
+  }
+  BT_GROW=f ? {p, f} : null;
+}
+function btMarkSentence(){
+  const p=batchPage();
+  if(!p || p.status!=="done"){ batchSay("Marking works on a proofed page.","warn"); return; }
+  btSyncNow();
+  const cps=Array.from(p.current);
+  let span=null;
+  const r=btHasSelection() ? btSelectionOffsets() : null;
+  const cur=btReadSentence();
+  const c=btCaretPos();
+  const fs=BATCH.sel.f!=null ? p.findings[BATCH.sel.f] : null;
+  if(r) span=sentenceBounds(cps, r.start, r.end);
+  else if(cur) span=[cur.s.a, cur.s.b];
+  else if(c>=0) span=sentenceBounds(cps, c, c+1);
+  else if(fs) span=sentenceBounds(cps, fs.start, fs.end);
+  if(!span || span[1]<=span[0]){ btManSay("Put the caret in a sentence, or start the read-aloud.","warn"); return; }
+  btMarkSpan(span[0], span[1], presetDesc("Real Meaning"));
+  BT_GROW=null;
+}
+function btStepWord(){
+  const p=batchPage();
+  if(!p || p.status!=="done"){ batchSay("Marking works on a proofed page.","warn"); return; }
+  btSyncNow();
+  const cps=Array.from(p.current), sents=readSentences(p.current);
+  if(!sents.length){ btManSay("There is no sentence on this page.","warn"); return; }
+  const at=x=>sents.find(s=>x<s.b) || sents[sents.length-1];   // the sentence x is in, or the next
+  const cur=btReadSentence(), c=btCaretPos();
+  const fs=BATCH.sel.f!=null ? p.findings[BATCH.sel.f] : null;
+  // The one being read is looked up again, by its text, as the page may
+  // have been typed in since it was split up for reading.
+  const s=cur ? (sents.find(x=>x.a===cur.s.a && x.text===cur.s.text)
+                 || sents.find(x=>x.text===cur.s.text) || at(cur.s.a))
+              : c>=0 ? at(c) : fs ? at(fs.start) : sents[0];
+  const words=[];
+  for(let i=s.a; i<s.b; i++){
+    if(!BT_LETTER.test(cps[i])) continue;
+    let j=i+1;
+    // An apostrophe between letters (don't, Isha's) is part of the word.
+    while(j<s.b && (BT_LETTER.test(cps[j])
+                    || ("'’".includes(cps[j]) && j+1<s.b && BT_LETTER.test(cps[j+1])))) j++;
+    words.push([i, j]); i=j-1;
+  }
+  if(!words.length){ btManSay("There is no word in this sentence.","warn"); return; }
+  const k=BT_STEP && BT_STEP.p===p && BT_STEP.a===s.a ? (BT_STEP.k+1)%words.length : 0;
+  const r=btRangeAt(words[k][0], words[k][1]);
+  if(!r) return;
+  const box=$("btTelugu");
+  box.focus({preventScroll:true});     // shown as selected, and typing replaces it
+  const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  BT_LAST_RANGE=r.cloneRange();
+  BT_STEP={p, a:s.a, k};
+  BT_GROW=null;                        // Ctrl+Shift+6 marks this word, not grows the last mark
+  const wr=r.getBoundingClientRect(), br=box.getBoundingClientRect();
+  if(wr.top<br.top || wr.bottom>br.bottom) box.scrollTop+=wr.top-br.top-box.clientHeight/3;
+  btManSay("Word "+(k+1)+" of "+words.length
+          +(k+1<words.length ? " — Ctrl+Shift+3 for the next, Ctrl+Shift+6 to mark it."
+                             : ", the last — Ctrl+Shift+3 again goes back to the first."),"");
+}
+/* Dragging with the RIGHT button across the {{LANGUAGE}} box selects the text as
    a left drag would, and marks it as Right word the moment the button
    comes up — the deliberate gesture for marking, so an ordinary left-drag
    selection (to copy, or to edit) is never marked by accident. A right
    click without a drag marks nothing, and the browser's right-click menu
-   is not shown in the Telugu box (Ctrl+C / Ctrl+V still copy and paste).
+   is not shown in the {{LANGUAGE}} box (Ctrl+C / Ctrl+V still copy and paste).
    A selection that overlaps corrections already on the page replaces
    them, as every mark does — an AI correction's versions go with it — and
    the status line says how many were replaced.                       */
@@ -4547,14 +5034,53 @@ function btAutoMark(){
 }
 document.addEventListener("keydown", e=>{
   if($("tabBatch").hidden || !BATCH) return;
+  if(!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey && (e.key==="Insert" || e.code==="Insert")){
+    if(e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    e.preventDefault();
+    btMark(presetDesc("Right word"));
+    window.getSelection().removeAllRanges();
+    BT_LAST_RANGE=null;
+    return;
+  }
   if(e.ctrlKey && e.shiftKey && !e.altKey && (e.key==="S" || e.key==="s")){
     e.preventDefault(); btMarkFromKeys(); return;
+  }
+  // Ctrl+Shift+0…9, by e.code (Shift turns e.key into ! @ # …). They work
+  // from any box, since none of them types anything. Windows swallows the
+  // 0 of Ctrl+Shift+0 on some machines (this one included), so the Pause
+  // key stops as well — it is what Numpad 0 sends in the AutoHotkey script.
+  if(e.key==="Pause" && !e.ctrlKey && !e.altKey && !e.metaKey){
+    e.preventDefault();
+    if(!e.repeat){ if(READ.on && !READ.paused && !READ.ended) readTogglePause(); sgStop(); }
+    return;
+  }
+  if(e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && /^Digit[0-9]$/.test(e.code)){
+    e.preventDefault();
+    if(e.repeat && /^Digit[06789]$/.test(e.code)) return;    // one mark / page / stop a press
+    switch(e.code){
+      case "Digit1": enStep(1); break;               // = End
+      case "Digit2": readOnce(1); break;             // = Page Down
+      case "Digit3": btStepWord(); break;            // held, word after word
+      case "Digit4": enStep(-1); break;              // = Home
+      case "Digit5": readOnce(-1); break;            // = Page Up
+      case "Digit6": btGrowWord(); break;
+      case "Digit7": batchPrevPage(); break;
+      case "Digit8": batchNextPage(); break;
+      case "Digit9": btMarkSentence(); break;
+      // Stop: the read-aloud is paused, not ended, so ▶ Play carries on
+      // from the same sentence; the Suggestions voice stops.
+      case "Digit0":
+        if(READ.on && !READ.paused && !READ.ended) readTogglePause();
+        sgStop();
+        break;
+    }
+    return;
   }
   // By e.key, so the dedicated keys and the number pad with Num Lock off
   // both count. The arrow keys are left to the browser.
   const KEYS=["End","PageDown","Home","PageUp"];
   if(!KEYS.includes(e.key) || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
-  // The Telugu box is often where the keys land, so while its page is
+  // The {{LANGUAGE}} box is often where the keys land, so while its page is
   // being read the keys work there too. Any other box being typed in
   // keeps them.
   const t=e.target, reading=READ.on && READ.pi===BATCH.sel.p;
@@ -4562,9 +5088,9 @@ document.addEventListener("keydown", e=>{
   if(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))
      && !(inTelugu && reading)) return;
   e.preventDefault();
-  if(e.key==="End") readOnce(-1);
+  if(e.key==="PageUp") readOnce(-1);
   else if(e.key==="PageDown") readOnce(1);
-  else if(e.key==="PageUp") enStep(1);
+  else if(e.key==="End") enStep(1);
   else if(e.key==="Home") enStep(-1);
 });
 

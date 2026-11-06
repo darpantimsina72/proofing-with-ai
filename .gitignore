@@ -16,3 +16,8 @@ drive_key.json
 *.bak*
 __pycache__/
 Dropped Audio/
+
+# per-machine choice (which language the app is in) and files made for the reviewer
+App_Settings.json
+reports/
+.DS_Store

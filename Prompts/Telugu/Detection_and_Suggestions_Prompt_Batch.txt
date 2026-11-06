@@ -1,0 +1,364 @@
+Assume that you are a thoughtful Telugu reader reading the Telugu edition of a book by Sadhguru.
+
+Below I am giving one page of that book: the Telugu translation, and the original English of the same page.
+In the input they arrive under two headings - "English transcript" is the English original of this page, and "Telugu dubbing script" is the Telugu translation of this page. The names are historical; there is no video and no audio here.
+
+This Telugu has ALREADY been translated and proofed by another AI. So it is usually fluent on the surface, and the problems that are left tend to be quieter ones: a meaning that shifted, a detail that was dropped, a phrase that reads correctly but says the wrong thing. Hold a high bar. Flag what a careful editor would actually change - not mere preferences, and not things that are already fine.
+
+A single word is a valid item. On a fluent page most of what an editor changes is one word: a word in the wrong sense, a word that is not this book's term (see THIS BOOK'S TERMS), a word weaker or stronger than the English, or a vague stand-in for a specific English word. These are errors, not preferences - flag each one on its own, as a one- or two-word item, without widening it to the sentence.
+What IS a mere preference: swapping a correct word for a near-synonym only because it is closer to the English or has a slightly different shade. Flag a word only when you can say what a Telugu reader would misread, find odd, or miss in it here. Two sentences that each have a problem are two items, not one - and so are two separate problems in one sentence, unless they share words. A wrong word and an added word a few words apart (మమేకం for "involve", and a లోపలికి the English does not have) are two short items, not one clause-long item. Word-level items come on top of the sentence-level checks, never instead of them: every sentence still gets the meaning check (types 10 to 13) and the grammar check (type 16), and a page with many word fixes can still have a sentence that says the wrong thing. A sentence-level item is still marked on the words that carry its problem - the verb with the wrong mood, the connective, the clause that is missing or wrong - and covers the whole sentence only when the fix truly needs the whole sentence rebuilt (broken flow, English word order, a meaning that has to be said again).
+
+The page is one piece of a longer book, cut at page boundaries. Its first or last sentence may start or end part way through. Do not flag a sentence only because it is cut off at the start or the end of the page.
+
+Now you will be doing two steps.
+1. Detection - first read the Telugu on its own, then check it against the English
+2. Suggestions - use the English to arrive at proper alternatives
+
+
+THIS BOOK'S TERMS
+Sadhguru uses some ordinary English words as fixed terms. This book has settled one Telugu rendering for each of them, listed below. Treat them as terms even where they look like everyday words.
+- In detection, flag any other rendering of these English words, even when it is good Telugu. Never flag these renderings as formal, Sanskritised or technical.
+- In every suggestion, use exactly these renderings.
+- When the passage sets two English words against each other (involvement vs identification, project vs invest, react vs respond, personality vs presence), they must never share one Telugu word.
+
+presence (as a quality: "the less personality, the more presence"; the presence of a Guru, of the yogis, of the sacred) - సాన్నిధ్యం. ఉనికి for existing or being there, and for the presence of an object or an ordinary person.
+life - జీవం where it is life itself, which no one owns: aliveness, life-forms, the life process, "a dimension of life", "a grade of life", life set against death or against thought and emotion, life that moves, is suppressed or is experienced ("the suppression of life", "this life and that life", "the life that you are"); "your being" - మీ జీవం. జీవితం where it is a life as lived - its span, course, events or quality: "your life", "cling to life", "the most wonderful life", "the pleasantness of life", "life is not like that" said of how things turn out. ప్రాణం for staying alive ("life-giving", "sustain my life"). In compounds - జీవ / జీవన ప్రక్రియ, భౌతిక జీవనం; "life and death" as two states - జీవన్మరణాలు.
+possibility (what a Guru, life or a human being is or opens up) - సంభావ్యత. A chance, "there is a possibility that…", an opportunity - అవకాశం. "not a possibility" meaning it cannot be done ("that first option is not a possibility") - సాధ్యం కాదు, not సంభావ్యత కాదు.
+openness, open - సుముఖత / అంగీకార భావం. "available" to Grace - అందుబాటులో.
+receptivity, receptive - గ్రహణశీలత / స్వీకరణా సామర్థ్యం / స్వీకార భావన.
+involvement, involve - నిమగ్నత, నిమగ్నమవ్వడం. Not మమేకం.
+identification, identified with - గుర్తింపు ఏర్పరచుకోవడం; "a deep identification" - లోతైన గుర్తింపు. Never గుర్తింపు పొందడం (being recognised), గుర్తించుకోవడం, కలిసిపోవడం or మమేకం.
+awareness - ఎరుక
+conscious, consciously (doing something in awareness) - ఎరుకతో, never స్పృహతో. unconscious, unconsciously - అచేతనంగా / అచేతన / ఎరుకలేని స్థితిలో / ఎరుక లేకుండా; "without knowing it", in everyday choices - తెలియకుండానే. "conscious of" or "aware of" a particular thing - తెలియడం (మీరేం చేశారో మీకు తెలిస్తే). consciousness (the faculty) - చైతన్యం, not ఎరుక. "a sense of time" - కాలం గురించిన స్పృహ.
+intensity, intense - తీక్షణత, తీక్షణమైన for intensity as a quality of a person, of emotion or awareness, or of how fully something is lived. తీవ్ర is right for intense physical activity, work and effort - do not flag it. Intense love or meditation - (ప్ర)గాఢ.
+passion - అభిరుచి
+integrity - నిబద్ధత
+intellect - బుద్ధి / తర్కబుద్ధి / విచక్షణా బుద్ధి; intellectually - బుద్ధితో. intelligence - మేధస్సు.
+the One Who Knows - జ్ఞాని
+dimension - పార్శ్వం, never పరిమాణం. arena - తలం.
+Master, Masters (meaning Gurus) - గురువు, గురువులు, not మాస్టర్. But a questioner addressing Sadhguru as "Master" - మాస్టర్ stays.
+live Guru - ప్రత్యక్ష గురువు
+the elements - పంచభూతాలు
+rigid, concretize (energies, a person) - కరుడుగట్టడం
+reverberation - ప్రకంపన
+project (onto something) - ఆపాదించడం. invest (energy, life) - జోడించడం / వెచ్చించడం.
+sincere, sincerity - నిజాయితీ
+expectation - ఆశ / అపేక్ష, never అంచనా. expect (hope for) - ఆశలు పెట్టుకోవడం; expect (anticipate: "what can we expect") - ఏం ఎదురవ్వొచ్చు. aspire - ఆకాంక్షించడం.
+privilege - భాగ్యం / అదృష్టం (opportunity is అవకాశం)
+manageable / unmanageable (madness) - అదుపులో ఉండే / అదుపుతప్పిన
+authoritarian - ఆధిపత్య ధోరణి
+corner (someone) - ఇరుకున పెట్టడం
+benevolence - దాతృత్వం
+flux - నిరంతర మార్పు
+combination (of energies, things) - మిశ్రమం / కలయిక, not సమ్మేళనం
+austerity - కఠోర నియమాలు / నియమనిష్టలు, not కృచ్ఛ్రసాధన
+react, where Sadhguru sets it against respond - రియాక్ట్ అవ్వడం / ప్రతిచర్య, never ప్రతిస్పందించడం, which is respond. Where respond is not in play, ప్రతిస్పందించడం for react is fine.
+human being(s), humans - మనిషి, మనుషులు (a generic "humans" takes the singular: మనిషి … జీవించగలడు); not మానవుడు, మానవులు. మానవ stays in compounds; మానవాళి, మానవత్వం stay.
+program (at Isha: Isha Yoga, Samyama, the advanced programs) - ప్రోగ్రామ్, అడ్వాన్స్‌డ్ ప్రోగ్రామ్‌లు, in teaching passages too; not కార్యక్రమం.
+time as a dimension or a duration - కాలం; a point in time - సమయం. "X percent of the time" - X శాతం సందర్భాల్లో.
+allotted karma (Prarabdha) - ప్రారబ్ధ కర్మ; "allotments" - కేటాయింపులు.
+work out, dissolve (karma) - కరిగించుకోవడం, కరిగిపోవడం; not పరిష్కరించుకోవడం or ఖర్చైపోవడం.
+accumulate, gather, acquire (karma, impressions) - పోగుచేసుకోవడం, పోగుపడటం; not సేకరించడం. సంచితం is Sanchita karma, not "an accumulation".
+karmic structure - కర్మ నిర్మాణం; karmic body - కర్మ శరీరం; karmic substance - కర్మ పదార్థం. Never కర్మ రాశి for any of them.
+Ultimate (Nature, Liberation) - పరమోన్నత, not పరమోత్తమ.
+Liberation, mukti - ముక్తి; "freedom" - స్వేచ్ఛ; "free from X" - X నుండి విముక్తి.
+tendencies - ప్రవృత్తులు, not వాసనలు.
+compulsive, compulsively (Sadhguru's sense: compulsive action, a compulsive way of being) - నిర్బంధ, నిర్బంధంగా; an everyday habit ("compulsive gambling") - అదుపులేని.
+duty, dutiful - కర్తవ్యం, కర్తవ్య పరాయణులు; obligations - బాధ్యతలు.
+suppression of one's own urges - అణచుకోవడం; "the suppression of life" - అణచివేయడం.
+practice (spiritual) - సాధన, not అభ్యాసం.
+yoga (the noun) - యోగా; in compounds యోగ (యోగ శాస్త్రం, యోగ క్రియలు); Karma Yoga - కర్మయోగం.
+mystic, mystics - మార్మికుడు, మార్మికులు; not యోగి or మిస్టిక్.
+Enlightened, Realized beings - జ్ఞానులు.
+the Devil (Christian context) - సైతాను; the Devil's agent - సైతాను దూత; a Divine agent - దైవదూత. "a demon" stays రాక్షసుడు.
+dissolve (a being, into the Ultimate) - లయమవ్వడం.
+bondage - బంధనం; attachment - మమకారం.
+energy body - శక్తి శరీరం.
+misconception, fallacy - అపోహ.
+sign, indicator - సంకేతం, not సూచిక.
+self-image - తన గురించి ఏర్పరచుకున్న భావన.
+perception, perceive - by sense. The reach of one's perception (what is or is not in it, its limits) and "perceivable" - గ్రాహ్యం / గ్రాహ్యత: "not yet in one's perception" - ఇంకా ఒకరి గ్రాహ్యంలో లేని; "beyond your limitations of perception" - మీకు గ్రాహ్యమయ్యే పరిధులను దాటి; "it is not perceivable" - అది మన గ్రాహ్యతకు అందనిది. Perception as the faculty itself, one's capacity to perceive - గ్రహణ శక్తి: "enhancing one's perception" - గ్రహణ శక్తిని విస్తరించుకోవడం. Perception as a view or understanding of something - అవగాహన, and in no other sense: "wrong perception about chakras" - చక్రాల గురించిన తప్పుడు అవగాహన. perceive - గోచరం కావడం: "he is not able to perceive anything" - అతనికి ఏదీ గోచరం కావడం లేదు. "clarity of perception" - విషయాలను స్పష్టంగా చూడగలిగే సామర్థ్యం.
+madness, mad, crazy - వెర్రి where it is being crazy, beyond normal reasoning (crazy enough to take the jump; the madness that all entertainment hides); పిచ్చి where it is madness as a disease, a mental inability (a mental asylum - పిచ్చాసుపత్రి; people thought he had gone mad - ఆయనకు పిచ్చి పట్టిందని భావించారు).
+we, our, us - మనం / మన / మనకు in general statements; మేము / మా / మాకు when Sadhguru speaks about himself or a specific group of people (Isha, his teachers, the yogic tradition).
+trust - విశ్వాసం ("you need deep trust" - మీకు ప్రగాఢమైన విశ్వాసం అవసరం); belief, believe - నమ్మకం.
+longing - తపన, not వాంఛ ("the natural longing of life to expand" - విస్తరించాలనే జీవపు సహజ తపన).
+sanity, sane - స్థిమితం, మతి స్థిమితం; not వివేకం ("perfectly sane" - పూర్తిగా మతి స్థిమితంతో).
+bother (meaning worry) - ఆందోళన పడటం: "don't bother about your chakras" - మీ చక్రాల గురించి ఆందోళన పడకండి; not పట్టించుకోకండి.
+alignment - సమన్వయం.
+volunteers - వాలంటీర్లు.
+friction - ఘర్షణ.
+engineering, Inner Engineering - ఇంజినీరింగ్, ఇన్నర్ ఇంజినీరింగ్; never ఇంజనీరింగ్.
+
+
+Detection:
+
+Note: do this in three passes, and work through all of them before you answer.
+
+Pass 1 - THE TELUGU ON ITS OWN. Do not look at the English yet. Read the page the way a Telugu reader would, and identify where the reading stumbles:
+
+1. Flow
+Identify the sentences that read like broken chunks or are not properly closed. Often Sadhguru first states the main point and then adds to it, or says one long sentence that adds detail after detail before it closes. When a translation keeps every segment in the English order, the Telugu can read as a string of fragments. Identify these.
+
+2. Intention
+Identify the sentences or phrases that seem like the odd man in the room - they do not naturally say something related to the context around them. These are usually literal translations that do not carry what the speaker actually meant.
+
+3. Generic words in place of contextually rich words
+A word that is correct but flat, where a more specific word would convey what is actually meant.
+Watch especially for these Telugu stand-ins. Each often sits where the English says something more specific - read the English and check:
+- స్థితి - the English may say arena, dimension, level, situation or space, or have no "state" at all ("beyond the physical" is భౌతికమైన దానికి, not భౌతిక స్థితికి; "from one dimension to the other" is ఒక పార్శ్వం నుండి మరొక పార్శ్వానికి)
+- సాధ్యపడు - work, open up, happen ("it did not work here" is వర్కవుట్ కాలేదు; "it will not open up" is తెరుచుకోదు)
+- శక్తి - empowerment (సాధికారత), faculties
+- జోక్యం - intrude (చొరబడటం)
+- మమేకం - involve (నిమగ్నమవ్వడం), identify (గుర్తింపు ఏర్పరచుకోవడం) and relate are three different things
+- an everyday word for one of Sadhguru's concepts: "knowing will never happen through a book" is about realisation - సాక్షాత్కారం, not తెలుసుకోవడం
+- రాశి ("heap") is not a catch-all for Sadhguru's karma words: "karmic structure" కర్మ నిర్మాణం, "a body of memory" స్మృతి భాండాగారం, "stock" నిల్వ, "an accumulation" కూడబెట్టడం, "a catalog" జాబితా
+
+4. An ending that is not connected to the rest of the sentence
+The last part or phrase of the sentence does not connect to what came before it in the sentence.
+
+5. Register
+This is a book, and its register follows what is being said.
+- Teaching passages: clear, modern written Telugu. Flag rare, learned words a general reader would stumble on (కృచ్ఛ్రసాధన, ప్రక్షేపణం, ఆత్మాశ్రయ, ఉన్మాద స్థితి, సమ్మిశ్రిత, సర్వజనీన, సంవేదన, దార్ఢ్యం, ఆయామం, దిగ్భ్రమ, తదుపరి, అనునిత్యం, రూపరహిత) in favour of a word in common use. Sadhguru's concept terms - THIS BOOK'S TERMS, and words like సాన్నిధ్యం, సాక్షాత్కారం, తీక్షణత - are not Grandhika even though they come from Sanskrit. Never flag them as formal, and never trade them for a plainer word that loses the concept.
+- Stories, jokes, quoted dialogue, the questioner's words and Sadhguru's asides: everyday Telugu. A formal word or a long formal paraphrase there is the error. "emotionally blackmail her" is "ఎమోషనల్‌గా బ్లాక్‌మెయిల్ చేసేవాళ్ళం", not "భావోద్వేగాలతో లొంగదీసుకోవాలని చూసేవాళ్ళం". Where Telugu speakers use the English word itself - జోక్, ప్రోగ్రామ్, క్లాసు, బిజీ, మిస్ అవ్వడం, మూడ్, హ్యాండిల్, వర్కవుట్ - a stiff Telugu coinage (హాస్యాస్పదం for "a joke") is the error. Everyday Telugu is about the words, not the pronoun: Sadhguru's "you" stays మీరు (type 15).
+- Never crude or slangy, even in a story.
+- Anywhere on the page, a modern or technical thing that Telugu readers know by its English name is written in English, in Telugu script: ప్రోగ్రామ్ (an Isha program), మైక్రోస్కోప్, జెనెటిక్స్, ఫిట్‌నెస్, ఫాస్ట్-ఫార్వర్డ్.
+- Do not bring in an English word for a spiritual or abstract idea, unless Telugu has no word that keeps a distinction Sadhguru is making (react, as against respond).
+
+6. Contextual phrasing and action shifts
+Phrases where a direct translation slightly shifts the meaning, emphasis or idiom of the action.
+Example: "Great storyteller" translated as "గొప్ప కథలు చెప్పేవారు" (teller of great stories) misses the action. It should be flagged to change to "కథలు గొప్పగా చెప్పేవారు" (telling stories greatly).
+Example: "Never be the same" translated as "ఒకేలా ఉండదు" (will not be identical) should be flagged to change to "మునుపటిలా ఉండదు" (will not be like before).
+Images work in both directions.
+- Keep Sadhguru's image when Telugu can carry it: "can you ride it a little bit?" - "దానిపై కాస్త స్వారీ చేయగలరా?"; "if your doors are open" - "మీ ద్వారాలు తెరిచి ఉంటే"; "I am poking at them" - "గిల్లుతూనే"; "throw yourself into the river" - "విసిరేసుకుంటే".
+- When the literal image is foreign in Telugu, use the Telugu idiom: "the carrot and stick" - "సామదండాలు"; "resented this" - "జీర్ణించుకోలేకపోయేవారు"; "I am taking you for a ride" - "ఏమారుస్తున్నాను".
+- Flag either kind when it has been flattened into a plain verb or replaced by an interpretation: "మీ అంతరంగం సిద్ధంగా ఉంటే" for "if your doors are open", "విమర్శిస్తూనే" for "poking", "సాధ్యపడదు" for "it will not open up".
+Set phrases. A fixed English phrase is one unit of meaning, not a string of words - say what it means the way Telugu says it:
+- "This is far from the truth" - ఏమాత్రం నిజం కాదు; "the jaws of death" - మృత్యు కోరలు; "somewhere along the way" - కాలక్రమంలో; "ninety-five percent of the time" - 95 శాతం సందర్భాల్లో
+- "the moment X" - X-న మరుక్షణం; "where is the question of X" - X ప్రసక్తే లేదు; "in the process" - ఆ క్రమంలో, not ఆ ప్రక్రియలో; "in terms of X" - X విషయానికొస్తే, not X పరంగా; "it does not matter" - ముఖ్యం కాదు
+- "Can you see…?" - చూశారా…?; "sit back defeated" - చేతులెత్తేసి కూర్చోవడం; "shatter illusions" - భ్రమలను పటాపంచలు చేయడం
+- "there is no way to X" means X cannot happen - X సాధ్యం కాదు. "X-కు వేరే మార్గం లేదు" says the opposite: there is no OTHER way.
+- an English repetition ("waited and waited") is a Telugu reduplication with its result - ఎదురుచూసి చూసి అలసిపోయారు. That result is not an addition.
+
+7. A dictionary word where Telugu uses a different one (colloquial word, not the literal one)
+The Telugu uses the word-for-word dictionary equivalent of the English word, but in this context a Telugu speaker would naturally use a different word. The word is not wrong in general - it is wrong here. Work out from the context what is actually being referred to, then ask what Telugu calls THAT. This is not the same as type 3: there the word is right but flat; here it is the wrong word for this context.
+Example: "snakes and their symbols", where the symbols are carved or installed images of snakes, translated as "పాముల గుర్తులు". గుర్తులు means marks or signs; for images of a snake Telugu says "విగ్రహాలు" or "మూర్తులు".
+More of the same kind - a word with several senses, given in its first dictionary sense. This is as common with abstract nouns, adjectives and verbs as with objects:
+- "a hundred times more sterile" - పరిశుద్ధంగా (germ-free), not పవిత్రంగా (holy)
+- "total calm" - ప్రశాంతత, not నిశ్శబ్దం
+- "used in many different, very loose ways" - బాధ్యతారహితంగా, not అస్పష్టంగా
+- "he could not refuse the offer" (to take his place) - ఆ సహాయాన్ని, not ఆ ప్రతిపాదనను
+- "the reminder comes" - గుర్తు, not హెచ్చరిక
+- "what does it cost to get married?" - మూల్యం, not ఖర్చు
+- "a bear trap" - ఉచ్చు, not బోను
+- "the consequence" - పర్యవసానం / పరిణామం, not ఫలితం (result)
+- "incomplete" - అసంపూర్తి (unfinished), not అసంపూర్ణం (imperfect)
+- "absurd" - హాస్యాస్పదం; "nonsense" - పనికిమాలిన; not అర్థరహితం (meaningless)
+- "physical" meaning bodily (pleasure, pain, energy) - శారీరక, not భౌతిక
+- a child who acts (chooses its parents, dies, goes to school) - పిల్లాడు, పిల్లలు; బిడ్డ is a baby
+- "Once this distinction comes" (between you and your body) - తేడా, not విభజన
+- "I see that it is not dissolved" (meaning I know) - తెలుసు, not చూస్తున్నాను
+- "a little space between you and your body" - ఎడం, not శూన్యం
+- "ensure" - జరిగేలా చూడటం, not నిర్ధారించడం
+- "patterns" (of behaviour, karma) - ధోరణులు / పోకడలు, not పద్ధతులు
+- "goes unexplored" - ఎవరూ అన్వేషించరు, not ఎవరూ స్పృశించరు ("no one touches it")
+- "if your energies predominate in these centres" - ప్రబలమైతే, not ఆధిపత్యం వహిస్తే (political dominance)
+One word in the wrong sense is enough to flag.
+
+8. Context-appropriate synonyms
+Of two near-synonyms, the Telugu has used the one that does not fit how Telugu says it in this context. Watch especially the everyday verbs - of saying, telling, calling, knowing, seeing, making, doing - where English uses one word and Telugu chooses between several.
+Example: "they say" in the sense of how something is called, or what people commonly hold to be true, is "అంటున్నారు" / "అంటారు" - not "చెప్తున్నారు" / "చెప్తారు". చెప్పడం is telling something to someone; అనడం is how a name, a saying or a common belief is reported.
+Other everyday verbs where English uses one word and Telugu chooses:
+- requested, pleaded, prayed - in a story, అన్నాడు, వేడుకున్నాడు, not అభ్యర్థించాడు, ప్రార్థించాడు
+- answer - బదులివ్వడం, not స్పందించడం
+- know a person - పరిచయం ఉండటం; "you will not get it" - బోధపడదు
+- feel, experience (Sadhguru, an energy, life, pain, an inner state) - అనుభూతి చెందడం, not అనుభవించడం or స్పర్శించడం
+- look into, look at, go through - పరిశీలించడం
+- remember (your being) - గుర్తుచేసుకోవడం, not గుర్తుంచుకోవడం
+- struggling with - సతమతమవ్వడం, not పోరాడటం
+- "you will find / notice / see that X" - …అని మీకు తెలుస్తుంది / అర్థమవుతుంది, not మీరు గమనిస్తారు / చూస్తారు; "there seems to be" - తోస్తోంది, not కనిపిస్తోంది; "would sound like a fairytale" - అనిపించవచ్చు
+- determine the nature of something - నిర్దేశించడం; decide whether - నిర్ణయించడం
+- "they say" reporting a finding (researchers say) - చెబుతున్నారు; అంటారు stays for sayings and names
+Quotations: the verb that reports a quotation comes after it, with అని - "…" అని అన్నాడు, "…" అని బతిమాలాడు. Flag "X ఇలా అన్నాడు, "…"" and a quotation left with no verb after it. The verb that closes a quotation or an అని-clause is a form of అనడం (అన్నాడు, అంటూ, అని అంటారు), not చెప్పడం. "When we say X" is "X అన్నప్పుడు".
+
+
+9. English sentence structure carried into the Telugu
+The words are right, but they stand in the English order, so the sentence reads like a translation. Telugu has its own structure and it comes first: what qualifies something - the reason, cause, condition, time, place or manner - usually comes before what it qualifies, and the main point settles at the end with the verb.
+Example: "This is very important for many reasons" translated as "ఇది అనేక కారణాల వల్ల చాలా ముఖ్యమైనది" keeps the English order. Telugu says "అనేక కారణాల వల్ల ఇది చాలా ముఖ్యమైనది".
+But a sentence does not stand alone. Keep its joins with its neighbours intact: what links back to the previous sentence stays near the start, and what the next sentence picks up stays where the next sentence can reach it. Do not reorder a sentence into one that reads well by itself but no longer flows from the sentence before or into the sentence after - when the two pull against each other, find the order that satisfies both.
+Flag only when the English order actually makes the Telugu read like a translation - not when it is merely one of several natural Telugu orders.
+Other English shapes that read as translation:
+- "There are some X who…" - కొందరు X ఉంటారు, వారు…
+- "He knows that…", "Modern physics says that…" - the knower or sayer first, and the verb of knowing or saying once, at the end.
+- an English abstract noun or -ly adverb that Telugu says with a verb: "a helpless dependence" - నిస్సహాయంగా ఆధారపడటం.
+- an English ellipsis left incomplete: "Shiva can contain it, not you" - "…మీరు అలా చేయలేరు".
+- "moment to moment" - క్షణం క్షణం, not క్షణం నుండి క్షణానికి.
+- a list whose last item the English joins with "and": write the join - ఇంకా, అలాగే, or -ఊ … -ఊ for a pair (జ్ఞాపకశక్తి, ఊహాశక్తుల - జ్ఞాపకశక్తి ఇంకా ఊహాశక్తుల). A bare comma reads broken. "again" meaning "also" is అలాగే, not మళ్ళీ.
+- an English passive that names its doer, or a -బడు passive where Telugu has its own verb or the doer is people in general: make the doer the subject, or use the Telugu verb ("is determined by your past patterns" - మీ గత ధోరణులే నిర్ణయిస్తున్నాయి; "is seen as" - …అని భావిస్తారు; "is molded" - రూపుదిద్దుకుంది). Leave the passives Telugu uses itself (అని పిలవబడే).
+- "you have / become more X" for a state or a faculty takes the మీకు form - మీకు ఎరుక పెరుగుతుంది, మీకు నిద్ర పట్టదు; "as you become more and more X" - X పెరిగే కొద్దీ.
+- an action done to or for oneself takes -కొను (సృష్టించుకుంటారు, వదిలించుకోవచ్చు); two states at once take -తూ (ఆహ్లాదంగా ఉంటూ, not ఉండి).
+- "It is not that X" - X అని కాదు; "Once you X" - ఒక్కసారి X-ారంటే; "has a way of", "has" - …ఉంది, not …కలిగి ఉంది.
+- "X or Y", "whether X or Y", X and Y after a negative - X-ఓ… Y-ఓ, X గానీ… Y గానీ, X-నా సరే… Y-నా సరే; not X లేదా Y.
+- "Do X, and Y", "all it takes is X" - X చేస్తే (చాలు), Y.
+- one root for a word and its opposite: "form" and "formless" - రూపం, రూపం లేని; "bound" and "boundless" - హద్దులు ఉండటం, హద్దులు లేకపోవడం.
+
+14. English grammar words carried into the Telugu
+Telugu leaves out what English grammar has to say. Flag these; the fix is to delete:
+- a subject pronoun or possessive (మీరు, వారు, అతను, మనం, మీ, తన) that the verb ending or the context already gives
+- ఒక for English "a" (ఒక సన్యాసి దాదాపు ఎప్పుడూ ఆకలితోనే ఉంటాడు - సన్యాసి దాదాపు ఎప్పుడూ…)
+- ఆ / ఈ for "the" / "this" where nothing is being pointed at
+- అక్కడ / ఇక్కడ from "there is" / "here is" - "There is no 'you' right now" is ప్రస్తుతం "మీరు" అనేదే లేదు, not ప్రస్తుతం అక్కడ "మీరు" అనేదే లేదు
+- a reflexive written twice where it reads doubled (మిమ్మల్ని మీరు మీ అంతిమ పరిమితి వరకు నెట్టుకోండి - మీ అంతిమ పరిమితి వరకు నెట్టుకోండి). మిమ్మల్ని మీరు with a -కొను verb is often natural - flag it only where the sentence stumbles on it.
+- spoken fillers translated word for word: "just", "simply", "you know", "then" after an if-clause, "I think" in a remark. Keep కేవలం only where "just" means "merely"; "just" meaning "for no reason" is ఊరికే, "that is all" is …అంతే, "easily" is ఇట్టే.
+- యొక్క for "of" or "'s": Telugu joins the nouns directly (ఆ వ్యక్తి యొక్క కర్మ - ఆ వ్యక్తి కర్మ), makes a compound (శరీరం యొక్క పరిమాణం - శరీర పరిమాణం), or uses -పు, తాలూకు or a case ending (ఒక వ్యక్తి యొక్క - ఒకరి). Keep it only where a word between the two nouns would otherwise attach to the wrong one.
+- English generic "one", "a person", "a child", "humans": no ఒక వ్యక్తి, ఒకరు, ఒక బిడ్డ. Keep the passage's మీరు, or say it generically (ఎవరినైనా, పిల్లల్లో, మన, మనిషి with a singular verb). Never turn Sadhguru's "you" into ఆ వ్యక్తి.
+- "anything" after a negative - ఏదీ / ఏమీ; "something" - ఏదో; ఏదైనా means "any at all".
+
+15. Respect and person
+- When Sadhguru says "you" - to the reader, to his listeners, to a questioner, or "you" meaning anyone - it is మీరు, with its forms (మీ, మిమ్మల్ని, మీకు, మీరే) and verb endings (చేస్తారు, చేయండి). This holds almost without exception: in teaching, in stories and in jokes alike. Never flag a మీరు form, and never change one into నువ్వు, నీ, నిన్ను or a నువ్వు verb form (చేస్తావు, చెయ్యి) - not in detection, not in any version. Where the Telugu has నువ్వు or నీ for Sadhguru's own "you", flag it: the fix is మీరు.
+- The only నువ్వు to leave alone is one the translation already has inside a story, between its own characters (a man to his wife, a parent to a child, friends). A quoted speech keeps one form throughout. Anyone addressing a king, a god, a Guru or an elder - మీరు. Never bring in a new నువ్వు for Sadhguru's "you".
+- An ordinary seeker or person in the third person is అతను or ఆమె; Gurus, saints and Sadhguru are ఆయన. Characters in a story or joke - a driver, a policeman, a footballer, any famous person who is not a spiritual figure - are అతను, with -ాడు verbs (అన్నాడు, not అన్నారు). Leave Shankaran Pillai as the page has him.
+- Sadhguru's "we", "our", "us": మనం / మన / మనకు in general statements; మేము / మా / మాకు when he speaks about himself or a specific group of people - Isha, the programs, his teachers, the yogic tradition.
+- Goddesses take దేవి (పార్వతీ దేవి). A woman who asks a question is సాధకురాలు, not సాధకుడు. No గారు after a name or title the English gives bare (రామకృష్ణ పరమహంస గారు, పోప్ గారు) - the verb ending already carries the respect.
+
+16. Spelling and grammar
+A misspelt word, a word split by a space (చూసి నప్పుడు), or two words run together is its own item, with the corrected spelling as every version. Never bundle a spelling fix into a wording change - if the wording is rejected, the spelling fix is lost with it. An English gloss in brackets never separates a word from its suffix, and an English loan word is written together with its suffix (టెంట్‌లో).
+Also check these forms, which read smoothly but are wrong: a noun describing another noun takes its oblique form (రాతి బుడగ, not రాయి బుడగ); a noun in -ం keeps it before a suffix (ధ్యానలింగంలో, not ధ్యానలింగలో); తనంతట తానుగా is for a person - for a thing, దానంతట అదే / వాటంతట అవే; animals are neuter (రెండూ ఒకదానికొకటి); the verb agrees with "a person" even where the English says "they"; a loan word takes one plural (రెసిడెంట్లు, not రెసిడెంట్సులు); నేను takes కాను, not కాదు.
+A word, sentence or paragraph that appears twice in a row, the second copy adding nothing, is its own item - delete the repeat, even when the English itself has it twice (a leftover from editing). Sadhguru's deliberate repetition for emphasis stays.
+A sentence left unfinished - an అని, an …ఏమిటంటే or a quotation that never closes - is its own item, and so is a wrong case ending (ఒకదానితో మరొకటి కొట్టాలి - ఒకదాన్ని మరొకదానితో కొట్టాలి).
+
+Pass 2 - THE TELUGU AGAINST THE ENGLISH. Now read the English, and check the Telugu against it, sentence by sentence. This pass is for what the Telugu alone cannot show you:
+
+10. Omissions
+A clause, qualifier, example, name, number or detail that is in the English and missing from the Telugu - especially small words that change the sense, such as "only", "not", "almost", "sometimes", "never".
+The small words are not only these five. Also: yet, all, also, nor, anyway, at all, anymore, even if, altogether, other, every bit, a single, any number of, certain (meaning "a specific"), could, most probably; the speaker's own frame ("I would say"); an adjective on a key noun ("compulsive gambling" - అదుపులేని జూదం); and steps of degree ("pretty strong" is కాస్త ఎక్కువ బలంగానే, not చాలా శక్తివంతంగా).
+Also own (సొంత), even (ఆఖరికి, -ఐనా), "a certain level" (ఒక నిర్దిష్ట స్థాయి, not కొంత), "so-called", and comparatives ("much deeper" - మరింత లోతుగా).
+But do not flag as omitted a word whose sense the Telugu already carries, or an emphatic doublet that adds nothing in Telugu ("the cells… at the cellular level", "Something, somehow"). When the English explains an Indian word for English readers ("Liberation, or mukti"; "Vasana literally means smell"), the Telugu says the Indian word once (ముక్తి) - the dropped explanation is not an omission.
+
+11. Additions
+Something in the Telugu that is not in the English and changes or colours what is being said.
+This includes small colourings that read as harmless fluency:
+- an intensifier or adjective the English does not have - ఎంతో, నిజమైన, అసలైన, నిరంతర, నిత్య, పూర్తి, ప్రత్యేకమైన, మరింత, తగినంత, కేవలం ("It is not love" is అది ప్రేమ కాదు, not అది నిజమైన ప్రేమ కాదు)
+- an emphatic -ఏ (కోసమే, నాతోనే, శరీరంలోనే) where the English has no "only", "itself" or "very" and no contrast. A contrastive -ఏ ("you… not the people around you" - మీరే) is not an addition.
+- "tries to" added to a plain verb ("it will run away" is పారిపోతుంది, not పారిపోవడానికి ప్రయత్నిస్తుంది)
+- two renderings of one English word joined by లేదా
+- స్థితి, అనుభూతి or another interpreting word added to a plain English noun
+- a word that interprets the English ("many things may come up" is ఎన్నో విషయాలు ఎదురుకావచ్చు, not ఎన్నో అడ్డంకులు రావచ్చు)
+- an explanation inside the text ("nervous energy" is నాడీ శక్తి, not నరాల ఉద్రిక్తతకు కారణమయ్యే నాడీ శక్తి), "only" said twice (ఏకైక … మాత్రమే), and a spoken restatement said twice
+
+12. Meaning shifts
+The Telugu reads well but says something different from the English: the wrong subject or object, a reversed or lost negation, a different tense or condition, a cause turned into an effect, a statement turned into a question or the other way round, a figurative expression taken literally.
+Check mood as well as tense: "can be" (కాగలదు) is not "is"; "don't" (అందుకోరు) is not "can't" (అందుకోలేరు); "are" is not "may be" (కావచ్చు); "the way is there" (ఉంది) is not "will be seen" (కనిపిస్తుంది); "by now" (ఈపాటికి) is not "at least now" (ఇప్పటికైనా). Aspect too: "is yet to happen" - జరిగి ఉండదు; "should have written" - రాసుంటే. And the force of "should" and "one": "it should be me" (it is bound to be me) - అది నేనే అయి ఉండాలి, not అది నేనే కావాలి (a wish); "This is one reason" - ఇది ఒక కారణం, not అందుకే ("that is why").
+Check force as well as sense - the Telugu word must be as blunt or as mild as the English: "slaughter" వధించడం, not బలి ఇవ్వడం; "it invades you" ఆక్రమించేస్తుంది, not ఆవరించేస్తుంది; "nonsense" చెత్త; "starve yourself" మాడ్చుకోవడం. But "some people will run away" (from the ashram) వెళ్లిపోవచ్చు, not పారిపోవచ్చు; "becoming corrupt" దారి తప్పుతున్నాడని, not భ్రష్టుడైపోతున్నాడని.
+
+13. Terms
+A spiritual or technical term, or an idiom, rendered with the wrong sense; or the same English term rendered in different ways on this one page without a reason.
+Terms are not checked within this page only. Use THIS BOOK'S TERMS, and check a recurring English word even when the page renders it the same way every time - a consistent wrong word is still wrong ("involve" given as మమేకం ten times on one page). Two English words set against each other on the page must not share one Telugu word. Check the reverse too: different English terms must not share one Telugu word (కర్మ రాశి used for "karmic structure", "karmic body" and "karmic substance"; ఎరుక used for "consciousness").
+
+Within each sentence, go through the English content words one by one - nouns, verbs, adjectives, adverbs. Decide which sense each word has in THIS sentence, and check that the Telugu word carries that sense and is this book's term. Do this for the sentences that read well too: a single wrong word inside a fluent sentence is the most common thing the reviewer has to fix by hand.
+
+Check types 7, 8 and 9 again here as well. For 7 and 8, the English often shows what a word was meant to refer to, and so which Telugu word fits. For 9, it shows which words belong together, so you can tell an English order that was carried over from a free Telugu one.
+
+Do not flag a sentence in this pass just because its Telugu wording does not follow the English word order or structure. A free translation that says the same thing is correct.
+
+
+Pass 3 - THE OVERSHADOWED ONES. Treat everything from passes 1 and 2 as already handled and set it aside, then read the page again from the start, Telugu and English together. This pass is for the quieter problem sitting next to a louder one, the joins between the sentences you did NOT pick, and the sentences that only read badly because of the sentence before them. It is also where you read each sentence whole once more, after all the word-level items: does it still say what the English says - its mood ("it should be me", "this is one reason"), its small words ("always", "in turn") - and does it close? Reading a sentence whole does not mean marking it whole: mark only the words that carry the problem (కావాలి, అందుకే, the ending that does not close). Hold the same bar as before - do not lower it just to find more. Finding nothing in this pass is a valid result.
+
+
+WHAT NOT TO FLAG
+The reviewer put the original back for these, so do not report them:
+- A free or idiomatic rendering that makes the same point as the English in its own way - a Telugu idiom, a different image, a word that fits the context, a small link to the next sentence. "more easily said than done" as "కానీ ఇది చెప్పినంత సులభం కాదు" is right; do not turn it back into the English wording. Before calling something a meaning shift, ask whether a Telugu reader would come away with a different idea than an English reader. If not, leave it, even when the words differ. This protects a free rendering - not a literal rendering of an English figure or set phrase that reads as translated.
+- A correct word swapped for a near-synonym only because it is closer to the English or has a slightly different shade. "Fits better", "more natural" or "slightly" is not a reason. But a word in a different sense is not a shade - flag it however small the difference looks (ఇప్పటికీ, "even now", for "still" meaning "nevertheless"; పట్టీ, "strip", for "bundle"). And flag a word when the English pairs it with another on the page ("shallow" and "depth" - లోతు లేని, లోతు).
+- THIS BOOK'S TERMS and other settled renderings (ప్రత్యక్ష గురువు, పంచభూతాలు, జనన మరణ చక్రాలు). Never flag them as formal, technical or Sanskritised.
+- మీరు, మీ, మిమ్మల్ని, మీకు and the మీరు verb endings for "you" (type 15).
+- An English word in brackets after a Sadhguru concept, a coined or technical name, a foreign custom, product or drug, or a pun - కృప (Grace), ప్రతిష్ఠాపన (consecration), లోలకం (pendulum), (Marlboro man). It is a deliberate gloss. Remove one only when it repeats a transliteration (మాస్టర్ (Master)), repeats a gloss given earlier on the page, follows an everyday word whose Telugu is plain (సమాచారం (information), శక్తి (energy), పద్ధతులు (patterns)), or is not in the English at all. A gloss never protects the word before it: if that word misses the English sense (వాసనలు (tendencies)), flag the word.
+- Two English sentences given as one Telugu sentence, or one as two, when nothing is lost; or an order that is one of several natural Telugu orders.
+- Spacing, paragraph breaks and stray quote marks on their own.
+- Anything whose Version 1 would read the same as the original.
+- A literal sentence that is natural Telugu (అది మీ గురించి), and a pronoun the translation has already resolved to its noun (ఆ ఇష్టం).
+- A -కొను verb for something that happens to one's own body (ఎముకలు విరగొట్టుకునే).
+- An unfinished phrase in the English (a leftover from editing) - do not restore it.
+
+
+All passes go into ONE list. Do not report the passes separately, do not label which pass an item came from, and do not output an earlier list on its own before the final one. Return the combined list in the order the sentences appear in the Telugu.
+
+No two items may cover the same words. If something from a later pass overlaps or sits inside an earlier item, do not drop either one and do not report them as two - merge them into a SINGLE item that runs from the start of the earlier one to the end of the later one, and write one description that names both problems. The merged item must still be one continuous quote copied from the Telugu. Only merge items that genuinely share words - if two items merely sit next to each other, leave them as two. Do not widen a sentence-level item over a one-word item just to merge them: mark the sentence-level problem on its own words, so the two stay separate.
+
+For each sentence or phrase that is identified, write a one line description of what the issue is. When the issue is with faithfulness to the English (types 10 to 13), say what is missing, added or shifted, so the reviewer can see it at a glance.
+
+
+Suggestions:
+You are a master bilingual translator and editor working on the Telugu edition of a book by Sadhguru. You are fluent in the philosophical nuance of his English and in clear, natural, modern written Telugu.
+
+For each identified sentence you must return three suggested versions.
+
+
+HOW TO READ THE ENGLISH
+The English is there so you understand exactly what is being said and what the speaker intends - and, for types 10 to 13, so you can restore what was lost or shifted. Its punctuation and sentence structure carry no information for you. Do not copy the English full stops, commas, hyphens or word order into the Telugu. Write the Telugu the way Telugu wants to be written.
+
+
+PUNCTUATION IN THE TELUGU
+This is a book. Punctuation in the Telugu - full stops, commas, … ; and - - is ordinary written punctuation. It does NOT mark pauses, timing or audio of any kind. Keep the existing punctuation where it is fine, and change it only where the fix you are making needs it to change.
+
+
+THE THREE VERSIONS
+The three versions are three different degrees of change, from the least to the most. They are NOT ranked - the reviewer picks the one that suits the book. Every one of the three must fix the issue that was identified. A version that leaves the problem in place is not a valid version.
+
+Version 1 - the smallest change.
+Copy the identified text word for word and change only the words that carry the problem in your description. Every other word, ending, connective, spelling and bracket, and the word order, stays as it is - even a word you would not have chosen yourself. Do not swap a correct word for a synonym, make a word plainer, replace a loan word, add a యొక్క, or reorder, unless that is the problem. If your description names a replacement, use exactly that replacement.
+"Smallest" is not "closest to the English wording". The words Version 1 brings in must be the ones a Telugu writer uses for this sense here: the Telugu idiom for an English idiom, the verb that fits the context, this book's term. Never a word-for-word rendering of the English word or phrase, a word built from its parts (అనుభవ పరిధి for "exposure", అనాహ్లాదకరం for "unpleasant"), its word order or its sentence breaks. Use an English word, in Telugu script, only for a modern or technical thing Telugu readers know by that name (ప్రోగ్రామ్, మైక్రోస్కోప్) - never for an idea. Where the problem is one of meaning (types 10 to 13), Version 1 restores the English meaning - in Telugu words.
+Version 1 must still read as correct Telugu: if your change needs a neighbouring word to change with it (agreement, a case ending - a subject changed to అవి takes గ్రహించగలవు, not గ్రహించగలరు), change that too. If your description names a problem of structure - no main verb, a subject dropped and picked up again, కలిగి ఉంది, an English phrase shape - Version 1 rebuilds that clause; swapping one word inside it is not a fix.
+
+Version 2 - the most natural reading flow.
+Rework the sentence as a fluent Telugu writer would write it, so it reads smoothly in the context of the page, while keeping exactly the meaning of the English. Re-order clauses, merge or split phrases, and choose better words as needed.
+
+Version 3 - the freest idiomatic Telugu.
+The turn of phrase a native Telugu writer would reach for - often a Telugu idiom. Restructure as needed; split a long sentence into shorter ones only when that is what makes it clear. It may move furthest from the English structure - but never from its meaning, and it must not add anything that is not in the English.
+
+For an item of one or two words, all three versions are one or two words, and each is a different choice: Version 1 the word a Telugu writer uses for this sense, Version 2 a natural alternative, Version 3 the Telugu idiom if there is one.
+
+
+LANGUAGE
+Write clear, natural, modern written Telugu - the language of a good Telugu book today.
+- Use THIS BOOK'S TERMS exactly.
+- For every word you bring in, decide which sense the English word has in THIS sentence and write the Telugu word for that sense. Abstract nouns, adjectives and small words go wrong most: "distinction" - తేడా, not విభజన; "I see that…" meaning I know - తెలుసు; "the terrible rut" - ఊబి, not చక్రం.
+- No English phrase shape: a set phrase has its own Telugu phrase ("far from the truth" - ఏమాత్రం నిజం కాదు; "the moment X" - X-న మరుక్షణం; "predict doom" - ఏదో ఘోరం జరగబోతోందని జోస్యం చెప్పడం).
+- Keep the mood of the English: "it should be me" (bound to be) - అది నేనే అయి ఉండాలి, not కావాలి (a wish); "can be" - కాగలదు, not "is"; "This is one reason" - ఇది ఒక కారణం, not అందుకే.
+- Teaching passages: clear written Telugu, without rare learned words a general reader would stumble on. Sadhguru's concept terms are not such words.
+- Stories, jokes, dialogue and asides: everyday Telugu, with the English words Telugu speakers actually use there (జోక్, ప్రోగ్రామ్, బిజీ, మిస్ అవ్వడం). Never crude or slangy.
+- Sadhguru's "you" is మీరు in every version - మీ, మిమ్మల్ని, మీకు, and verbs like చేస్తారు, చేయండి - even in a story or a joke. Never write నువ్వు, నీ, నిన్ను or a నువ్వు verb form (చేస్తావు, చెయ్యి) for it. Keep a నువ్వు only where the text you are replacing already has it between a story's own characters.
+- Add nothing the English does not have: no intensifier, no emphatic -ఏ, no కూడా / కలిసి / ఇక / మళ్ళీ, no adjective, no explanation, no new యొక్క, and do not name what a pronoun refers to unless the English names it or the Telugu would be unclear without it. Say a spoken restatement once.
+- Keep every small qualifier of the English in all three versions - anymore (ఇక), also (కూడా), even (ఆఖరికి), even if (…అయినా సరే), altogether (పూర్తిగా), like (లాంటిది), own (సొంత), much deeper (మరింత లోతుగా). Versions 2 and 3 must not lose them while rewriting.
+- Each version is one finished reading: no "X/Y", no "X లేదా Y" for one English word, no second word in brackets.
+- Use the word Telugu actually uses for this thing in this context, not the dictionary equivalent of the English word (images of snakes are విగ్రహాలు or మూర్తులు, not గుర్తులు).
+- Among near-synonyms, choose the one that fits how Telugu says it here ("they say" as in what something is called is అంటారు, not చెప్తారు).
+- Follow Telugu sentence structure, not the English one: qualifiers before what they qualify, the main point at the end (అనేక కారణాల వల్ల ఇది చాలా ముఖ్యమైనది, not ఇది అనేక కారణాల వల్ల చాలా ముఖ్యమైనది) - while keeping each sentence joined to the ones before and after it.
+
+
+FOR EACH IDENTIFIED SENTENCE, RETURN THESE SIX THINGS, IN THIS ORDER
+1. The corresponding sentence from the English, exactly as it appears there - copied word for word. Do not translate the Telugu back into English, and do not paraphrase, shorten, re-order or tidy the English wording.
+2. The detected sentence/phrase, exactly as it appears in the Telugu.
+3. The description of the detected issue.
+4. Suggestion Version 1 (the portion that would exactly replace the selected part of the sentence)
+5. Suggestion Version 2 (the portion that would exactly replace the selected part of the sentence)
+6. Suggestion Version 3 (the portion that would exactly replace the selected part of the sentence)
+
+
+WHAT EACH VERSION MUST COVER
+
+Whichever version the reviewer picks REPLACES the identified text in the page, word for word. Nothing around it is touched. So every version has to be a complete drop-in replacement for exactly the text you identified - starting where that text starts and ending where that text ends.
+
+Do not return only the part you changed. If the identified Telugu text has five clauses and only the last one is wrong, every version still contains all five: the four that were already fine, carried across as they were, plus the fixed one.
+
+Do not drop anything off the front or the back. Nothing that was in the identified text may simply disappear from your version - unless removing it IS the fix (a redundant word, a repeated pronoun, or something added that is not in the English), and even then any meaning it was rightly carrying still has to be there.
+
+Do not reach beyond it either. Do not pull in the sentence before it or the sentence after it, even if that would make your version read better on its own. If the fix for an omission needs words from a neighbouring sentence, identify the larger span in detection instead.
+
+Read the words just before and just after the identified text, and make the version join them: it must not repeat a word that already stands outside it (a version that begins with అది right after "…అది" makes "అది అది"), and its last word must take the form the next word needs.
+
+This holds at whatever size you identified. If you identified a whole sentence, your versions are whole sentences. If you identified only a phrase or a part of a sentence, your versions are phrases that slot into that exact spot - not the whole rewritten sentence. The full page is given above for context: use it to understand the surroundings, never to extend or shrink what you return.
+
+Before you answer, read each version back against the identified text it replaces and against the English. Check that everything in the original is still accounted for - carried across, or deliberately changed as part of the fix; that nothing has been added that is not in the English; and that every small qualifier of the English is still there. Then compare Version 1 with the original word by word and undo every change you cannot tie to your description. Spell-check every version.
+
+Always return all three versions, even when one of them suits that particular sentence less well - the reviewer picks which to use.
+
+Do not add explanation, analysis or commentary of your own - only the items above, in the JSON shape described next.

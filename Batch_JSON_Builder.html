@@ -3,9 +3,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Batch JSON Builder</title>
 <!-- Builds the input file for the Batch section of Proofing with AI: a JSON
-     list of entries, each with "Page Number", "English Script" and "Telugu
-     Script". Runs entirely in the browser from this one file - nothing that
-     is pasted here is sent anywhere. -->
+     list of entries, each with "Page Number", "English Script" and
+     "<Language> Script" (Telugu Script, Hindi Script …, by the language
+     picked at the top). Runs entirely in the browser from this one file -
+     nothing that is pasted here is sent anywhere. -->
 <style>
 :root{
   --bg:#e8eef5; --panel:#fff; --border:#cbd5e1; --text:#1e293b; --muted:#64748b;
@@ -59,7 +60,10 @@ textarea.empty{background:#fffbeb;border-color:#fde68a}
 
 <div class="hdr">
   <b>BATCH JSON BUILDER</b>
-  <span class="sub">Makes the input file for the Batch section &mdash; Page Number, English Script, Telugu Script. Nothing you paste leaves this browser.</span>
+  <span class="sub">Makes the input file for the Batch section &mdash; Page Number, English Script, <span id="langKey">Telugu</span> Script. Nothing you paste leaves this browser.</span>
+  <label>Language <select id="lang" title="The language of the translation column — names the column and the key in the file">
+    <option>Telugu</option><option>Tamil</option><option>Hindi</option><option>Kannada</option>
+  </select></label>
 </div>
 
 <div class="panel">
@@ -82,14 +86,22 @@ textarea.empty{background:#fffbeb;border-color:#fde68a}
 
 <table>
   <colgroup><col class="c-pg"><col><col><col class="c-x"></colgroup>
-  <thead><tr><th>Page</th><th>English text</th><th>Telugu text</th><th></th></tr></thead>
+  <thead><tr><th>Page</th><th>English text</th><th><span id="langCol">Telugu</span> text</th><th></th></tr></thead>
   <tbody id="rows"></tbody>
 </table>
 
 <script>
 const $=id=>document.getElementById(id);
 const DRAFT_KEY="batchJsonBuilder.draft.v1";
-let ROWS=[];        // [{page, english, telugu}]
+let ROWS=[];        // [{page, english, telugu}]  — "telugu" is the translation, whatever the language
+const LANG_TAGS={Telugu:"te",Tamil:"ta",Hindi:"hi",Kannada:"kn"};
+const lang=()=>$("lang").value;
+function showLang(){
+  $("langKey").textContent=lang(); $("langCol").textContent=lang();
+  for(const ta of document.querySelectorAll("textarea[data-tr]")){
+    ta.placeholder="Paste the "+lang()+" for this page"; ta.lang=LANG_TAGS[lang()]||"";
+  }
+}
 const ADD_HINT="Entries are added below; page numbers count up from the starting page.";
 
 const say=(el,m,c)=>{ el.textContent=m; el.className="status "+(c||""); };
@@ -97,7 +109,7 @@ const say=(el,m,c)=>{ el.textContent=m; el.className="status "+(c||""); };
 /* ---- the draft survives a closed tab --------------------------------- */
 function saveDraft(){
   try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(
-         {rows:ROWS, start:$("start").value, fname:$("fname").value})); }
+         {rows:ROWS, start:$("start").value, fname:$("fname").value, lang:lang()})); }
   catch(e){ /* storage blocked: the page still works, it just will not remember */ }
 }
 function loadDraft(){
@@ -105,6 +117,7 @@ function loadDraft(){
     const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");
     if(!d || !Array.isArray(d.rows)) return;
     ROWS=d.rows; if(d.start) $("start").value=d.start; if(d.fname) $("fname").value=d.fname;
+    if(d.lang && [...$("lang").options].some(o=>o.value===d.lang)) $("lang").value=d.lang;
     if(ROWS.length) say($("status"),"Restored "+ROWS.length+" entr"+(ROWS.length===1?"y":"ies")+" from your last visit.","ok");
   }catch(e){}
 }
@@ -123,7 +136,7 @@ function render(){
     tr.innerHTML=
       '<td class="pg"><input type="text" value=""></td>'+
       '<td><textarea placeholder="Paste the English for this page" spellcheck="true"></textarea><div class="count"></div></td>'+
-      '<td><textarea placeholder="Paste the Telugu for this page" spellcheck="false" lang="te"></textarea><div class="count"></div></td>'+
+      '<td><textarea data-tr placeholder="Paste the '+lang()+' for this page" spellcheck="false" lang="'+(LANG_TAGS[lang()]||"")+'"></textarea><div class="count"></div></td>'+
       '<td><button class="rm" title="Remove this entry">&#10006;</button></td>';
     const [pg]=tr.querySelectorAll("input"), [en,te]=tr.querySelectorAll("textarea"),
           [cEn,cTe]=tr.querySelectorAll(".count");
@@ -185,7 +198,7 @@ $("bMake").onclick=()=>{
   const pages=ROWS.map(r=>String(r.page).trim()).filter(Boolean);
   const dups=[...new Set(pages.filter((p,i)=>pages.indexOf(p)!==i))];
   const problems=[];
-  if(noTe.length) problems.push("no Telugu on page "+noTe.join(", ")+" — the batch will mark these as failed");
+  if(noTe.length) problems.push("no "+lang()+" on page "+noTe.join(", ")+" — the batch will mark these as failed");
   if(noEn.length) problems.push("no English on page "+noEn.join(", ")+" — proofing works much worse without it");
   if(noPg) problems.push(noPg+" entr"+(noPg===1?"y has":"ies have")+" no page number");
   if(dups.length) problems.push("page "+dups.join(", ")+" appears more than once");
@@ -193,7 +206,7 @@ $("bMake").onclick=()=>{
 
   const data=ROWS.map(r=>({"Page Number":asPage(r.page),
                            "English Script":r.english.trim(),
-                           "Telugu Script":r.telugu.trim()}));
+                           [lang()+" Script"]:r.telugu.trim()}));
   let name=($("fname").value||"Book_batch").trim().replace(/[<>:"/\\|?*]/g,"");
   if(!/\.json$/i.test(name)) name+=".json";
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
@@ -208,6 +221,17 @@ $("bMake").onclick=()=>{
 /* Reopen a file made earlier — same keys, matched loosely, as the batch reads them. */
 const key=k=>String(k).toLowerCase().replace(/[^a-z]/g,"");
 function field(o,names){ for(const k of Object.keys(o)) if(names.includes(key(k))) return o[k]; }
+// The translation column: "<Language> Script" for any language, or the old names.
+function trField(o){
+  const known=["teluguscript","tamilscript","hindiscript","kannadascript","telugu","tamil","hindi","kannada",
+               "targetscript","translationscript","translation"];
+  const v=field(o,known); if(v!==undefined) return v;
+  for(const k of Object.keys(o)){ const n=key(k); if(n.endsWith("script")&&n!=="englishscript") return o[k]; }
+}
+function langOf(o){
+  for(const k of Object.keys(o)){ const n=key(k);
+    for(const L of Object.keys(LANG_TAGS)) if(n===L.toLowerCase()+"script"||n===L.toLowerCase()) return L; }
+}
 $("bOpen").onclick=()=>$("pick").click();
 $("pick").onchange=async function(){
   const f=this.files[0]; this.value="";
@@ -221,8 +245,9 @@ $("pick").onchange=async function(){
       const p=field(o,["pagenumber","page","pageno"]);
       return {page:p===undefined||p===null?String(i+1):String(p),
               english:String(field(o,["englishscript","english"])||""),
-              telugu:String(field(o,["teluguscript","telugu"])||"")};
+              telugu:String(trField(o)||"")};
     });
+    const seen=d.map(langOf).find(Boolean); if(seen) $("lang").value=seen;
     if(!rows.length) throw new Error("no entries in it");
     if(ROWS.length && !confirm("Opening "+f.name+" replaces the "+ROWS.length+" entr"
         +(ROWS.length===1?"y":"ies")+" here. Continue?")) return;
@@ -243,7 +268,8 @@ $("bClear").onclick=()=>{
   say($("status"),"Cleared.","");
 };
 $("fname").oninput=saveDraft;
+$("lang").onchange=()=>{ showLang(); saveDraft(); };
 
-loadDraft(); render();
+loadDraft(); render(); showLang();
 </script>
 </body></html>
