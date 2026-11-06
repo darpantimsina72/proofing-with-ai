@@ -50,10 +50,17 @@ BASE_URL = "https://offeringschat.isha.in/"
 gemini_client.OPENROUTER_BASE_URL = BASE_URL
 gemini_client.OPENROUTER_URL = gemini_client._openrouter_endpoint(BASE_URL)
 
-NEEDED = ("index.html", "Detection_Prompt.txt", "Get_Suggestions_Prompt.txt",
-          "Detection_and_Suggestions_Prompt.txt",
-          "Custom_Text_Translation_Prompt.txt",
-          "server.py", "review_core.py", "gemini_client.py")
+# The prompts live in Prompts/<Language>/ (see Prompts/README.md); the
+# template folder is what every language is made from, so it is the one
+# that has to be here.
+NEEDED = ("index.html", "server.py", "review_core.py", "gemini_client.py",
+          "sync_helper.py", "tts.py", "_voices_literal.py",
+          os.path.join("Prompts", "_template", "Detection_Prompt.txt"),
+          os.path.join("Prompts", "_template", "Get_Suggestions_Prompt.txt"),
+          os.path.join("Prompts", "_template",
+                       "Detection_and_Suggestions_Prompt.txt"),
+          os.path.join("Prompts", "_template",
+                       "Custom_Text_Translation_Prompt.txt"))
 
 
 def main():
@@ -90,14 +97,15 @@ def main():
     url = srv.start()
 
     print(f"\n   folder : {HERE}")
-    print(f"   gemini : {mode}  ({gemini_client.KEY_FILES[mode]})")
+    print(f"   language: {srv.language}  (prompts in Prompts/{srv.language})")
+    print(f"   gemini  : {mode}  ({gemini_client.KEY_FILES[mode]})")
     if mode == "OPENROUTER":
-        print(f"   gateway: {gemini_client.OPENROUTER_URL}")
+        print(f"   gateway : {gemini_client.OPENROUTER_URL}")
     if len(modes) > 1:
         others = [m for m in modes if m != mode]
         print(f"            (also available: {', '.join(others)} — pass one "
               f"as an argument to switch)")
-    print(f"   url    : {url}")
+    print(f"   url     : {url}")
 
     srv.open_browser()
     print("\nOpened in your browser.")
