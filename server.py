@@ -16,6 +16,8 @@ import json
 import os
 import re
 import time
+import sys
+import subprocess
 import urllib.request
 import urllib.error
 import secrets
@@ -468,9 +470,19 @@ class ProofingServer:
 
     def _ask_open_path(self, title="Load pages — a batch JSON, or its progress file",
                        initialdir=None):
-        """A Windows file dialog, on top of the browser. Its own hidden Tk
-        root, made and destroyed in this request's thread, so nothing Tk
-        outlives the call; one at a time."""
+        """A file dialog, on top of the browser; one at a time.
+
+        On a Mac it is the system's own Choose File dialog, through
+        osascript: Tk cannot be used here, because macOS lets only a
+        program's main thread open a window, and this runs in a request's
+        thread — Tk there kills the whole app (abort, "Python quit
+        unexpectedly"). On Windows, its own hidden Tk root, made and
+        destroyed in this request's thread, so nothing Tk outlives the
+        call."""
+        start = initialdir or (os.path.dirname(self.batch_path)
+                               if self.batch_path else None)
+        if sys.platform == "darwin":
+            return self._ask_open_path_mac(title, start)
         import tkinter as tk
         from tkinter import filedialog
         with self._dialog_lock:
@@ -486,6 +498,26 @@ class ProofingServer:
                     filetypes=[("JSON", "*.json"), ("All files", "*.*")]) or ""
             finally:
                 root.destroy()
+
+    def _ask_open_path_mac(self, title, initialdir=None):
+        """The macOS Choose File dialog; "" when cancelled."""
+        def q(text):                      # an AppleScript string literal
+            return '"' + str(text).replace("\\", "\\\\").replace('"', '\\"') + '"'
+        script = "POSIX path of (choose file with prompt " + q(title)
+        if initialdir and os.path.isdir(initialdir):
+            script += " default location (POSIX file " + q(initialdir) + ")"
+        script += ")"
+        # "activate" brings the dialog in front of the browser.
+        script = "activate\nreturn " + script
+        with self._dialog_lock:
+            r = subprocess.run(["osascript", "-e", script],
+                               capture_output=True, text=True)
+        if r.returncode != 0:            # cancelled (-128), or no dialog
+            if "-128" in (r.stderr or ""):
+                return ""
+            raise RuntimeError("the file dialog did not open: "
+                               + (r.stderr or "").strip())
+        return r.stdout.strip()
 
     def act_batch_pick(self):
         """Load pages: choose a file, and report what it is.
