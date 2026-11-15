@@ -16,6 +16,22 @@ is the language picked in the LANGUAGE panel at the top of the page
 
 Edit the file in the language's own folder. That is the copy the app reads.
 
+## `Extra_Checks.txt` — the team's points to check after proofing
+
+A language folder may also hold `Extra_Checks.txt`: that language team's own
+list of things to check on every page (Hindi, Kannada and Telugu have one;
+Tamil has none yet). The app adds it to every detection prompt, so the AI
+flags those problems on top of its usual ones, and to the Get suggestions
+prompts as house style for the versions it writes. It has no template — a
+language without the file simply has no extra checks.
+
+The mechanical points of the Hindi and Kannada lists (no space around a
+hyphen, one kind of inverted comma per page, and for Hindi: no nukta in Urdu
+words, chandrabindu, सद्‌गुरु / अद्‌भुत / जरूरी) are also applied by code, in
+`house_style.py`, after the AI has answered: each one becomes its own
+"House style:" finding, with the fix applied, which the reviewer can undo
+like any other. Editing a rule there means editing that file.
+
 ## `_template/` — the language-neutral masters
 
 `Prompts/_template/` holds a language-neutral version of each file, with

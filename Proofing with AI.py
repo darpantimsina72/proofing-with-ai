@@ -54,7 +54,7 @@ gemini_client.OPENROUTER_URL = gemini_client._openrouter_endpoint(BASE_URL)
 # template folder is what every language is made from, so it is the one
 # that has to be here.
 NEEDED = ("index.html", "server.py", "review_core.py", "gemini_client.py",
-          "sync_helper.py", "tts.py", "_voices_literal.py",
+          "sync_helper.py", "tts.py", "_voices_literal.py", "house_style.py",
           os.path.join("Prompts", "_template", "Detection_Prompt.txt"),
           os.path.join("Prompts", "_template", "Get_Suggestions_Prompt.txt"),
           os.path.join("Prompts", "_template",

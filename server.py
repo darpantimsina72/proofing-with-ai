@@ -28,6 +28,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
 import gemini_client
+import house_style
 import keystore
 import review_core as core
 import sync_helper
@@ -50,6 +51,14 @@ BATCH_SUGG_PROMPT = "Get_Suggestions_Prompt_Batch.txt"
 # BATCH_ONESHOT_PROMPT at {{BOOK_TERMS}}.
 SYNC_PROMPT = "Sync_With_Final_English_Prompt_Batch.txt"
 TRANSLATE_PROMPT = "Custom_Text_Translation_Prompt.txt"
+# Each language team's "points to check after proofing": added to every
+# detection prompt, and to the suggestion prompts as house style for the
+# versions. Only Prompts/<language>/ has one — no template; a language
+# without the file has no extra checks. The mechanical points are also
+# applied by code (house_style.py).
+EXTRA_CHECKS = "Extra_Checks.txt"
+DETECTION_PROMPTS = (DETECT_PROMPT, ONESHOT_PROMPT, BATCH_ONESHOT_PROMPT)
+SUGGESTION_PROMPTS = (SUGGEST_PROMPT, BATCH_SUGG_PROMPT)
 # One folder of prompts per language: Prompts/Telugu, Prompts/Hindi … A
 # language whose folder is missing a prompt gets it made from the
 # language-neutral master in Prompts/_template (see load_prompt).
@@ -97,6 +106,16 @@ def load_prompt(name, language):
         return body
     with open(path, "r", encoding="utf-8") as fh:
         return fill_language(fh.read(), language)
+
+
+def load_extra_checks(language):
+    """The language team's extra checks, or "" when it has none."""
+    try:
+        with open(prompt_path(EXTRA_CHECKS, language), "r",
+                  encoding="utf-8") as fh:
+            return fill_language(fh.read(), language).strip()
+    except FileNotFoundError:
+        return ""
 
 
 def load_app_language():
@@ -205,8 +224,17 @@ class ProofingServer:
         webbrowser.open(self.url())
 
     def _run(self, text, prompt_name, contract):
-        body = (load_prompt(prompt_name, self.language)
-                + fill_language(contract, self.language))
+        body = load_prompt(prompt_name, self.language)
+        extra = load_extra_checks(self.language)
+        if extra and prompt_name in DETECTION_PROMPTS:
+            body += "\n\n\n" + extra + "\n"
+        elif extra and prompt_name in SUGGESTION_PROMPTS:
+            body += ("\n\n\nHOUSE STYLE FOR THE VERSIONS\n"
+                     "The points below are the team's checks for the whole "
+                     "page. In this job do not add new items: only make "
+                     "every version you write follow them.\n\n"
+                     + extra + "\n")
+        body += fill_language(contract, self.language)
         return gemini_client.run_prompt(text, body, self.mode, self.model)
 
     # ── actions ──────────────────────────────────────────────────────────
@@ -859,7 +887,8 @@ class ProofingServer:
 
         with self._lock:
             self.session.reset_findings("ai")
-            missed, applied = self._place_oneshot(self.session, items)
+            missed, applied = self._place_oneshot(self.session, items,
+                                                  self.language)
             state = self.session.as_json()
         state["missed"] = [{"text": m["text"], "issue": m["issue"]}
                            for m in missed]
@@ -877,9 +906,13 @@ class ProofingServer:
         return items, note, raw
 
     @staticmethod
-    def _place_oneshot(session, items):
+    def _place_oneshot(session, items, language):
         """Locate every item in `session`, hang its versions on it, then put
-        Version 1 in place. Returns (missed, applied)."""
+        Version 1 in place. Returns (missed, applied).
+
+        The versions are put in the language's house style, and every
+        house-style problem left outside them becomes a finding of its own
+        (see house_style.py), applied the same way."""
         used = [(f["start"], f["end"]) for f in session.findings]
         missed = []
         for it in items:
@@ -890,8 +923,9 @@ class ProofingServer:
             used.append(span)
             f = session.new_finding(span[0], span[1], it["issue"], "ai")
             f["english"] = it["english"]
-            f["options"] = core.keep_end_mark(session.telugu[span[0]:span[1]],
-                                              it["suggestions"][:3])
+            f["options"] = [house_style.fix(v, language) for v in
+                            core.keep_end_mark(session.telugu[span[0]:span[1]],
+                                               it["suggestions"][:3])]
         # Applied after every span is placed: apply_version shifts the
         # spans that follow it, and locating against a script that was
         # already being rewritten would put later findings in the wrong
@@ -901,6 +935,18 @@ class ProofingServer:
             if f["options"]:
                 session.apply_version(f["id"], f["options"][0])
                 applied += 1
+        used = [(f["start"], f["end"]) for f in session.findings]
+        style = []
+        for s, e, fixed, issue in house_style.problems(session.telugu,
+                                                       language):
+            if any(s < b and a < e for a, b in used):
+                continue
+            f = session.new_finding(s, e, issue, "ai")
+            f["options"] = [fixed]
+            style.append(f)
+        for f in style:
+            session.apply_version(f["id"], f["options"][0])
+            applied += 1
         return missed, applied
 
     def act_batch_oneshot(self, english, telugu):
@@ -923,7 +969,7 @@ class ProofingServer:
 
         sess = core.Session()
         sess.english, sess.telugu = english, telugu
-        missed, applied = self._place_oneshot(sess, items)
+        missed, applied = self._place_oneshot(sess, items, self.language)
         state = sess.as_json()
         state["missed"] = [{"text": m["text"], "issue": m["issue"]}
                            for m in missed]
@@ -971,8 +1017,9 @@ class ProofingServer:
                 item = by_n.get(n)
                 if f is None or item is None:
                     continue
-                f["options"] = core.keep_end_mark(f["current"],
-                                                  item["suggestions"][:3])
+                f["options"] = [house_style.fix(v, self.language) for v in
+                                core.keep_end_mark(f["current"],
+                                                   item["suggestions"][:3])]
                 f["english"] = core.english_from(en_sents, item)
                 f["gesture_en"] = item.get("gesture_en", "")
                 filled += 1
@@ -1018,8 +1065,9 @@ class ProofingServer:
         for i in range(1, len(items) + 1):
             g = by_n.get(i)
             results.append({} if g is None else {
-                "suggestions": core.keep_end_mark(items[i - 1]["text"],
-                                                  g["suggestions"][:3]),
+                "suggestions": [house_style.fix(v, self.language) for v in
+                                core.keep_end_mark(items[i - 1]["text"],
+                                                   g["suggestions"][:3])],
                 "english": core.english_from(en_sents, g)})
         return {"results": results}
 

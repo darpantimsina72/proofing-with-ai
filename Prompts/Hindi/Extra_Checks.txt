@@ -1,0 +1,28 @@
+THIS BOOK'S HINDI HOUSE STYLE - EXTRA CHECKS
+The Hindi team checks every page for the points below after proofing. Check them too, on top of everything above. Each problem you find is its own item, marked on the words that carry it, with the fix in every version. Where these points and WHAT NOT TO FLAG disagree (spacing, quote marks), these points win.
+
+1. Chandrabindu. A nasal vowel is written with chandrabindu (ँ), not with anusvara (ं): हूँ, यहाँ, वहाँ, कहाँ, माँ, आँख, गाँव, पाँच, साँस, पहुँच, मुँह, कहानियाँ, जाऊँ. Flag one written with ं. Leave ं where it is right: over a top matra (हैं, में, नहीं, क्यों) and where it stands for a nasal consonant (शांत, संबंध, अंदर, पंडित).
+
+2. Inverted commas. The page uses one kind of inverted comma - all curly (‘ ’ and “ ”) or all straight (' and ") - not both. Flag the ones that differ from the rest of the page. A quotation that opens must close with the same kind.
+
+3. Anything that feels off or odd to a Hindi reader - flag it and say what is odd.
+
+4. Hindi grammar - gender and number agreement, case endings (ने, को, से, में), verb forms, the order of a reported quotation.
+
+5. Repeated content. A word, phrase or sentence said twice where the English says it once. Version 1 removes the repeat.
+
+6. Missing translation. A sentence, clause, detail or footnote of the English with no Hindi at all. Mark the Hindi sentence next to the gap, and give it in every version with the missing part translated into it.
+
+7. Spelling and typos - a wrong matra, a missing or extra letter, a word split by a space, two words run together.
+
+8. Speaker labels. Every paragraph spoken by Sadhguru starts with "सद्‌गुरु:" and every paragraph spoken by the seeker starts with "साधक:". Flag a label that is missing, misspelt, or a different word (प्रश्नकर्ता, जिज्ञासु, सद्‌गुरुजी:). The label is put in bold in the final book; bold is not visible here, so check only that the label is there and correct.
+
+9. Question numbers. The paragraph that opens a NEW question starts with its number, then the label: "58. साधक:". A follow-up from the same seeker in the same exchange takes no number. Flag a new question with no number, and give the number that follows the previous numbered question on this page (or comes before the next one). If the page does not show which number it is, do not guess - leave it.
+
+10. Hyphen. No space before or after a hyphen: "कभी-कभी", not "कभी - कभी". A hyphen used as a dash between two clauses also takes no spaces.
+
+11. These spellings: जरूरी (not जरुरी), सद्‌गुरु (with the halant showing, not सद्गुरु), अद्‌भुत (not अद्भुत).
+
+12. Nukta. Urdu-origin words are written WITHOUT the nukta: खयाल, फरिश्ता, चीज, जिंदा, ज्यादा, जमानत, जब्त, जोर, मजदूर, जेवर - not ख़याल, फ़रिश्ता, चीज़, ज़िन्दा, ज़्यादा, ज़मानत, ज़ब्त, ज़ोर, मज़दूर, ज़ेवर. The dot under ड़ and ढ़ belongs to Hindi words and STAYS: लड़का, गाड़ी, पकड़, पेड़, पढ़ना, चढ़ना, बढ़ना, बाढ़, सीढ़ी.
+
+Every version you write, for any item, follows points 1, 2, 10, 11 and 12.

@@ -1,0 +1,22 @@
+THIS BOOK'S KANNADA HOUSE STYLE - EXTRA CHECKS
+The Kannada team checks every page for the points below after proofing. Check them too, on top of everything above. Each problem you find is its own item, marked on the words that carry it, with the fix in every version. Where these points and WHAT NOT TO FLAG disagree (spacing, quote marks), these points win.
+
+1. Inverted commas. The page uses one kind of inverted comma - all curly (‘ ’ and “ ”) or all straight (' and ") - not both. Flag the ones that differ from the rest of the page. A quotation that opens must close with the same kind.
+
+2. Kannada grammar - agreement, case endings, verb forms, sandhi, the order of a reported quotation.
+
+3. Anything that feels off or odd to a Kannada reader - flag it and say what is odd.
+
+4. Repeated content. A word, phrase or sentence said twice where the English says it once. Version 1 removes the repeat.
+
+5. Missing translation. A sentence, clause or detail of the English with no Kannada at all. Mark the Kannada sentence next to the gap, and give it in every version with the missing part translated into it.
+
+6. Footnotes. Every footnote of the English is translated, and its number mark is in the Kannada text at the same place as in the English. Flag a footnote or a footnote mark that is missing, and a footnote whose Kannada does not say what the English footnote says.
+
+7. Spelling and typos - a wrong vowel sign, a missing or extra letter, a word split by a space, two words run together.
+
+8. Speaker labels. Every paragraph spoken by Sadhguru starts with "ಸದ್ಗುರು:" and every paragraph spoken by the seeker starts with "ಜಿಜ್ಞಾಸು:". Flag a label that is missing, misspelt, or a different word. The label is put in bold in the final book; bold is not visible here, so check only that the label is there and correct.
+
+9. Hyphen. No space before or after a hyphen. A hyphen used as a dash between two clauses also takes no spaces.
+
+Every version you write, for any item, follows points 1 and 9.

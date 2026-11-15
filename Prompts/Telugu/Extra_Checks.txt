@@ -1,0 +1,4 @@
+THIS BOOK'S TELUGU HOUSE STYLE - EXTRA CHECKS
+The Telugu team checks every page for the point below after proofing. Check it too, on top of everything above. Each problem you find is its own item, with the fix in every version.
+
+1. Speaker labels. Every paragraph spoken by Sadhguru starts with "సద్గురు:" and every paragraph spoken by the seeker starts with the seeker's label this book uses (the same word every time, as on the rest of the page). Flag a label that is missing, misspelt, or a different word from the one the page uses. The label is put in bold in the final book; bold is not visible here, so check only that the label is there and correct.
