@@ -290,6 +290,30 @@ select:disabled{opacity:.5}
 #sharedPanels{display:contents}
 #tabBatch .secband{margin-top:0}
 #tabBatch{padding-bottom:10px}
+/* The chapters list, down the left of the Batch tab, like a list of chats:
+   every progress file opened here, one click to switch to it. */
+.chapwrap{display:flex;flex:1 0 auto;min-width:0;align-items:stretch}
+.chapmain{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+#chapterBar{flex:0 0 230px;width:230px;border-right:1px solid var(--border);
+  background:#f8fafc;display:flex;flex-direction:column;min-height:0;
+  font-family:"Nirmala UI",sans-serif;font-size:12px}
+#chapterBar.closed{flex-basis:34px;width:34px}
+#chapterBar.closed .chapbody,#chapterBar.closed .chaptitle{display:none}
+.chaphead{display:flex;align-items:center;gap:6px;padding:8px;border-bottom:1px solid var(--border)}
+.chaptitle{font-weight:bold;letter-spacing:.5px;color:#0f766e;flex:1}
+.chapbody{overflow-y:auto;flex:1;padding:6px}
+.chapbody button.chapnew{width:100%;margin-bottom:6px}
+.chap{border:1px solid transparent;border-radius:6px;padding:6px 8px;margin-bottom:3px;
+  cursor:pointer;position:relative}
+.chap:hover{background:#eef2f7}
+.chap.on{background:#ccfbf1;border-color:#5eead4}
+.chap.missing{opacity:.5}
+.chap .cn{font-weight:600;color:var(--text);word-break:break-word;padding-right:38px}
+.chap .cs{color:var(--muted);margin-top:2px}
+.chap .ca{position:absolute;top:4px;right:4px;display:none;gap:2px}
+.chap:hover .ca{display:flex}
+.chap .ca button{font-size:11px;padding:1px 5px;border:1px solid var(--border);
+  border-radius:4px;background:#fff;cursor:pointer}
 /* The reason bar sits between the {{LANGUAGE}} box's title and its text. */
 #btTeluguCell>.head{border-top:0;border-bottom:1px solid var(--border)}
 #btSuggCell>.head,#suggCell>.head{border-top:0;border-bottom:1px solid var(--border)}
@@ -679,6 +703,21 @@ select:disabled{opacity:.5}
 </div><!-- /#tabSingle -->
 
 <div class="tabpane" id="tabBatch" role="tabpanel" hidden>
+<div class="chapwrap">
+<aside id="chapterBar">
+  <div class="chaphead">
+    <span class="chaptitle">CHAPTERS</span>
+    <button id="bChapToggle" title="Hide or show the chapters list">&laquo;</button>
+  </div>
+  <div class="chapbody">
+    <button id="bChapNew" class="b-sugg chapnew"
+            title="Load pages: open another chapter file. It joins this list.">&#128194; Load pages</button>
+    <div id="chapDup" class="cs" style="display:none;color:#b91c1c;font-weight:600;margin-bottom:6px">
+      &#9888; Also open in another tab &mdash; work in only one.</div>
+    <div id="chapList"></div>
+  </div>
+</aside>
+<div class="chapmain">
 <div class="secband">
   <div class="sectitle">BATCH PROOFING</div>
   <div class="secsub">A book, page by page: Load pages (below the boxes), proof them all,
@@ -884,6 +923,7 @@ select:disabled{opacity:.5}
 </div>
 
 <div id="sharedSlotBatch"></div>
+</div></div><!-- /.chapmain /.chapwrap -->
 </div><!-- /#tabBatch -->
 
 </div><!-- /.app -->
@@ -902,7 +942,9 @@ const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 async function api(path, body){
   const r=await fetch(path+"?t="+encodeURIComponent(TOKEN),{
     method: body===undefined?"GET":"POST",
-    headers:{"Content-Type":"application/json"},
+    // The tab's own language: the server answers this tab in it, whatever
+    // another tab is working in.
+    headers:{"Content-Type":"application/json", "X-Proofing-Lang":LANG},
     body: body===undefined?undefined:JSON.stringify(body)});
   if(!r.ok) throw new Error("HTTP "+r.status);
   return await r.json();
@@ -2482,7 +2524,10 @@ $("cfgLang").onchange=async function(){
   try{
     $("statusLang").textContent="switching to "+lang+"…"; $("statusLang").className="status";
     await api("/api/config",{language:lang});
-    location.reload();
+    await BATCH_SAVING;
+    // Not a plain reload: an address that came from the chapters list
+    // names a chapter and a language of its own.
+    location.href=location.pathname+"?t="+encodeURIComponent(TOKEN);
   }catch(e){ $("statusLang").textContent="Could not change: "+e.message;
              $("statusLang").className="status err"; }
 };
@@ -2766,7 +2811,7 @@ function batchSave(){
   if(!BATCH) return;
   const body=JSON.stringify(BATCH);
   BATCH_SAVING=BATCH_SAVING.then(()=>
-    api("/api/batch/save",{batch:JSON.parse(body)}).then(r=>{
+    api("/api/batch/save",{batch:JSON.parse(body), path:BATCH_PATH}).then(r=>{
       if(r.error) throw new Error(r.error);
       UNSAVED=false; })
   ).catch(e=>(UNSAVED=true, e instanceof TypeError && appGone(), batchSay(
@@ -2852,13 +2897,21 @@ async function batchUse(path){
 /* The batch that was open last — reopened on start, wherever its progress
    file is. */
 async function batchRestore(){
+  // Opened from the chapters list (↗, or a chapter in another language):
+  // that chapter, not the last one.
+  const want=new URLSearchParams(location.search).get("open");
+  if(want){ try{ if(await chapLoad(want)) return; }catch(e){} }
   let r=null;
   try{ r=await api("/api/batch/load"); }catch(e){ return; }
   if(r && r.error) batchSay("Could not read the saved batch — "+r.error,"err");
+  chapRefresh();
   try{
     const b=r && r.batch;
     if(!b || !Array.isArray(b.pages) || !b.pages.length) return;
+    // A chapter in another language waits in the list for its own tab.
+    if(b.language && b.language!==LANG) return;
     BATCH=batchResumed(b); BATCH_PATH=r.path||"";
+    chapOpened();
     renderBatch(); sgWarm();
     const done=b.pages.filter(p=>p.status==="done").length;
     batchSay("Reopened "+(b.source||"the batch")+" — "+done+" of "
@@ -2868,6 +2921,108 @@ async function batchRestore(){
     if(Object.keys(r.marks||{}).length) batchSave();   // keep what was put back
   }catch(e){ /* a broken save is ignored, not fatal */ }
 }
+/* ---- the chapters list ------------------------------------------------------
+   Down the left of the Batch tab, like a list of chats: every progress file
+   opened here (the server keeps the list), with its language and how many
+   pages are done. A click switches this tab to that chapter — its work is
+   saved first, and each chapter saves to its own progress file. ↗ (or
+   Ctrl/⌘-click) opens it in a new browser tab instead, so two chapters can
+   be worked on at once, each in its own language. A chapter in another
+   language opens in a tab in that language. Two tabs on the SAME chapter
+   would save over each other, so the tabs tell each other what they have
+   open (BroadcastChannel), and both say so in red.                       */
+const CHAP_TAB=Math.random().toString(36).slice(2);
+const chapChan=("BroadcastChannel" in window) ? new BroadcastChannel("proofing-chapters") : null;
+let CHAPTERS=[];
+const chapName=c=>(c.source||c.name||"").replace(/(\.progress)?\.json$/i,"");
+async function chapRefresh(){
+  try{ const r=await api("/api/batch/recent"); CHAPTERS=r.chapters||[]; }catch(e){ return; }
+  chapRender();
+}
+function chapRender(){
+  const box=$("chapList"); box.innerHTML="";
+  if(!CHAPTERS.length){
+    box.innerHTML='<div class="cs" style="padding:4px">No chapters yet — press Load pages to open one.</div>';
+    return;
+  }
+  for(const c of CHAPTERS){
+    const d=document.createElement("div");
+    d.className="chap"+(c.path===BATCH_PATH?" on":"")+(c.missing?" missing":"");
+    d.title=c.path;
+    d.innerHTML='<div class="cn"></div><div class="cs"></div><div class="ca">'
+      +'<button data-a="tab" title="Open in a new browser tab, to work on it at the same time">&#8599;</button>'
+      +'<button data-a="forget" title="Take it off this list (its file is kept)">&times;</button></div>';
+    d.querySelector(".cn").textContent=chapName(c);
+    d.querySelector(".cs").textContent=c.missing ? "file not found"
+      : [c.language, c.total ? c.done+" / "+c.total+" done" : ""].filter(Boolean).join(" · ");
+    d.onclick=e=>{
+      const a=e.target.dataset && e.target.dataset.a;
+      if(a==="forget") return chapForget(c);
+      if(a==="tab" || e.ctrlKey || e.metaKey) return chapNewTab(c);
+      chapOpen(c);
+    };
+    box.appendChild(d);
+  }
+}
+const chapUrl=c=>location.pathname+"?t="+encodeURIComponent(TOKEN)+"&open="+c.id
+  +(c.language ? "&lang="+encodeURIComponent(c.language) : "");
+function chapNewTab(c){
+  if(c.missing){ batchSay(chapName(c)+" — its file is not there any more: "+c.path,"err"); return; }
+  window.open(chapUrl(c),"_blank");
+}
+async function chapOpen(c){
+  if(c.path===BATCH_PATH) return;
+  if(c.missing){ batchSay(chapName(c)+" — its file is not there any more: "+c.path,"err"); return; }
+  if(BATCH_RUNNING){
+    batchSay("Stop the run first — or open that chapter in a new tab (↗) to work on both at once.","warn");
+    return;
+  }
+  try{ btSyncNow(); }catch(e){}
+  await BATCH_SAVING;                  // this chapter's work is saved first
+  if(c.language && c.language!==LANG){ location.href=chapUrl(c); return; }
+  await chapLoad(c.id);
+}
+async function chapLoad(id){
+  const r=await api("/api/batch/open",{id:id});
+  if(r.error){ batchSay(r.error,"err"); chapRefresh(); return false; }
+  BATCH=batchResumed(r.batch); BATCH_PATH=r.path;
+  renderBatch(); sgWarm();
+  batchLoadedSay(BATCH, r.name, batchMarksNote(r.marks));
+  if(Object.keys(r.marks||{}).length) batchSave();
+  chapOpened();
+  return true;
+}
+async function chapForget(c){
+  if(c.path===BATCH_PATH){ batchSay("That chapter is open here — open another one first.","warn"); return; }
+  try{ const r=await api("/api/batch/forget",{id:c.id}); CHAPTERS=r.chapters||[]; chapRender(); }
+  catch(e){}
+}
+function chapOpened(){
+  chapWarn(false);
+  chapRefresh();
+  if(chapChan && BATCH_PATH) chapChan.postMessage({q:"who", path:BATCH_PATH, tab:CHAP_TAB});
+}
+function chapWarn(on){
+  const el=$("chapDup");
+  el.style.display=on?"":"none";
+  if(on) batchSay("⚠ This chapter is also open in another tab. Work in only one of them — "
+                 +"each saves over the other's work.","err");
+}
+if(chapChan) chapChan.onmessage=e=>{
+  const m=e.data||{};
+  if(m.tab===CHAP_TAB || !BATCH_PATH || m.path!==BATCH_PATH) return;
+  if(m.q==="who") chapChan.postMessage({a:"here", path:BATCH_PATH, tab:CHAP_TAB});
+  chapWarn(true);
+};
+$("bChapNew").onclick=()=>batchLoadPick();
+$("bChapToggle").onclick=()=>{
+  const bar=$("chapterBar"), closed=bar.classList.toggle("closed");
+  $("bChapToggle").innerHTML=closed?"&raquo;":"&laquo;";
+  try{ localStorage.setItem("chapBar", closed?"closed":"open"); }catch(e){}
+};
+try{ if(localStorage.getItem("chapBar")==="closed") $("bChapToggle").onclick(); }catch(e){}
+setInterval(()=>{ if(!document.hidden) chapRefresh(); }, 20000);
+
 /* What the server put back as the batch opened ("marks": {page: count}) —
    punctuation that Version 1 had dropped; see restore_end_marks in
    review_core.py. "" when it put back nothing. */
@@ -2900,10 +3055,7 @@ async function batchLoadPick(){
     const r=await api("/api/batch/pick",{});
     if(r.cancelled){ batchSay("Nothing loaded.",""); return; }
     if(r.error){ batchSay(r.error,"err"); return; }
-    if(BATCH && BATCH.pages.length && r.progress_path!==BATCH_PATH &&
-       !confirm("Loading \""+r.name+"\" replaces the batch that is loaded now ("
-               +(BATCH.source||"unnamed")+"). Its progress is already saved."
-               +"\n\nContinue?")){ batchSay("Nothing loaded.",""); return; }
+    await BATCH_SAVING;                // the chapter open now is saved first
     let b=null;
     if(r.kind==="progress") b=batchResumed(r.batch);
     else{
@@ -2922,11 +3074,12 @@ async function batchLoadPick(){
         }
         b=batchResumed(r.saved);
       }
-      if(!b) b={source:r.name, pages:parseBatchJson(r.text), sel:{p:0,f:null}};
+      if(!b) b={source:r.name, language:LANG, pages:parseBatchJson(r.text), sel:{p:0,f:null}};
     }
     const u=await batchUse(r.progress_path);
     BATCH=b; batchSave(); renderBatch(); sgWarm();
     batchLoadedSay(b, u.name, batchMarksNote(r.marks));
+    chapOpened();
   }catch(e){ batchSay("Could not load — "+e.message,"err"); }
   finally{ btn.disabled=BATCH_RUNNING; }
 }

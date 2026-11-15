@@ -12,6 +12,7 @@ nothing else on the machine can drive it or read the script.
 """
 
 import collections
+import hashlib
 import json
 import os
 import re
@@ -73,6 +74,8 @@ PROMPT_TEMPLATE_DIR = "_template"
 APP_SETTINGS_FILE = "App_Settings.json"    # {"language": "Hindi"} — the panel's choice, kept across launches
 BATCH_FILE = "Batch_Progress.json"         # where progress went before Load pages
 BATCH_LAST_FILE = "Batch_Last_Opened.txt"  # which progress file was open last
+BATCH_RECENT_FILE = "Batch_Recent.json"    # the chapters list in the sidebar
+BATCH_RECENT_MAX = 60
 PROGRESS_SUFFIX = ".progress.json"         # beside a file chosen with Load pages
 LEGACY_SUFFIX = ".batch.json"              # the main app's earlier name for it
 CLIP_CACHE_MAX = 400       # sentence clips kept for the read-aloud, newest last
@@ -157,6 +160,8 @@ class ProofingServer:
         self.token = secrets.token_urlsafe(24)
         # The language the whole app works in: the prompts, the page's
         # labels, the file formats, and what the two TTS panels start on.
+        # A tab can work in another one at the same time (see `language`).
+        self._req = threading.local()
         self.language = load_app_language()
         # TTS settings, mirroring the desktop app's panel.
         self.tts = {
@@ -197,6 +202,7 @@ class ProofingServer:
         # out — the only ones act_batch_use will accept.
         self.batch_path = None
         self._picked = set()
+        self._recent_lock = threading.Lock()
         self._dialog_lock = threading.Lock()
         # Sync helper files read so far, by path: (stamp, Helper).
         self._helpers = {}
@@ -221,6 +227,20 @@ class ProofingServer:
 
     def url(self):
         return f"http://127.0.0.1:{self.port}/?t={self.token}"
+
+    # Each browser tab works in its own language: the page sends the one it
+    # was opened in with every request (X-Proofing-Lang), and for that
+    # request `language` is that one. So a Hindi chapter and a Kannada one
+    # can be proofed in two tabs at once, each with its own prompts. With
+    # no such header (the page itself being served, the launcher) it is the
+    # app's language, the one the LANGUAGE panel sets.
+    @property
+    def language(self):
+        return getattr(self._req, "language", None) or self._language
+
+    @language.setter
+    def language(self, value):
+        self._language = value
 
     def stop(self):
         if self.httpd is not None:
@@ -262,6 +282,7 @@ class ProofingServer:
             lang = patch.get("language")
             if lang in tts.APP_LANGUAGES and lang != self.language:
                 self.language = lang
+                self._req.language = lang      # this reply is in it too
                 save_app_language(lang)
                 # Both TTS panels read in the app's language until the
                 # reviewer picks another there; a Google voice that belonged
@@ -497,6 +518,98 @@ class ProofingServer:
                 fh.write(path)
         except Exception:
             pass                # only a convenience; the work itself is saved
+        self._recent_add(path)
+
+    # ── the chapters list (the sidebar) ──────────────────────────────────
+    # Every progress file opened here, newest first, with the language it
+    # was opened in — kept in BATCH_RECENT_FILE so the list is there on the
+    # next start. Only a list of where the files are: removing a chapter
+    # from it never touches the file.
+    @staticmethod
+    def _recent_id(path):
+        return hashlib.sha1(path.encode("utf-8")).hexdigest()[:12]
+
+    def _recent_read(self):
+        try:
+            with open(os.path.join(HERE, BATCH_RECENT_FILE), "r",
+                      encoding="utf-8") as fh:
+                got = json.load(fh)
+            return [e for e in got if isinstance(e, dict) and e.get("path")]
+        except Exception:
+            return []
+
+    def _recent_write(self, entries):
+        path = os.path.join(HERE, BATCH_RECENT_FILE)
+        try:
+            with open(path + ".tmp", "w", encoding="utf-8") as fh:
+                json.dump(entries[:BATCH_RECENT_MAX], fh, ensure_ascii=False,
+                          indent=1)
+            os.replace(path + ".tmp", path)
+        except Exception:
+            pass
+
+    def _recent_add(self, path):
+        with self._recent_lock:
+            entries = [e for e in self._recent_read() if e["path"] != path]
+            entries.insert(0, {"path": path, "language": self.language,
+                               "opened": time.strftime("%Y-%m-%dT%H:%M:%S")})
+            self._recent_write(entries)
+
+    def act_batch_recent(self):
+        """The chapters list: each entry's name, language, pages done of
+        all, and whether its file is still there."""
+        out = []
+        for e in self._recent_read():
+            path = e["path"]
+            item = {"id": self._recent_id(path), "path": path,
+                    "name": os.path.basename(path), "language": e.get("language", ""),
+                    "opened": e.get("opened", ""), "missing": False}
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    b = json.load(fh)
+                pages = b.get("pages") or []
+                item.update(source=b.get("source") or "",
+                            language=b.get("language") or item["language"],
+                            done=sum(1 for p in pages if p.get("status") == "done"),
+                            total=len(pages))
+            except FileNotFoundError:
+                item["missing"] = True
+            except Exception:
+                pass
+            out.append(item)
+        return {"chapters": out}
+
+    def _recent_find(self, cid):
+        return next((e for e in self._recent_read()
+                     if self._recent_id(e["path"]) == cid), None)
+
+    def act_batch_open(self, cid):
+        """Open a chapter from the list, the way act_batch_load reopens the
+        last one. Only a path in the list can be opened this way."""
+        e = self._recent_find(cid or "")
+        if not e:
+            return {"error": "that chapter is not in the list"}
+        path = e["path"]
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                batch = json.load(fh)
+        except FileNotFoundError:
+            return {"error": f"{os.path.basename(path)} is not there any more: {path}"}
+        except Exception as exc:
+            return {"error": f"{os.path.basename(path)}: {exc}"}
+        if not self._is_progress(batch):
+            return {"error": f"{os.path.basename(path)} is not a progress file"}
+        self._picked.add(path)
+        self._remember_batch(path)
+        return {"batch": batch, "path": path, "name": os.path.basename(path),
+                "marks": self._restore_end_marks(batch)}
+
+    def act_batch_forget(self, cid):
+        """Take a chapter off the list. Its file is not touched."""
+        with self._recent_lock:
+            self._recent_write([e for e in self._recent_read()
+                                if self._recent_id(e["path"]) != cid])
+        return self.act_batch_recent()
 
     @staticmethod
     def _is_progress(data):
@@ -624,9 +737,12 @@ class ProofingServer:
         self._remember_batch(target)
         return {"ok": True, "path": target, "name": os.path.basename(target)}
 
-    def act_batch_save(self, batch):
+    def act_batch_save(self, batch, path=""):
+        """Save a tab's batch: to `path`, the progress file that tab has
+        open (so two tabs with two chapters each save to their own), or —
+        from a page that does not say — where the last Load pages pointed."""
         with self._lock:
-            path = self._batch_target()
+            path = path if path in self._picked else self._batch_target()
             tmp = path + ".tmp"
             with open(tmp, "w", encoding="utf-8") as fh:
                 json.dump(batch, fh, ensure_ascii=False)
@@ -670,6 +786,7 @@ class ProofingServer:
             self.batch_path = (None if path == os.path.join(HERE, BATCH_FILE)
                                else path)
         self._picked.add(path)
+        self._recent_add(path)
         return {"batch": batch, "path": path, "name": os.path.basename(path),
                 "marks": self._restore_end_marks(batch)}
 
@@ -1741,6 +1858,12 @@ def _make_handler(srv):
             ok = secrets.compare_digest(token, srv.token)
             if ok:
                 srv.last_seen = time.time()
+                # The tab's own language, for this request (see `language`);
+                # "lang" in the address for the page itself, opened from the
+                # chapters list in a chapter's language.
+                lang = (self.headers.get("X-Proofing-Lang", "")
+                        or qs.get("lang", [""])[0])
+                srv._req.language = lang if lang in tts.APP_LANGUAGES else None
             return ok
 
         def _send(self, code, body, ctype="application/json; charset=utf-8"):
@@ -1799,6 +1922,8 @@ def _make_handler(srv):
                     qs.get("job", ["0"])[0]))
             if parsed.path == "/api/batch/load":
                 return self._json(srv.act_batch_load())
+            if parsed.path == "/api/batch/recent":
+                return self._json(srv.act_batch_recent())
             if parsed.path == "/api/state":
                 st = srv.session.as_json()
                 st["presets"] = [list(p) for p in core.ALL_PRESETS]
@@ -1862,7 +1987,12 @@ def _make_handler(srv):
                 if r == "/api/oneshot":
                     return self._json(srv.act_oneshot())
                 if r == "/api/batch/save":
-                    return self._json(srv.act_batch_save(p.get("batch")))
+                    return self._json(srv.act_batch_save(
+                        p.get("batch"), str(p.get("path") or "")))
+                if r == "/api/batch/open":
+                    return self._json(srv.act_batch_open(str(p.get("id") or "")))
+                if r == "/api/batch/forget":
+                    return self._json(srv.act_batch_forget(str(p.get("id") or "")))
                 if r == "/api/batch/pick":
                     return self._json(srv.act_batch_pick())
                 if r == "/api/batch/use":

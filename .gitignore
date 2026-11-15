@@ -19,6 +19,7 @@ Dropped Audio/
 
 # per-machine choice (which language the app is in) and files made for the reviewer
 App_Settings.json
+Batch_Recent.json
 reports/
 .DS_Store
 logs/
