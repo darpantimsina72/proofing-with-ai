@@ -41,6 +41,39 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+LOG_PATH = os.path.join(HERE, "logs", "app.log")
+
+
+def show_startup_error(text):
+    """A message box with `text` and where the full log is — the only way
+    a failure can reach anyone when the app runs without a window."""
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("Proofing with AI could not start",
+                             text.strip()[-1500:] + f"\n\n(Full log: {LOG_PATH})")
+        root.destroy()
+    except Exception:
+        pass
+
+
+# pythonw (Proofing with AI.bat on Windows) gives a program no stdout at
+# all. Set up the log before anything else can fail, so a broken import
+# shows in a message box rather than nowhere.
+NO_WINDOW = sys.stdout is None
+if NO_WINDOW:
+    os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+    sys.stdout = sys.stderr = open(LOG_PATH, "a", encoding="utf-8", buffering=1)
+    print(f"\n----- {time.strftime('%Y-%m-%dT%H:%M:%S')} started without a window")
+
+    def _crash(kind, exc, tb):
+        import traceback
+        text = "".join(traceback.format_exception(kind, exc, tb))
+        print(text)
+        show_startup_error(text)
+    sys.excepthook = _crash
 
 import gemini_client                                            # noqa: E402
 import server                                                   # noqa: E402
@@ -158,5 +191,20 @@ def keep_running_when_window_closes(srv):
     signal.signal(signal.SIGHUP, on_hangup)
 
 
+def run_without_window():
+    """Started without a window (see NO_WINDOW): nothing printed can be
+    seen and there is nothing to Ctrl-C. The app stops on its own once no
+    tab has reached it for IDLE_QUIT, as after a closed window, and a
+    failed start shows the end of the log in a message box."""
+    global WINDOW_CLOSED
+    WINDOW_CLOSED = True
+    rc = main()
+    if rc:
+        sys.stdout.flush()
+        with open(LOG_PATH, "r", encoding="utf-8") as fh:
+            show_startup_error(fh.read())
+    return rc
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_without_window() if NO_WINDOW else main())
