@@ -161,6 +161,15 @@ Also check the forms that read smoothly but are wrong in Hindi: a noun describin
 A word, sentence or paragraph that appears twice in a row, the second copy adding nothing, is its own item - delete the repeat, even when the English itself has it twice (a leftover from editing). Sadhguru's deliberate repetition for emphasis stays.
 A sentence left unfinished - a quotative, a "what it is, is…" or a quotation that never closes - is its own item, and so is a wrong case ending ("strike one with another" written with the cases the wrong way round).
 
+17. Hindi proofing checks (this edition's house rules)
+Report each of these as its own item, with the corrected text as every version:
+- Chandrabindu missing, or anusvara written where chandrabindu belongs: हूं → हूँ, कहां → कहाँ, यहां → यहाँ, वहां → वहाँ, आंख → आँख, पांच → पाँच, सांस → साँस, गांव → गाँव, मां → माँ, जाएंगे → जाएँगे. Anusvara stays where the vowel sign goes above the line (में, मैं, हैं, नहीं) and where it stands for a nasal consonant (संत, अंत, हिंदी).
+- Quotation marks: only the curly ‘ ’ and “ ”. Report straight marks (' and "), a mark facing the wrong way, and a quotation that is never closed.
+- A sentence ended with an English full stop (.) instead of the danda (।) - but leave numbering ("14.") and abbreviations alone.
+- Question number: every question from a seeker - a paragraph starting with साधक: (or प्रश्न:) - must have its number in front, like "14. साधक:". If it is missing, quote the opening words and give them with the number in front: the number from the English if it shows one, otherwise the previous numbered question on the page plus one, otherwise [?].
+- An English sentence, clause, name or number with no Hindi on the page is a missing translation (type 10) - report it on the Hindi sentence where it belongs.
+The app itself flags सद्गुरु (for सद्‌गुरु), अद्भुत (for अद्‌भुत), जरुरी, Urdu nukta and spaces around a hyphen - do not report those, but follow them in every version. The text is plain, so bold cannot be seen - say nothing about bold.
+
 Pass 2 - THE Hindi AGAINST THE ENGLISH. Now read the English, and check the Hindi against it, sentence by sentence. This pass is for what the Hindi alone cannot show you:
 
 10. Omissions
@@ -207,7 +216,7 @@ The reviewer put the original back for these, so do not report them:
 - The respectful form of "you", its possessives, its object forms and its verb endings for Sadhguru's "you" (type 15).
 - An English word in brackets after a Sadhguru concept, a coined or technical name, a foreign custom, product or drug, or a pun - (Grace), (consecration), (pendulum), (Marlboro man). It is a deliberate gloss. Remove one only when it repeats a transliteration ("Master (Master)"), repeats a gloss given earlier on the page, follows an everyday word whose Hindi is plain ("information", "energy", "patterns"), or is not in the English at all. A gloss never protects the word before it: if that word misses the English sense, flag the word.
 - Two English sentences given as one Hindi sentence, or one as two, when nothing is lost; or an order that is one of several natural Hindi orders.
-- Spacing, paragraph breaks and stray quote marks on their own.
+- Paragraph breaks on their own. (Straight or wrong-facing quotation marks, and spaces around a hyphen, ARE errors - see type 17.)
 - Anything whose Version 1 would read the same as the original.
 - A literal sentence that is natural Hindi ("that is about you"), and a pronoun the translation has already resolved to its noun.
 - A reflexive verb form for something that happens to one's own body ("breaking one's bones").
@@ -255,6 +264,7 @@ For an item of one or two words, all three versions are one or two words, and ea
 LANGUAGE
 Write clear, natural, modern written Hindi - the language of a good Hindi book today.
 - Use THIS BOOK'S TERMS exactly.
+- House style of this Hindi edition, in every version: write सद्‌गुरु exactly as here (never सद्गुरु) and अद्‌भुत exactly as here (never अद्भुत) - copy them character for character, they carry an invisible joining character; जरूरी, never जरुरी; no nukta on Urdu or English words (ज्यादा, जरूरी, खयाल, चीज, आवाज, हजार, बिजनेस, ऑफिस - not ज़्यादा, ज़रूरी, ख़याल, चीज़, आवाज़, हज़ार, बिज़नेस, ऑफ़िस), but keep the dot of ड़ and ढ़ (लड़का, पेड़, पढ़ना, सीढ़ी); chandrabindu where Hindi needs it (हूँ, कहाँ, यहाँ, आँख, पाँच, साँस, माँ - but anusvara stays over ि ी े ै ो ौ: में, मैं, हैं, नहीं); curly quotation marks only (‘ ’ and “ ”); no space before or after a hyphen (आमने-सामने); a sentence ends with the danda (।).
 - For every word you bring in, decide which sense the English word has in THIS sentence and write the Hindi word for that sense. Abstract nouns, adjectives and small words go wrong most: "distinction" (a difference, not a division); "I see that…" meaning I know; "the terrible rut" (a mire one is stuck in, not a wheel).
 - No English phrase shape: a set phrase has its own Hindi phrase ("far from the truth", "the moment X", "predict doom" each have their own way of being said in Hindi).
 - Keep the mood of the English: "it should be me" (bound to be) is not a wish; "can be" is not "is"; "This is one reason" is not "that is why".

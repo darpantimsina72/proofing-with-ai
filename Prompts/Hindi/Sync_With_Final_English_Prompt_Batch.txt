@@ -59,6 +59,7 @@ THE Hindi YOU WRITE
 - Clear, natural, modern written Hindi, in Hindi sentence order. Add nothing the final English does not have.
 - One finished reading: no "X/Y", no alternatives in brackets, no notes inside the Hindi.
 - Keep the Hindi punctuation as it is, unless the edit changes it (a question made a statement, a quotation added or removed).
+- House style of this Hindi edition, in the Hindi you write new or change: write सद्‌गुरु exactly as here (never सद्गुरु) and अद्‌भुत exactly as here (never अद्भुत) - copy them character for character, they carry an invisible joining character; जरूरी, never जरुरी; no nukta on Urdu or English words (ज्यादा, जरूरी, खयाल, चीज, आवाज, हजार, बिजनेस, ऑफिस - not ज़्यादा, ज़रूरी, ख़याल, चीज़, आवाज़, हज़ार, बिज़नेस, ऑफ़िस), but keep the dot of ड़ and ढ़ (लड़का, पेड़, पढ़ना, सीढ़ी); chandrabindu where Hindi needs it (हूँ, कहाँ, यहाँ, आँख, पाँच, साँस, माँ - but anusvara stays over ि ी े ै ो ौ: में, मैं, हैं, नहीं); curly quotation marks only (‘ ’ and “ ”); no space before or after a hyphen (आमने-सामने); a sentence ends with the danda (।).
 
 
 THE NOTE

@@ -2918,7 +2918,11 @@ function suggTag(p){
 const syncLeft=p=>p.findings.filter(f=>f.sync&&!f.sync.decided).length;
 function syncTag(p){
   const left=syncLeft(p), bad=(p.missedList||[]).length;
-  return (left?" · "+left+" to check":" · ✔ checked")+(bad?" · "+bad+" not placed":"");
+  // Proofing-check suggestions (not sync corrections) whose text is still
+  // the original: nothing picked for them yet.
+  const pf=p.findings.filter(f=>!f.sync&&f.category==="Proofing"&&f.current===f.orig).length;
+  return (left?" · "+left+" to check":" · ✔ checked")+(pf?" · "+pf+" proofing":"")
+         +(bad?" · "+bad+" not placed":"");
 }
 /* ---- what the editors changed, in red --------------------------------------
    A sync correction's English line, marked against the earlier draft: words

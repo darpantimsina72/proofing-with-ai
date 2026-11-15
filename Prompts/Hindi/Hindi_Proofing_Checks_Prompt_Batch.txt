@@ -1,0 +1,74 @@
+Assume that you are the final proofreader of the Hindi edition of a book by Sadhguru.
+
+Below is one page of the book: the English original ("English transcript") and its Hindi ("Hindi dubbing script"; the names are historical - there is no audio here). The Hindi has already been translated, proofed and synced with the final English. Your job is the last proofreading pass: find what the reviewer would otherwise have to fix by hand, using the checklist below. Hold a high bar - report real errors, not preferences.
+
+The page is cut from a longer book; its first or last sentence may be cut off. Do not report a sentence only because it is cut at the edge of the page.
+
+
+THE CHECKLIST - go through the whole page for every point
+
+1. Chandrabindu (ँ)
+A word that needs chandrabindu but has none, or has anusvara (ं) in its place: हूं → हूँ, कहां → कहाँ, यहां → यहाँ, वहां → वहाँ, जहां → जहाँ, आंख → आँख, पांच → पाँच, सांस → साँस, गांव → गाँव, मां → माँ, चांद → चाँद, ऊंचा → ऊँचा, दांत → दाँत, हां → हाँ, जाएंगे → जाएँगे, करूंगा → करूँगा.
+Do NOT change anusvara where the vowel sign goes above the line (ि ी े ै ो ौ): में, मैं, हैं, नहीं, कहीं, भीं, गोंद - these are correct with anusvara.
+Also do not change anusvara that stands for a nasal consonant (संत, अंत, संबंध, हिंदी).
+
+2. Quotation marks
+Use the standard curly marks only: ‘ ’ for single quotes and “ ” for double quotes. Report straight marks (' and "), an opening mark used as a closing one or the other way round, and a quotation that opens and never closes. The version keeps the same words, with the right marks.
+
+3. Something that is off or odd
+A word or sentence that a Hindi reader would find odd, out of place or confusing in this context - report it and fix it.
+
+4. Hindi grammar and punctuation
+Gender and number agreement, case endings (ने, को, से, का/की/के), verb forms, wrong or missing full stop (।), question mark, comma; a sentence that does not close. Hindi uses the danda (।) to end a sentence, not the English full stop (.) - report a sentence ended with "." (but leave numbering such as "14." and abbreviations alone).
+
+5. Repeated content
+A word, phrase, sentence or paragraph written twice where the second copy adds nothing (a leftover from editing). Version: the text with the repeat removed. Sadhguru's deliberate repetition for emphasis stays.
+
+6. Missing translation
+An English sentence, clause, detail, name or number that has no Hindi on this page. Quote the Hindi sentence where it belongs, and give that sentence with the missing part translated in.
+An English word left untranslated in Roman letters inside the Hindi is also a missing translation, unless it is a deliberate gloss in brackets.
+
+7. Spelling and typos
+Misspelt words, wrong matras (ि/ी, ु/ू), a word split by a space, two words run together, a stray character. Each is its own item, with the corrected word as every version. Examples: जरूरी (never जरुरी), कोई, इसलिए, किताबें, चाहिए, दुनिया.
+
+8. Question number before every question
+Every question from a seeker - a paragraph that starts with साधक: (or प्रश्न:) - must have its question number in front of it, written like: 14. साधक:
+If the number is missing, quote the opening words (for example "साधक: सद्‌गुरु, क्या") and give them with the number in front. Take the number from the English if it shows one; otherwise from the numbered question before it on this page plus one; if you cannot tell, write [?] in place of the number so the reviewer fills it in. Report only the missing number - do not change the words.
+
+9. Literal or confusing translation
+A sentence translated word for word so that it sounds odd in Hindi, changes the meaning or the intent of the English sentence, or is so complex that it is hard to understand. Suggest clear, natural Hindi that keeps exactly the meaning of the English. Add nothing that is not in the English.
+
+
+WHAT THE APP CHECKS BY ITSELF - do NOT report these, but follow them in every version you write:
+- Write सद्‌गुरु exactly as here (never सद्गुरु), and अद्‌भुत exactly as here (never अद्भुत). Copy these two words character for character from this prompt: they carry an invisible joining character that must not be lost.
+- जरूरी, never जरुरी.
+- No nukta on Urdu or English words: ज़ → ज, फ़ → फ, क़ → क, ख़ → ख, ग़ → ग (ज़्यादा → ज्यादा, ज़रूरी → जरूरी, ख़याल → खयाल, चीज़ → चीज, आवाज़ → आवाज, हज़ार → हजार, बिज़नेस → बिजनेस, ऑफ़िस → ऑफिस, ट्रैफ़िक → ट्रैफिक, फ़्लाइट → फ्लाइट, मुलाक़ात → मुलाकात, कागज़ → कागज). But KEEP the dot in ड़ and ढ़, which are Hindi letters: लड़का, गाड़ी, पकड़, पेड़, पढ़ना, चढ़ना, बढ़ना, बाढ़, सीढ़ी.
+- No space before or after a hyphen: "आमने-सामने", never "आमने - सामने".
+
+BOLD
+The text you get is plain text; bold cannot be seen in it. Do not report anything about bold.
+
+
+WHAT NOT TO REPORT
+- A correct word swapped for a near-synonym only because you like it more.
+- A free rendering that says the same thing as the English.
+- The respectful "आप" and its verb forms for Sadhguru's "you" - never change them.
+- Settled terms of this book.
+- Anything whose Version 1 would read exactly the same as the original.
+
+
+THE THREE VERSIONS
+For each item, return three versions. Each is a complete drop-in replacement for exactly the Hindi you quoted - from where it starts to where it ends, nothing more, nothing less.
+- Version 1: the smallest change that fixes the problem; every other word stays exactly as it is.
+- Version 2: a natural, smoothly reading Hindi version with the same meaning.
+- Version 3: the freest idiomatic Hindi with the same meaning.
+For a spelling, chandrabindu, quotation-mark, punctuation or question-number fix, the three versions may be the same.
+In every version: clear, natural, modern written Hindi; respectful "आप" for Sadhguru's "you"; nothing added that is not in the English; and the app's own rules above (सद्‌गुरु, अद्‌भुत, जरूरी, no Urdu nukta, no space around a hyphen).
+
+The "issue" line starts with the checklist point in brackets, then says what is wrong, for example:
+- "[Chandrabindu] हूं should be हूँ"
+- "[Question number] the question has no number"
+- "[Missing translation] 'only once' is not translated"
+- "[Literal translation] word-for-word; reads oddly in Hindi"
+
+Items must not overlap. Return them in the order they appear in the Hindi.
