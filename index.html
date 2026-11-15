@@ -402,7 +402,18 @@ select:disabled{opacity:.5}
         color:#94a3b8;border:1px solid var(--border)}
 .bapply.dirty{background:#dc2626;color:#fff;border-color:#dc2626}
 .bapply:disabled{opacity:1}
+.appgone{position:sticky;top:0;z-index:9999;background:#b91c1c;color:#fff;
+  padding:12px 16px;font:600 15px/1.45 "Nirmala UI",sans-serif;display:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.appgone.on{display:block}
+.appgone button{margin:6px 8px 0 0;font:700 14px sans-serif;padding:6px 12px;border-radius:6px;
+  border:0;background:#fff;color:#b91c1c;cursor:pointer}
 </style></head><body>
+<div id="appGone" class="appgone" role="alert">
+  &#9888; THE APP HAS STOPPED — nothing you do on this page is being saved now.
+  <div id="appGoneMore" style="font-weight:400"></div>
+  <button id="bAppGoneSave">&#8681; Save my work now</button>
+</div>
 
 <div class="app">
 <div class="tabs" role="tablist">
@@ -840,11 +851,20 @@ select:disabled{opacity:.5}
                    and the {{LANGUAGE}} as it stands in the {{LANGUAGE}} box, one row per
                    page — ready to paste into a Google Doc with Ctrl+V"
             >&#9112; Copy Final Script</button>
+    <select id="exportFormat"
+            title="What the two Export buttons save: JSON (the file the app
+                   loads back), a Word document, or PDF (a print window opens:
+                   choose Save as PDF there)">
+      <option value="json">JSON</option>
+      <option value="doc">Word</option>
+      <option value="pdf">PDF</option>
+    </select>
     <button id="bFinalJson" class="b-exp"
             title="Save the whole batch as a JSON file in the same shape as
                    the file Load pages takes &mdash; Page Number, English
                    Script, {{LANGUAGE}} Script &mdash; with the {{LANGUAGE}} as it stands
-                   in the {{LANGUAGE}} box"
+                   in the {{LANGUAGE}} box (or, with Word or PDF picked
+                   beside it, as a document: one row per page)"
             >&#8681; Export Final Script</button>
     <button id="bBatchCopyChanges" class="b-exp"
             title="Copy every changed sentence for a Google Doc &mdash; page,
@@ -855,7 +875,9 @@ select:disabled{opacity:.5}
     <button id="bBatchExport" class="b-exp"
             title="Save every sentence that has changed as JSON &mdash; page,
                    English, the {{LANGUAGE}} as it came in and the {{LANGUAGE}} now &mdash;
-                   whether a version, a hand edit or a hand mark changed it"
+                   whether a version, a hand edit or a hand mark changed it
+                   (or, with Word or PDF picked, as a document with the changed
+                   words marked red and green)"
             >&#8681; Export changes</button>
     <span id="finalStatus" class="status">Copies the batch as a table: page, English, final {{LANGUAGE}}. Then paste it into your Google Doc with Ctrl+V.</span>
   </div></div>
@@ -2745,8 +2767,9 @@ function batchSave(){
   const body=JSON.stringify(BATCH);
   BATCH_SAVING=BATCH_SAVING.then(()=>
     api("/api/batch/save",{batch:JSON.parse(body)}).then(r=>{
-      if(r.error) throw new Error(r.error); })
-  ).catch(e=>batchSay(
+      if(r.error) throw new Error(r.error);
+      UNSAVED=false; })
+  ).catch(e=>(UNSAVED=true, e instanceof TypeError && appGone(), batchSay(
       // A fetch that never reached the server — its window was closed, or
       // this tab belongs to a copy of the app that has since stopped — says
       // so plainly rather than as "Failed to fetch".
@@ -2755,8 +2778,57 @@ function batchSave(){
           +"or this tab belongs to an earlier copy). Start Proofing with AI again and "
           +"work in the tab it opens; the progress file has everything up to the last save."
         : "Could not save the batch's progress — "+e.message+". Export to keep the work.",
-      "err"));
+      "err")));
 }
+
+/* ---- when the app stops ---------------------------------------------------
+   The page lives in the browser; the app that saves it lives in the
+   window it was started from. Close that window and the page carries on
+   looking normal while nothing is saved any more. So the page asks the
+   app every few seconds whether it is still there, and the moment it is
+   not, a red bar covers the top of the page, with a button that saves
+   the batch, as it is in this tab, as a progress file. Load pages takes
+   that file back in the next time the app is started, exactly where the
+   work stopped. Closing the tab while the bar is up asks first.          */
+let APP_GONE=false, UNSAVED=false;
+function appGone(){
+  if(APP_GONE) return;
+  APP_GONE=true;
+  $("appGoneMore").textContent = BATCH
+    ? "Click the button to save this batch as a file. Then start Proofing with AI "
+      +"again and open that file with Load pages — the work carries on from here."
+    : "Start Proofing with AI again and work in the tab it opens.";
+  $("bAppGoneSave").style.display = BATCH ? "" : "none";
+  $("appGone").classList.add("on");
+  window.scrollTo(0,0);
+}
+function appBack(){
+  if(!APP_GONE) return;
+  APP_GONE=false; $("appGone").classList.remove("on");
+  batchSave();                        // what was not saved while it was away
+}
+function downloadBlob(blob, name){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+$("bAppGoneSave").onclick=()=>{
+  if(!BATCH) return;
+  try{ btSyncNow(); }catch(e){}
+  const name=(BATCH.source||"batch").replace(/\.json$/i,"")+".progress.json";
+  downloadBlob(new Blob([JSON.stringify(BATCH)],{type:"application/json"}), name);
+  UNSAVED=false;
+  $("appGoneMore").textContent="Saved as "+name+" in your Downloads folder. Start Proofing "
+    +"with AI again, press Load pages and choose that file.";
+};
+setInterval(()=>{
+  api("/api/ping").then(appBack).catch(e=>{ if(e instanceof TypeError) appGone(); });
+}, 5000);
+window.addEventListener("beforeunload", e=>{
+  if(APP_GONE && BATCH && UNSAVED){ e.preventDefault(); e.returnValue=""; }
+});
 /* A saved batch made ready to carry on with. */
 function batchResumed(b){
   // A page that was mid-call when the tab closed never got its answer.
@@ -3444,6 +3516,58 @@ function batchChangedRows(p){
   }
   return rows;
 }
+/* An export as a document instead of JSON: "doc" is an HTML file that
+   Word opens as a document (colours and all; Google Docs takes it too),
+   "pdf" is the browser's own print window — choose Save as PDF there. The
+   browser lays the script out, so every language prints right, with no
+   fonts to install. */
+function exportDocument(kind, name, title, bodyHtml){
+  const css='body{font-family:"Nirmala UI","Kohinoor Devanagari","Kohinoor Telugu",'
+    +'"Noto Sans",sans-serif;font-size:12pt;line-height:1.5}'
+    +'h1{font-size:16pt;margin:0 0 12pt}p{margin:0 0 4pt}'
+    +'table{border-collapse:collapse;width:100%}'
+    +'td,th{border:1px solid #999;padding:4pt 6pt;vertical-align:top;text-align:left}'
+    +'.entry{margin:0 0 16pt;page-break-inside:avoid}.head{font-weight:bold}';
+  const head='<meta charset="utf-8"><title>'+esc(title)+'</title><style>'+css+'</style>';
+  const body='<h1>'+esc(title)+'</h1>'+bodyHtml;
+  if(kind==="doc"){
+    const html='\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+      +'xmlns:w="urn:schemas-microsoft-com:office:word"><head>'+head
+      +'<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View>'
+      +'</w:WordDocument></xml><![endif]--></head><body>'+body+'</body></html>';
+    downloadBlob(new Blob([html],{type:"application/msword"}), name+".doc");
+    return true;
+  }
+  // A hidden frame on this page rather than a new window, which a pop-up
+  // blocker could stop.
+  const f=document.createElement("iframe");
+  f.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+  document.body.appendChild(f);
+  const d=f.contentWindow.document;
+  d.open(); d.write('<!DOCTYPE html><html><head>'+head+'</head><body>'+body+'</body></html>'); d.close();
+  setTimeout(()=>{
+    f.contentWindow.focus(); f.contentWindow.print();
+    setTimeout(()=>f.remove(), 60000);
+  }, 400);
+  return true;
+}
+const exportKind=()=>$("exportFormat").value;
+const exportedSay=(kind, name)=> kind==="pdf"
+  ? "Print window opened — choose Save as PDF there."
+  : "✔ Saved "+name+".doc";
+/* The changed sentences as HTML: page, English, the {{LANGUAGE}} before with the
+   words that went marked red, and after with the words that came marked
+   green — what Copy changes puts on the clipboard. */
+function changesHtml(entries){
+  const line=h=>'<p style="margin:0">'+(h||"<br>")+"</p>";
+  const none='<span style="color:#94a3b8">—</span>';
+  return entries.map((e,k)=>'<div class="entry">'
+     +'<p class="head" style="margin:0">'+esc((k+1)+" - Page: "+e.page)+'</p>'
+     +line(esc(e.english||""))
+     +line(e.orig ? ccMark(e.orig, e.current, CC_OUT) : none)
+     +line(e.current ? ccMark(e.current, e.orig, CC_IN) : none)
+     +'</div>').join("");
+}
 function batchExport(){
   if(!BATCH){ finalSay("Load a batch first.","warn"); return; }
   btSyncNow();
@@ -3458,15 +3582,19 @@ function batchExport(){
                  "Original {{LANGUAGE}}":r.orig, "Current {{LANGUAGE}}":r.current});
   }
   if(!rows.length){ finalSay("No sentence has changed yet.","warn"); return; }
-  const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=(BATCH.source||"batch").replace(/\.json$/i,"")+"_export.json";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  const kind=exportKind(), base=(BATCH.source||"batch").replace(/\.json$/i,"")+"_export";
   const pending=BATCH.pages.filter(p=>p.status!=="done").length;
-  finalSay("✔ Exported "+rows.length+" changed sentence(s) from "+pagesChanged+" page(s)"
-          +(pending?" — "+pending+" page(s) not done are not in it":""),
+  const tail=(pending?" — "+pending+" page(s) not done are not in it":"");
+  if(kind!=="json"){
+    const entries=rows.map(r=>({page:r["Page Number"], english:r.English,
+      orig:r["Original {{LANGUAGE}}"], current:r["Current {{LANGUAGE}}"]}));
+    exportDocument(kind, base, (BATCH.source||"Batch")+" — changes", changesHtml(entries));
+    finalSay(exportedSay(kind, base)+" · "+rows.length+" changed sentence(s) from "
+             +pagesChanged+" page(s)"+tail, pending?"warn":"ok");
+    return;
+  }
+  downloadBlob(new Blob([JSON.stringify(rows,null,2)],{type:"application/json"}), base+".json");
+  finalSay("✔ Exported "+rows.length+" changed sentence(s) from "+pagesChanged+" page(s)"+tail,
            pending?"warn":"ok");
 }
 
@@ -3768,14 +3896,22 @@ function finalJsonExport(){
     "Page Number": /^\d+$/.test(p.page) ? Number(p.page) : p.page,
     "English Script": p.english||"",
     "{{LANGUAGE}} Script": p.current||""}));
-  const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=(BATCH.source||"batch").replace(/\.json$/i,"")+"_final.json";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  const kind=exportKind(), base=(BATCH.source||"batch").replace(/\.json$/i,"")+"_final";
   const pending=BATCH.pages.filter(p=>p.status!=="done").length;
-  finalSay("✔ Saved "+a.download+" — "+rows.length+" page(s)"
+  if(kind!=="json"){
+    const paras=t=>(t||"").split(/\n+/).map(x=>'<p>'+esc(x)+'</p>').join("");
+    const table='<table><tr><th>Page</th><th>English</th><th>{{LANGUAGE}}</th></tr>'
+      +rows.map(r=>'<tr><td>'+esc(String(r["Page Number"]))+'</td><td>'+paras(r["English Script"])
+        +'</td><td lang="{{LANG_TAG}}">'+paras(r["{{LANGUAGE}} Script"])+'</td></tr>').join("")
+      +'</table>';
+    exportDocument(kind, base, (BATCH.source||"Batch")+" — final {{LANGUAGE}}", table);
+    finalSay(exportedSay(kind, base)+" · "+rows.length+" page(s)"
+             +(pending?"; "+pending+" not proofed yet carry their original {{LANGUAGE}}":""),
+             pending?"warn":"ok");
+    return;
+  }
+  downloadBlob(new Blob([JSON.stringify(rows,null,2)],{type:"application/json"}), base+".json");
+  finalSay("✔ Saved "+base+".json — "+rows.length+" page(s)"
           +(pending?"; "+pending+" not proofed yet carry their original {{LANGUAGE}}":"")+".",
            pending?"warn":"ok");
 }

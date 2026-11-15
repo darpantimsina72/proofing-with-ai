@@ -35,6 +35,7 @@ The API and JSON modes additionally need:  pip install google-genai
 """
 
 import os
+import signal
 import sys
 import time
 
@@ -107,6 +108,7 @@ def main():
               f"as an argument to switch)")
     print(f"   url     : {url}")
 
+    keep_running_when_window_closes(srv)
     srv.open_browser()
     print("\nOpened in your browser.")
     print("If it did not open, paste the url above into one.")
@@ -114,10 +116,46 @@ def main():
     try:
         while True:
             time.sleep(1)
+            # Its window was closed: carry on while the page is open, and
+            # stop once no tab has reached it for a while.
+            if WINDOW_CLOSED and time.time() - srv.last_seen > IDLE_QUIT:
+                break
     except KeyboardInterrupt:
         print("\nStopping…")
-        srv.stop()
+    srv.stop()
     return 0
+
+
+# After its window is closed, the app keeps saving for as long as the page
+# is open, then stops on its own once no tab has reached it for this long.
+IDLE_QUIT = 15 * 60
+WINDOW_CLOSED = False
+
+
+def keep_running_when_window_closes(srv):
+    """Closing the window the app was started from (a Terminal window, or
+    VS Code's terminal panel) sends it SIGHUP, which would stop it at once
+    — and with it every save from the page still open in the browser. So
+    the hang-up is caught instead: what the app prints goes nowhere from
+    then on (there is no window left to print to), and it keeps serving the
+    page. Ctrl-C still stops it. Windows has no SIGHUP; there the page's
+    red "app has stopped" bar and its Save my work button are the guard."""
+    if not hasattr(signal, "SIGHUP"):
+        return
+
+    def on_hangup(signum, frame):
+        global WINDOW_CLOSED
+        WINDOW_CLOSED = True
+        srv.last_seen = time.time()
+        devnull = open(os.devnull, "w")
+        try:
+            os.dup2(devnull.fileno(), 1)
+            os.dup2(devnull.fileno(), 2)
+        except OSError:
+            pass
+        sys.stdout = sys.stderr = devnull
+
+    signal.signal(signal.SIGHUP, on_hangup)
 
 
 if __name__ == "__main__":

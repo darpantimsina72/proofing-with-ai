@@ -180,6 +180,11 @@ class ProofingServer:
         self._job_seq = 0
         self.httpd = None
         self.port = None
+        # When the page last reached the server (any request with the
+        # token). The page asks every few seconds, so this goes stale only
+        # when no tab is open — what the launcher waits for before it quits
+        # on its own after its window was closed.
+        self.last_seen = time.time()
         self._lock = threading.Lock()
         # The batch's progress file, when it came through Load pages (None:
         # BATCH_FILE here), and every progress path Load pages has handed
@@ -1658,7 +1663,10 @@ def _make_handler(srv):
         def _authorised(self, qs):
             token = (qs.get("t", [""])[0]
                      or self.headers.get("X-Proofing-Token", ""))
-            return secrets.compare_digest(token, srv.token)
+            ok = secrets.compare_digest(token, srv.token)
+            if ok:
+                srv.last_seen = time.time()
+            return ok
 
         def _send(self, code, body, ctype="application/json; charset=utf-8"):
             data = body if isinstance(body, bytes) else body.encode("utf-8")
@@ -1709,6 +1717,8 @@ def _make_handler(srv):
                     # not synthesized yet - the page retries
                     return self._send(202, "not ready", "text/plain")
                 return self._send(200, data, "audio/mpeg")
+            if parsed.path == "/api/ping":        # the page: "still there?"
+                return self._json({"ok": True})
             if parsed.path == "/api/tts/status":
                 return self._json(srv.act_tts_status(
                     qs.get("job", ["0"])[0]))
