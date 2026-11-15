@@ -16,21 +16,26 @@ is the language picked in the LANGUAGE panel at the top of the page
 
 Edit the file in the language's own folder. That is the copy the app reads.
 
-## `Extra_Checks.txt` — the team's points to check after proofing
+## Each team's "points to check after proofing"
 
-A language folder may also hold `Extra_Checks.txt`: that language team's own
-list of things to check on every page (Hindi, Kannada and Telugu have one;
-Tamil has none yet). The app adds it to every detection prompt, so the AI
-flags those problems on top of its usual ones, and to the Get suggestions
-prompts as house style for the versions it writes. It has no template — a
-language without the file simply has no extra checks.
+- **Hindi** — the checklist is written into the Hindi prompts themselves
+  (type 17 of the detection prompt; the house-style line in the sync and
+  suggestion prompts), and `Hindi_Proofing_Checks_Prompt_Batch.txt` runs it
+  as one more AI pass on every batch page after Corrections to sync. Its
+  items wait for the reviewer to pick a version; the page list counts them
+  ("· N proofing").
+- **Kannada, Telugu** — `Extra_Checks.txt` in the language's folder: added
+  to every detection prompt, so the AI flags those problems on top of its
+  usual ones, and to the Get suggestions prompts as house style for the
+  versions it writes. No template — a language without one has none.
 
-The mechanical points of the Hindi and Kannada lists (no space around a
-hyphen, one kind of inverted comma per page, and for Hindi: no nukta in Urdu
-words, chandrabindu, सद्‌गुरु / अद्‌भुत / जरूरी) are also applied by code, in
-`house_style.py`, after the AI has answered: each one becomes its own
-"House style:" finding, with the fix applied, which the reviewer can undo
-like any other. Editing a rule there means editing that file.
+The exact points are checked by code, in `house_style.py`, after AI
+Proofing and after Corrections to sync, as "[Proofing rule]" findings that
+wait for a click: no space around a hyphen and curly quotation marks only
+(Hindi, Kannada); for Hindi also सद्‌गुरु / अद्‌भुत with the joiner, जरूरी,
+no nukta on Urdu or English words (ड़ ढ़ keep it), and chandrabindu in the
+words where it is certain. The versions the AI writes are put in the same
+style.
 
 ## `_template/` — the language-neutral masters
 

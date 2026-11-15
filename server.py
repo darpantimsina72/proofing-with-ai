@@ -50,12 +50,18 @@ BATCH_SUGG_PROMPT = "Get_Suggestions_Prompt_Batch.txt"
 # with the book's revised (final) English. Its terms list is filled in from
 # BATCH_ONESHOT_PROMPT at {{BOOK_TERMS}}.
 SYNC_PROMPT = "Sync_With_Final_English_Prompt_Batch.txt"
+# The last proofing pass on a batch page (chandrabindu, quotation marks,
+# question numbers, missing translation, literal translation …): run after
+# the sync, on the whole page. Only for a language that has this file — it is
+# not made from the template, so other languages are not affected.
+CHECKS_PROMPT = "Hindi_Proofing_Checks_Prompt_Batch.txt"
 TRANSLATE_PROMPT = "Custom_Text_Translation_Prompt.txt"
 # Each language team's "points to check after proofing": added to every
 # detection prompt, and to the suggestion prompts as house style for the
 # versions. Only Prompts/<language>/ has one — no template; a language
-# without the file has no extra checks. The mechanical points are also
-# applied by code (house_style.py).
+# without the file has no extra checks. (Hindi has none: its checklist is
+# written into its own prompts and CHECKS_PROMPT.) The exact points are
+# flagged by code (house_style.py, see _proofing_checks).
 EXTRA_CHECKS = "Extra_Checks.txt"
 DETECTION_PROMPTS = (DETECT_PROMPT, ONESHOT_PROMPT, BATCH_ONESHOT_PROMPT)
 SUGGESTION_PROMPTS = (SUGGEST_PROMPT, BATCH_SUGG_PROMPT)
@@ -913,11 +919,8 @@ class ProofingServer:
     @staticmethod
     def _place_oneshot(session, items, language):
         """Locate every item in `session`, hang its versions on it, then put
-        Version 1 in place. Returns (missed, applied).
-
-        The versions are put in the language's house style, and every
-        house-style problem left outside them becomes a finding of its own
-        (see house_style.py), applied the same way."""
+        Version 1 in place. Returns (missed, applied). The versions are put
+        in the language's house style (house_style.fix)."""
         used = [(f["start"], f["end"]) for f in session.findings]
         missed = []
         for it in items:
@@ -940,18 +943,6 @@ class ProofingServer:
             if f["options"]:
                 session.apply_version(f["id"], f["options"][0])
                 applied += 1
-        used = [(f["start"], f["end"]) for f in session.findings]
-        style = []
-        for s, e, fixed, issue in house_style.problems(session.telugu,
-                                                       language):
-            if any(s < b and a < e for a, b in used):
-                continue
-            f = session.new_finding(s, e, issue, "ai")
-            f["options"] = [fixed]
-            style.append(f)
-        for f in style:
-            session.apply_version(f["id"], f["options"][0])
-            applied += 1
         return missed, applied
 
     def act_batch_oneshot(self, english, telugu):
@@ -980,7 +971,78 @@ class ProofingServer:
                            for m in missed]
         state["applied"] = applied
         state["note"] = note
+        # The house rules checked in code (the checklist itself is in this
+        # prompt, so no second AI pass here).
+        try:
+            extra, _ = self._proofing_checks(english, state["telugu"],
+                                             state.get("findings") or [],
+                                             with_ai=False)
+            state["findings"] = sorted((state.get("findings") or []) + extra,
+                                       key=lambda f: f["start"])
+        except Exception:
+            pass
         return state
+
+    # ── the last proofing pass (each team's house rules) ────────────────
+    def _proofing_checks(self, english, text, existing, with_ai=True):
+        """(findings, note) for `text` as it now stands, never overlapping
+        `existing`. Nothing is applied: each finding's text is still the
+        original, its versions wait for the reviewer to pick one.
+
+        Two parts: the rules that need no AI (house_style — the invisible
+        joiner in सद्‌गुरु, nukta, जरूरी, a spaced hyphen, curly quotes …),
+        and, when the language has CHECKS_PROMPT, one AI call with the
+        proofing checklist. A failed AI call only leaves a note — the page
+        is still done."""
+        used = [(f["start"], f["end"]) for f in existing]
+        out = []
+        for r in house_style.findings(text, self.language, used):
+            out.append({"start": r["start"], "end": r["end"],
+                        "orig": r["orig"], "current": r["orig"],
+                        "english": "", "issue": r["issue"],
+                        "options": [r["fix"]], "kind": "ai",
+                        "category": "Proofing"})
+            used.append((r["start"], r["end"]))
+        note = ""
+        if with_ai and os.path.exists(prompt_path(CHECKS_PROMPT, self.language)):
+            try:
+                items, note = self._checks_ask(english, text)
+                for it in items:
+                    sp = core.locate(text, it["text"], used)
+                    if not sp:
+                        continue
+                    orig = text[sp[0]:sp[1]]
+                    opts = core.keep_end_mark(orig, it["suggestions"][:3])
+                    if all(o.strip() == orig.strip() for o in opts if o):
+                        continue                  # nothing would change
+                    out.append({"start": sp[0], "end": sp[1], "orig": orig,
+                                "current": orig, "english": it["english"],
+                                "issue": it["issue"], "options": opts,
+                                "kind": "ai", "category": "Proofing"})
+                    used.append(sp)
+            except Exception as exc:
+                note = f"Proofing checks did not run: {exc}"
+        out.sort(key=lambda f: f["start"])
+        return out, note
+
+    def _checks_ask(self, english, text):
+        """(items, note): the checklist call. The gateway cuts a call off at
+        about 100 s (HTTP 524), and a whole page at full effort ran past it —
+        so medium effort first, and on a timeout one more try at low."""
+        payload = (f"=== English transcript ===\n{english}"
+                   f"\n\n=== {self.language} dubbing script ===\n{text}")
+        body = (load_prompt(CHECKS_PROMPT, self.language)
+                + fill_language(core.ONESHOT_CONTRACT, self.language))
+        for effort in ("medium", "low"):
+            try:
+                raw = gemini_client.run_prompt(payload, body, self.mode,
+                                               self.model, effort=effort)
+                break
+            except Exception as exc:
+                if effort == "low" or not re.search(
+                        r"\b(524|502|503|504)\b|timed? ?out", str(exc), re.I):
+                    raise
+        return core.parse_oneshot(raw)
 
     def act_suggestions(self, scope="all"):
         with self._lock:
@@ -1221,8 +1283,9 @@ class ProofingServer:
                   "unfound_en": [u[:300] for u in pc["unfound"]],
                   "paired": paired}
         if not changes:
-            return {"telugu": telugu, "findings": [], "missed": [],
-                    "sync": report, "note": ""}
+            extra, cnote = self._proofing_checks(english, telugu, [])
+            return {"telugu": telugu, "findings": extra, "missed": [],
+                    "sync": report, "note": cnote}
 
         ids = [c["id"] for c in changes]
         payload = self._sync_payload(english, telugu, pc, te_paras, paired)
@@ -1443,6 +1506,12 @@ class ProofingServer:
             delta += len(v) - (e0 - s0)
         report.update({"answered": len(seen), "placed": len(findings),
                        "not_in_telugu": gone, "unplaced": unplaced})
+        # The last proofing pass, on the page as it now stands, around the
+        # sync corrections (never inside one).
+        extra, cnote = self._proofing_checks(english, text, findings)
+        if cnote:
+            note = (note + " · " if note else "") + cnote
+        findings = sorted(findings + extra, key=lambda f: f["start"])
         return {"telugu": text, "findings": findings, "missed": unplaced,
                 "sync": report, "note": note}
 

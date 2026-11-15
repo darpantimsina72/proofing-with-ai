@@ -1,97 +1,62 @@
-"""House-style rules that need no judgement — the mechanical half of each
-language team's "points to check after proofing" list.
+"""House-style rules that need no AI: checked exactly, in code.
 
-The judgement half (grammar, something odd, repeated or missing
-translation, the speaker labels, question numbers) goes to the model with
-the detection prompt, from Prompts/<language>/Extra_Checks.txt. What is
-here is exact and is applied by code, because a model copying a quote
-character for character cannot be trusted with an invisible joiner
-(सद्\u200Cगुरु) or a dot under a letter.
+The model cannot be trusted with these - सद्\u200Cगुरु and अद्\u200Cभुत differ
+from the wrong forms only by an invisible joining character (U+200C, ZWNJ),
+and a nukta is one dot. So the batch flags them itself, as ordinary findings
+on the page with the corrected text as the version. Nothing is applied: the
+reviewer picks the version, as with any other finding. The rest of each
+team's checklist goes to the model (Prompts/<language>/).
 
-    fix(text, language)       -> text with every rule applied
-    problems(text, language)  -> [(start, end, fixed, issue)], one per
-                                 word (or words) a rule changes
+    fix(text, language)              -> text with every rule applied (used
+                                        on the versions the model writes)
+    findings(text, language, used)   -> [{"start", "end", "orig", "fix",
+                                          "issue"}]
+
+Offsets are code points into `text` (Python str indices), the same as the
+page's own findings. `used` holds (start, end) spans already taken by other
+findings; nothing returned overlaps them or each other.
+
+Every language here: no space before or after a hyphen, and curly quotation
+marks only (‘ ’ “ ”). Hindi also: सद्\u200Cगुरु / अद्\u200Cभुत with the
+joiner, जरूरी, no nukta on Urdu or English words (ड़ and ढ़ keep theirs), and
+chandrabindu in the words where it is certain.
 """
 import re
 
-ZWNJ = "\u200C"
-_DEV = "\u0900-\u0963\u0966-\u097F"   # Devanagari, less the danda । ॥
-_END = f"(?![{_DEV}{ZWNJ}])"                  # end of a Devanagari word
+LANGUAGES = {"Hindi", "Kannada"}       # Telugu's list is speaker labels only
 
+_DEV = "\u0900-\u0963\u0966-\u097F"     # Devanagari, less the danda । ॥
+_END = f"(?![{_DEV}\u200C])"            # end of a Devanagari word
 
-_HYPHEN_RE = re.compile(r"(?<=\S)(?:[ \t]+-[ \t]*|-[ \t]+)(?=\S)")
+# A hyphen (or a Unicode hyphen; not a dash – —) with a space on either
+# side, between two non-spaces.
+_HYPHEN = re.compile("(?<=\\S)(?:[ \\t]+[-\u2010\u2011][ \\t]*"
+                     "|[-\u2010\u2011][ \\t]+)(?=\\S)")
+# Straight quotation marks: opening after a space, a bracket, a dash or the
+# start of a line; closing anywhere else.
+_QUOTES = re.compile("['\"]")
+_OPENS_AFTER = " \t\n([{\u2014\u2013-"
 
+# Nukta letters of Urdu and English words: क़ ख़ ग़ ज़ फ़, precomposed or as
+# letter + nukta. ड़ and ढ़ are Hindi letters and are never touched.
+_NUKTA = re.compile("[\u0958\u0959\u095A\u095B\u095E]|(?<=[कखगजफ])\u093C")
+_PRECOMP = {"\u0958": "क", "\u0959": "ख", "\u095A": "ग",
+            "\u095B": "ज", "\u095E": "फ"}
 
-def _quote_style(text, straight, opening, closing):
-    """One kind of inverted comma on the page: whichever of straight or
-    curly it uses more (curly on a tie). Returns (pattern, fix) for the
-    minority kind, or None when the page uses only one."""
-    n_straight = text.count(straight)
-    n_curly = text.count(opening) + text.count(closing)
-    if not n_straight or not n_curly:
-        return None
-    if n_straight > n_curly:
-        return (re.compile(f"[{opening}{closing}]"),
-                lambda t, i: straight)
-    # Straight to curly: opening after a space, a bracket or the start of
-    # a line, closing anywhere else.
-    return (re.compile(re.escape(straight)),
-            lambda t, i: opening if i == 0 or t[i - 1] in " \t\n([{—-–"
-            else closing)
-
-
-# Hindi: Urdu-origin words lose the nukta; ड़ ढ़ are Hindi and keep it.
-# क़ ख़ ग़ are only ever Urdu sounds, so they always lose it. ज़ and फ़ are
-# in English words too (यूज़र, फ़ोन), which the list does not cover — so they
-# lose it only in the Urdu words below (and anything built on them:
-# ज्यादातर, हजारों); the rest is left to the model (Extra_Checks point 12).
-_NUKTA_URDU = {"\u0958": "क", "\u0959": "ख", "\u095A": "ग",
-               "\u095B": "ज", "\u095E": "फ"}
-_NUKTA_ALWAYS = re.compile("[\u0958\u0959\u095A]|(?<=[कखग])\u093C")
-_NUKTA_ZF = re.compile("[\u095B\u095E]|(?<=[जफ])\u093C")
-_URDU_ZF = (
-    "ज्यादा जरूर जरा जरिय जरिए जिंदा जिन्दा जिंदगी जिन्दगी चीज फरिश्त जोर "
-    "जमीन जमान जमाने जमानत जब्त मजदूर जेवर गुजर गुजार रफ्तार फिक्र फिक्रमंद "
-    "अंदाज आवाज इज्जत नजर नजदीक नजारा सजा मजा मजे मजेदार तेज फैसल फर्क "
-    "साफ माफ तरफ जाहिर जिक्र जुबान जहर कमजोर बाजार हजार मिजाज सफर फायद "
-    "फौरन फकीर फुरसत फुर्सत जुल्म जनाब दफा दफ्तर लफ्ज कागज मौजूद नाराज "
-    "रोज अजीब लिहाज इजाजत जायज तकलीफ तारीफ शरीफ खिलाफ लिफाफ इंसाफ सिर्फ "
-    "हफ्त सफेद जंजीर जख्म जनाजा जज्बा जज्बात जालिम जुर्म गिरफ्त फरमा "
-    "फरमान फर्ज फितरत फिजूल फिलहाल फिर्का फौज बर्दाश्त मंजिल मंजूर मर्ज "
-    "मरीज मिजाज मुफ्त मेज लजीज वजह वजन वाजिब हफ्ता हिफाजत होशियार "
-    "अफसोस अफसर अजनबी आजाद आजादी आराम इंतजार इंतजाम खुदगर्ज गुजारिश "
-    "जनाब तजुर्बा तमीज दरवाज परहेज पोशाक बेजार मजबूत मजबूर मजहब "
-    "मजाक मजार राजी रिवाज लाजिम शुरुआत हाजिर हुजूर").split()
-_WORD = re.compile("[\u0900-\u0963\u0966-\u097F\u200C\u200D]+")
-
-
-def _urdu_zf_words(text):
-    """(start, end) of each nukta ज़ / फ़ inside a listed Urdu word."""
-    for w in _WORD.finditer(text):
-        word = w.group(0)
-        if not _NUKTA_ZF.search(word):
-            continue
-        plain = _NUKTA_ZF.sub(lambda m: _NUKTA_URDU.get(m.group(0), ""), word)
-        if any(plain.startswith(stem) for stem in _URDU_ZF):
-            for m in _NUKTA_ZF.finditer(word):
-                yield w.start() + m.start(), w.start() + m.end(), m.group(0)
-
-
-# Hindi words written wrong, and how the book writes them.
 _HINDI_WORDS = [
-    # सद्‌गुरु and अद्‌भुत with the halant showing, not as a ligature.
     (re.compile("सद(?:्\u200D?)?गुरु"), "सद्\u200Cगुरु",
-     "सद्\u200Cगुरु is written with the halant showing (सद्\u200Cगुरु, not सद्गुरु)"),
+     "write सद्\u200Cगुरु (with the joiner), not the other form"),
     (re.compile("अद(?:्\u200D?)?भुत"), "अद्\u200Cभुत",
-     "अद्\u200Cभुत is written with the halant showing (अद्\u200Cभुत, not अद्भुत)"),
-    (re.compile("जरुर(?=[ीत])"), "जरूर", "जरूरी / जरूरत, not जरुरी / जरुरत"),
-    # Chandrabindu: a nasal vowel at the end of a word, and the common
-    # words with one inside. Not शांत, संबंध, हैं, में — those are right.
-    (re.compile(f"ां{_END}"), "ाँ", "chandrabindu missing (ाँ)"),
-    (re.compile(f"ूं{_END}"), "ूँ", "chandrabindu missing (ूँ)"),
-    (re.compile(f"ऊं{_END}"), "ऊँ", "chandrabindu missing (ऊँ)"),
+     "write अद्\u200Cभुत (with the joiner), not the other form"),
+    (re.compile("जरुर(?=[ीत])"), "जरूर", "जरूरी, not जरुरी"),
+    # Chandrabindu: a nasal vowel at the end of a word. Not शांत, संबंध,
+    # हैं, में - those are right with anusvara.
+    (re.compile(f"ां{_END}"), "ाँ", "chandrabindu missing"),
+    (re.compile(f"ूं{_END}"), "ूँ", "chandrabindu missing"),
+    (re.compile(f"ऊं{_END}"), "ऊँ", "chandrabindu missing"),
 ]
 # Common words with a chandrabindu inside them, exactly.
+# सांस(?![ा्]): not सांसारिक, सांस्कृतिक - those are right.
 _HINDI_CHANDRA = {"आंख": "आँख", "गांव": "गाँव", "पांच": "पाँच",
                   "पांव": "पाँव", "सांस(?![ा्])": "साँस", "सांप": "साँप",
                   "चांद": "चाँद", "दांत": "दाँत", "बांध": "बाँध",
@@ -99,70 +64,41 @@ _HINDI_CHANDRA = {"आंख": "आँख", "गांव": "गाँव", "प
                   "पहुंच": "पहुँच", "ऊंच": "ऊँच"}
 
 
-class _Hit:
-    def __init__(self, s, e, g):
-        self._s, self._e, self._g = s, e, g
-
-    def span(self):
-        return self._s, self._e
-
-    def group(self, _=0):
-        return self._g
-
-
-class _UrduZF:
-    """The listed-word nukta rule, shaped like a compiled pattern."""
-    def finditer(self, text):
-        return (_Hit(*h) for h in _urdu_zf_words(text))
-
-
-_URDU_ZF_HITS = _UrduZF()
-
-
-def _rules(text, language):
-    """[(compiled pattern, fix(text, i, match) -> str, issue)]"""
-    out = [(_HYPHEN_RE, lambda t, i, m: "-",
-            "no space before or after the hyphen")]
-    for straight, o, c in (("'", "‘", "’"), ('"', "“", "”")):
-        q = _quote_style(text, straight, o, c)
-        if q:
-            pat, f = q
-            out.append((pat, lambda t, i, m, f=f: f(t, i),
-                        "one kind of inverted comma on the page"))
+def _rules(language):
+    """[(compiled pattern, fix(text, match) -> str, issue)]"""
+    out = [(_HYPHEN, lambda t, m: "-", "no space before or after the hyphen"),
+           (_QUOTES, lambda t, m: _curly(t, m), "curly quotation marks only")]
     if language == "Hindi":
-        out.append((_NUKTA_ALWAYS,
-                    lambda t, i, m: _NUKTA_URDU.get(m.group(0), ""),
-                    "nukta removed from an Urdu word"))
-        out.append((_URDU_ZF_HITS,
-                    lambda t, i, m: _NUKTA_URDU.get(m.group(0), ""),
-                    "nukta removed from an Urdu word"))
+        out.append((_NUKTA, lambda t, m: _PRECOMP.get(m.group(0), ""),
+                    "Urdu/English word - remove the nukta"))
         for pat, repl, issue in _HINDI_WORDS:
-            out.append((pat, lambda t, i, m, r=repl: r, issue))
+            out.append((pat, lambda t, m, r=repl: r, issue))
         for wrong, right in _HINDI_CHANDRA.items():
-            # सांस(?![ा्]): not सांसारिक, सांस्कृतिक — those are right.
             out.append((re.compile("(?<![" + _DEV + "])" + wrong),
-                        lambda t, i, m, r=right: r,
-                        "chandrabindu missing"))
+                        lambda t, m, r=right: r, "chandrabindu missing"))
     return out
 
 
-# Languages whose list has the mechanical rules. Telugu's list is the
-# speaker labels only; Tamil has no list yet.
-LANGUAGES = {"Hindi", "Kannada"}
+def _curly(text, m):
+    i, single = m.start(), m.group(0) == "'"
+    opening = i == 0 or text[i - 1] in _OPENS_AFTER
+    if single:
+        return "\u2018" if opening else "\u2019"
+    return "\u201C" if opening else "\u201D"
 
 
 def _edits(text, language):
     """[(start, end, replacement, issue)] for every rule match, the
     earlier rule winning where two overlap."""
-    if language not in LANGUAGES:
+    if language not in LANGUAGES or not text:
         return []
     got = []
-    for pat, f, issue in _rules(text, language):
+    for pat, f, issue in _rules(language):
         for m in pat.finditer(text):
             s, e = m.span()
             if any(s < b and a < e for a, b, _, _ in got):
                 continue
-            got.append((s, e, f(text, s, m), issue))
+            got.append((s, e, f(text, m), issue))
     return sorted(got)
 
 
@@ -173,39 +109,40 @@ def _apply(text, edits):
 
 
 def fix(text, language):
-    """`text` with every house-style rule for `language` applied."""
-    if not text:
-        return text
-    return _apply(text, _edits(text, language))
+    """`text` with every rule for `language` applied."""
+    return _apply(text, _edits(text, language)) if text else text
 
 
-def problems(text, language):
-    """One item per word (or run of words) a rule changes: (start, end,
-    fixed text, issue). The span is widened to whole words so the reviewer
-    sees the word, and hits that touch the same word are one item naming
-    every rule that hit it."""
-    edits = _edits(text, language)
-    items = []                         # [start, end, [issues], [edits]]
-    for ed in edits:
+def findings(text, language, used=()):
+    """One finding per word (or run of words joined by a fix) that a rule
+    changes. The span is widened to whole words so the reviewer sees the
+    word, and hits on the same word are one finding naming every rule."""
+    text = text or ""
+    groups = []                        # [start, end, [issues], [edits]]
+    for ed in _edits(text, language):
         s, e = ed[0], ed[1]
         while s > 0 and not text[s - 1].isspace():
             s -= 1
         while e < len(text) and not text[e].isspace():
             e += 1
-        if items and s <= items[-1][1]:
-            it = items[-1]
-            it[1] = max(it[1], e)
-            if ed[3] not in it[2]:
-                it[2].append(ed[3])
-            it[3].append(ed)
+        if groups and s <= groups[-1][1]:
+            g = groups[-1]
+            g[1] = max(g[1], e)
+            if ed[3] not in g[2]:
+                g[2].append(ed[3])
+            g[3].append(ed)
         else:
-            items.append([s, e, [ed[3]], [ed]])
+            groups.append([s, e, [ed[3]], [ed]])
+    taken = list(used)
     out = []
-    for s, e, issues, eds in items:
-        old = text[s:e]
-        # The page's own edits, moved into the word: a quote mark's fix
-        # depends on the whole page, so it is not worked out again here.
-        new = _apply(old, [(a - s, b - s, r, i) for a, b, r, i in eds])
-        if new != old:
-            out.append((s, e, new, "House style: " + "; ".join(issues)))
+    for s, e, issues, eds in groups:
+        if any(s < b and a < e for a, b in taken):
+            continue
+        orig = text[s:e]
+        new = _apply(orig, [(a - s, b - s, r, i) for a, b, r, i in eds])
+        if new == orig:
+            continue
+        out.append({"start": s, "end": e, "orig": orig, "fix": new,
+                    "issue": "[Proofing rule] " + "; ".join(issues)})
+        taken.append((s, e))
     return out

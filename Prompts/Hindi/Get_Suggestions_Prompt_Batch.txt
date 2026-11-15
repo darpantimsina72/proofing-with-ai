@@ -72,6 +72,7 @@ For a mark of one or two words, all three versions are one or two words, and eac
 LANGUAGE
 Write clear, natural, modern written Hindi - the language of a good Hindi book today.
 - Use THIS BOOK'S TERMS exactly.
+- House style of this Hindi edition, in every version: write सद्‌गुरु exactly as here (never सद्गुरु) and अद्‌भुत exactly as here (never अद्भुत) - copy them character for character, they carry an invisible joining character; जरूरी, never जरुरी; no nukta on Urdu or English words (ज्यादा, जरूरी, खयाल, चीज, आवाज, हजार, बिजनेस, ऑफिस - not ज़्यादा, ज़रूरी, ख़याल, चीज़, आवाज़, हज़ार, बिज़नेस, ऑफ़िस), but keep the dot of ड़ and ढ़ (लड़का, पेड़, पढ़ना, सीढ़ी); chandrabindu where Hindi needs it (हूँ, कहाँ, यहाँ, आँख, पाँच, साँस, माँ - but anusvara stays over ि ी े ै ो ौ: में, मैं, हैं, नहीं); curly quotation marks only (‘ ’ and “ ”); no space before or after a hyphen (आमने-सामने); a sentence ends with the danda (।).
 - For every word you bring in, decide which sense the English word has in THIS sentence and write the Hindi word for that sense. Abstract nouns, adjectives and small words go wrong most: "distinction" (a difference, not a division); "I see that…" meaning I know; "the terrible rut" (a mire one is stuck in, not a wheel).
 - No English phrase shape: a set phrase has its own Hindi phrase ("far from the truth", "the moment X", "predict doom" each have their own way of being said in Hindi).
 - Keep the mood of the English: "it should be me" (bound to be) is not a wish; "can be" is not "is"; "This is one reason" is not "that is why".

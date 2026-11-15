@@ -1,7 +1,7 @@
 THIS BOOK'S KANNADA HOUSE STYLE - EXTRA CHECKS
 The Kannada team checks every page for the points below after proofing. Check them too, on top of everything above. Each problem you find is its own item, marked on the words that carry it, with the fix in every version. Where these points and WHAT NOT TO FLAG disagree (spacing, quote marks), these points win.
 
-1. Inverted commas. The page uses one kind of inverted comma - all curly (‘ ’ and “ ”) or all straight (' and ") - not both. Flag the ones that differ from the rest of the page. A quotation that opens must close with the same kind.
+1. Inverted commas. Only the curly marks: ‘ ’ and “ ”. Flag straight marks (' and "), a mark facing the wrong way, and a quotation that opens and never closes.
 
 2. Kannada grammar - agreement, case endings, verb forms, sandhi, the order of a reported quotation.
 
