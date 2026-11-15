@@ -3,7 +3,8 @@
 # adding a language means adding its entry here, with its Google voices as
 # Google lists them (texttospeech.googleapis.com/v1/voices?languageCode=…).
 # Telugu, English and Tamil came verbatim from the main app's table; Hindi,
-# Kannada and the Tamil WaveNet voices were checked against Google's live list.
+# Kannada, Bangla and the Tamil WaveNet voices were checked against Google's
+# live list.
 TTS_LANGUAGES = {'Telugu': {'code': 'te-IN',
             'Standard': ['te-IN-Standard-A',
                          'te-IN-Standard-B',
@@ -111,4 +112,23 @@ TTS_LANGUAGES = {'Telugu': {'code': 'te-IN',
                         'kn-IN-Chirp3-HD-Orus',
                         'kn-IN-Chirp3-HD-Puck',
                         'kn-IN-Chirp3-HD-Schedar',
-                        'kn-IN-Chirp3-HD-Zephyr']}}
+                        'kn-IN-Chirp3-HD-Zephyr']},
+ 'Bangla': {'code': 'bn-IN',
+            'Standard': ['bn-IN-Standard-A',
+                         'bn-IN-Standard-B',
+                         'bn-IN-Standard-C',
+                         'bn-IN-Standard-D'],
+            'WaveNet': ['bn-IN-Wavenet-A',
+                        'bn-IN-Wavenet-B',
+                        'bn-IN-Wavenet-C',
+                        'bn-IN-Wavenet-D'],
+            'Chirp3': ['bn-IN-Chirp3-HD-Algenib',
+                       'bn-IN-Chirp3-HD-Aoede',
+                       'bn-IN-Chirp3-HD-Charon',
+                       'bn-IN-Chirp3-HD-Fenrir',
+                       'bn-IN-Chirp3-HD-Kore',
+                       'bn-IN-Chirp3-HD-Leda',
+                       'bn-IN-Chirp3-HD-Orus',
+                       'bn-IN-Chirp3-HD-Puck',
+                       'bn-IN-Chirp3-HD-Schedar',
+                       'bn-IN-Chirp3-HD-Zephyr']}}

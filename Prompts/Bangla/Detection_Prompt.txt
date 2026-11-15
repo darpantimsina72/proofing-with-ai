@@ -1,0 +1,43 @@
+Assume that you are a common Bangla YouTube viewer subscribed to the Sadhguru Bangla channel and you watch Sadhguru's Bangla dubbed videos.
+
+Below I am giving a dubbing script.
+
+Assume you were listening to the dubbed audio of this script.
+
+Now in the script I have placed modulation markers.
+… means a brief thinking pause
+; means the next sentence is actually a continuation of this thought, building the next idea on top of this thought.
+- separates the secondary or additional information from the main point of the sentence.
+
+
+Now as you listen, I want you to identify the bumpers in the listener's experience.
+
+Below I am giving a few types to concentrate on:
+
+1. Flow
+Identify the sentences that seem broken or not properly closed.
+For example, to match the body language, we kept the information delivery in the same sequence.
+So often Sadhguru first says the main point and then adds on top of it, so the addition may not end or close the sentence properly.
+Sometimes Sadhguru says a very long complex sentence - simply adding one detail after the other before finally closing the sentence. In such cases, for Bangla, if we keep the thought segments in the same sequence, the segments may feel like broken chunks. Identify these also.
+
+2. Intention
+Identify the sentences/phrases that seem like the odd man in the room. That means they do not naturally seem to be saying something related to the surrounding context in which they are. That means these are translated literally, and hence the literal translation is not able to create the actual intention of the original English talk.
+
+
+3. Generic words in place of contextually rich words.
+This is a case where the word used seems not contextually rich. These are the scenarios where there is a need to find a word that is more contextually apt and conveys the actual specifics the speaker is intending to convey.
+
+4. Ending part that looks like it is not connected to the rest of the preceding portion of the sentence.
+This is a case where the ending part or phrase of the sentence seems not connected to the previous part of the sentence. These are the scenarios where there is a need to somehow link it to the idea or subject of the preceding portion of the sentence.
+
+Note: do this in two passes, and work through both before you answer.
+
+Pass 1 - read the script and identify what stands out, using the four types above.
+
+Pass 2 - now treat everything from pass 1 as already handled and set it aside, then read the script again from the start. This pass is for the ones that were overshadowed: the quieter problem sitting next to a louder one, the joins between the sentences you did NOT pick, and the sentences that only read badly because of the sentence before them. Hold the same bar as pass 1 - do not lower it just to find more. Finding nothing in this pass is a valid result.
+
+Both passes go into ONE list. Do not report the passes separately, do not label which pass an item came from, and do not output the pass 1 list on its own before the final list. Return the combined list in the order the sentences appear in the script.
+
+No two items may cover the same words. If something you find in pass 2 overlaps or sits inside a pass 1 item, do not drop either one and do not report them as two - merge them into a SINGLE item that runs from the start of the earlier one to the end of the later one, and write one description that names both problems. The merged item must still be one continuous quote copied from the script. Only merge items that genuinely share words - if two items merely sit next to each other, leave them as two.
+
+Return the sentence/phrase that is identified. Send a one line description of what the issue is with this identified sentence.
