@@ -10,11 +10,13 @@ team's checklist goes to the model (Prompts/<language>/).
     fix(text, language)              -> text with every rule applied (used
                                         on the versions the model writes)
     findings(text, language, used)   -> [{"start", "end", "orig", "fix",
-                                          "issue"}]
+                                          "issue", "auto"}]
 
 Offsets are code points into `text` (Python str indices), the same as the
 page's own findings. `used` holds (start, end) spans already taken by other
-findings; nothing returned overlaps them or each other.
+findings; nothing returned overlaps them or each other. "auto" is true for
+a word whose only fix is its quotation marks: the team asked for those to be
+put in without a click, since a mark changes no word (and never the length).
 
 Every language here: no space before or after a hyphen, and curly quotation
 marks only (‘ ’ “ ”). Hindi also: सद्\u200Cगुरु / अद्\u200Cभुत with the
@@ -24,6 +26,7 @@ chandrabindu in the words where it is certain.
 import re
 
 LANGUAGES = {"Hindi", "Kannada"}       # Telugu's list is speaker labels only
+QUOTES_ISSUE = "curly quotation marks only"
 
 _DEV = "\u0900-\u0963\u0966-\u097F"     # Devanagari, less the danda । ॥
 _END = f"(?![{_DEV}\u200C])"            # end of a Devanagari word
@@ -67,7 +70,7 @@ _HINDI_CHANDRA = {"आंख": "आँख", "गांव": "गाँव", "प
 def _rules(language):
     """[(compiled pattern, fix(text, match) -> str, issue)]"""
     out = [(_HYPHEN, lambda t, m: "-", "no space before or after the hyphen"),
-           (_QUOTES, lambda t, m: _curly(t, m), "curly quotation marks only")]
+           (_QUOTES, lambda t, m: _curly(t, m), QUOTES_ISSUE)]
     if language == "Hindi":
         out.append((_NUKTA, lambda t, m: _PRECOMP.get(m.group(0), ""),
                     "Urdu/English word - remove the nukta"))
@@ -143,6 +146,7 @@ def findings(text, language, used=()):
         if new == orig:
             continue
         out.append({"start": s, "end": e, "orig": orig, "fix": new,
-                    "issue": "[Proofing rule] " + "; ".join(issues)})
+                    "issue": "[Proofing rule] " + "; ".join(issues),
+                    "auto": issues == [QUOTES_ISSUE] and len(new) == len(orig)})
         taken.append((s, e))
     return out

@@ -974,9 +974,9 @@ class ProofingServer:
         # The house rules checked in code (the checklist itself is in this
         # prompt, so no second AI pass here).
         try:
-            extra, _ = self._proofing_checks(english, state["telugu"],
-                                             state.get("findings") or [],
-                                             with_ai=False)
+            extra, _, state["telugu"] = self._proofing_checks(
+                english, state["telugu"], state.get("findings") or [],
+                with_ai=False)
             state["findings"] = sorted((state.get("findings") or []) + extra,
                                        key=lambda f: f["start"])
         except Exception:
@@ -985,9 +985,12 @@ class ProofingServer:
 
     # ── the last proofing pass (each team's house rules) ────────────────
     def _proofing_checks(self, english, text, existing, with_ai=True):
-        """(findings, note) for `text` as it now stands, never overlapping
-        `existing`. Nothing is applied: each finding's text is still the
-        original, its versions wait for the reviewer to pick one.
+        """(findings, note, text) for `text` as it now stands, never
+        overlapping `existing`. Nothing is applied — each finding's text is
+        still the original, its versions wait for the reviewer to pick one —
+        except a word whose only fix is its quotation marks, which is put in
+        at once (the returned text has it; the reviewer can still go back to
+        the original). A mark is one character for one, so no span moves.
 
         Two parts: the rules that need no AI (house_style — the invisible
         joiner in सद्‌गुरु, nukta, जरूरी, a spaced hyphen, curly quotes …),
@@ -997,8 +1000,11 @@ class ProofingServer:
         used = [(f["start"], f["end"]) for f in existing]
         out = []
         for r in house_style.findings(text, self.language, used):
+            if r["auto"]:
+                text = text[:r["start"]] + r["fix"] + text[r["end"]:]
             out.append({"start": r["start"], "end": r["end"],
-                        "orig": r["orig"], "current": r["orig"],
+                        "orig": r["orig"],
+                        "current": r["fix"] if r["auto"] else r["orig"],
                         "english": "", "issue": r["issue"],
                         "options": [r["fix"]], "kind": "ai",
                         "category": "Proofing"})
@@ -1023,7 +1029,7 @@ class ProofingServer:
             except Exception as exc:
                 note = f"Proofing checks did not run: {exc}"
         out.sort(key=lambda f: f["start"])
-        return out, note
+        return out, note, text
 
     def _checks_ask(self, english, text):
         """(items, note): the checklist call. The gateway cuts a call off at
@@ -1283,7 +1289,7 @@ class ProofingServer:
                   "unfound_en": [u[:300] for u in pc["unfound"]],
                   "paired": paired}
         if not changes:
-            extra, cnote = self._proofing_checks(english, telugu, [])
+            extra, cnote, telugu = self._proofing_checks(english, telugu, [])
             return {"telugu": telugu, "findings": extra, "missed": [],
                     "sync": report, "note": cnote}
 
@@ -1508,7 +1514,7 @@ class ProofingServer:
                        "not_in_telugu": gone, "unplaced": unplaced})
         # The last proofing pass, on the page as it now stands, around the
         # sync corrections (never inside one).
-        extra, cnote = self._proofing_checks(english, text, findings)
+        extra, cnote, text = self._proofing_checks(english, text, findings)
         if cnote:
             note = (note + " · " if note else "") + cnote
         findings = sorted(findings + extra, key=lambda f: f["start"])
