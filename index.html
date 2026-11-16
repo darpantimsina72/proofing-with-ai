@@ -910,6 +910,24 @@ select:disabled{opacity:.5}
   </div></div>
 </div>
 
+<!-- Your own check: one thing the reviewer wants checked, typed in, run on
+     the page on screen or on every page of the chapter. -->
+<div class="panel" id="customPanel">
+  <span class="name pink">YOUR CHECK</span><span class="bar"></span>
+  <div class="rows"><div class="row">
+    <input id="ckText" list="ckRecent" autocomplete="off"
+           placeholder="Type what to check — e.g. Check that every quotation mark and comma is the same as in the English"
+           title="One check, in your own words. The AI checks only that, on the whole page, and gives each problem as a yellow suggestion with versions — nothing is changed until you pick one. Your last checks are offered as you type."
+           style="flex:1 1 380px;min-width:240px;padding:5px 8px;font:inherit">
+    <datalist id="ckRecent"></datalist>
+    <button id="bCkPage" class="b-man2"
+            title="Run this check on the page on screen">&#128270; Check this page</button>
+    <button id="bCkAll" class="b-one"
+            title="Run this check on every page of this chapter, one page after the other (Stop works)">&#128270; Check whole chapter</button>
+    <span id="ckStatus" class="status">Your own check, in your words &mdash; for this page or the whole chapter.</span>
+  </div></div>
+</div>
+
 <!-- The finished batch, as one table to paste into a Google Doc. Outside
      the sideways-scrolling section, so it is always in view. -->
 <div class="panel" id="finalPanel">
@@ -3070,6 +3088,7 @@ async function chapForget(c){
   catch(e){}
 }
 function chapOpened(){
+  ckFill();
   chapWarn(false);
   chapRefresh();
   if(chapChan && BATCH_PATH) chapChan.postMessage({q:"who", path:BATCH_PATH, tab:CHAP_TAB});
@@ -3902,12 +3921,14 @@ async function batchRun(sync){
             : {english:p.english, telugu:p.telugu})});
         let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
         if(s.error) throw new Error(s.error);
+        const kept=p.findings.filter(batchKeeps);
         p.current=s.telugu;
         p.findings=(s.findings||[]).map(f=>({start:f.start, end:f.end,
           orig:f.orig, current:f.current, english:f.english||"",
           issue:f.issue||"", options:f.options||[],
           ...(f.category!==undefined?{category:f.category||""}:{}),
           ...(f.sync?{sync:f.sync}:{})}));
+        batchKeepMarks(p, kept);
         p.missed=(s.missed||[]).length; p.note=s.note||"";
         if(sync){ p.synced=true; p.syncInfo=s.sync||{}; p.missedList=s.missed||[]; }
         p.status="done"; ok++;
@@ -3936,6 +3957,33 @@ async function batchRun(sync){
            bad?"warn":"ok");
 }
 
+/* What a page keeps when the AI or the sync runs on it: the reviewer's own
+   marks (blue) and the answers to their own checks (Your check). */
+const batchKeeps=f=>f.kind==="man" || f.custom;
+/* Put `kept` back on page `p` after its text was rewritten under them:
+   each one found again by its words — the place nearest where it was —
+   unless that is now inside one of the run's own corrections. Returns how
+   many could not be found (their words were changed by the run). */
+function batchKeepMarks(p, kept){
+  if(!kept.length) return 0;
+  const cps=Array.from(p.current), text=p.current;
+  let lost=0;
+  for(const m of kept){
+    const want=Array.from(m.current||m.orig||"");
+    if(!want.length){ lost++; continue; }
+    const hits=[];
+    for(let i=text.indexOf(want.join("")); i>=0; i=text.indexOf(want.join(""), i+1))
+      hits.push(Array.from(text.slice(0,i)).length);
+    const free=hits.filter(a=>!p.findings.some(f=>a<f.end && a+want.length>f.start));
+    if(!free.length){ lost++; continue; }
+    const a=free.reduce((x,y)=>Math.abs(y-m.start)<Math.abs(x-m.start)?y:x);
+    p.findings.push({...m, start:a, end:a+want.length});
+  }
+  p.findings.sort((x,y)=>x.start-y.start);
+  if(lost) p.note=(p.note?p.note+" · ":"")+lost+" of your mark(s) could not be found after the run (their words changed)";
+  return lost;
+}
+
 /* Skip AI Proofing: every page not done yet is made done as the AI run
    would leave it, only with nothing flagged — its {{LANGUAGE}} as it is, no
    corrections — so it can be edited and marked by hand straight away.
@@ -3949,8 +3997,10 @@ function batchSkipAi(){
              +" suggestions, so the AI Proofing run will not do them afterwards.")) return;
   btSyncNow();
   for(const p of todo){
+    const kept=p.findings.filter(batchKeeps);
     p.status="done"; p.error=""; p.current=p.telugu;
     p.findings=[]; p.missed=0; p.note="";
+    batchKeepMarks(p, kept);
   }
   if(READ.on && todo.includes(BATCH.pages[READ.pi])) readStop();
   if(todo.includes(batchPage())) BATCH.sel.f=null;
@@ -5133,7 +5183,7 @@ function btSelectionOffsets(){
 }
 function btMark(desc){
   const p=batchPage();
-  if(!p || p.status!=="done"){ btManSay("Marking works on a proofed page.","warn"); return; }
+  if(!p || p.status==="running"){ btManSay("Wait for the AI to finish this page.","warn"); return; }
   btSyncNow();                         // the offsets are into the text as typed
   const r=btSelectionOffsets();
   if(!r){ btManSay("Select the sentence or phrase in the {{LANGUAGE}} box first.","warn"); return; }
@@ -5505,12 +5555,14 @@ $("btIssue").addEventListener("blur", ()=>{ clearTimeout(BT_ISSUE_TIMER); batchS
 
 let BT_MAN_BUSY=false;
 // A page's hand-marked sentences that have no versions yet.
-const btManTodo=p=>p && p.status==="done"
+const btManTodo=p=>p && p.status!=="running"
   ? p.findings.filter(f=>f.kind==="man" && !f.options.length) : [];
 function btManButtons(){
   const p=batchPage();
   $("btManSugg").disabled=BT_MAN_BUSY || !btManTodo(p).length;
-  const off=!p || p.status!=="done";
+  // Any page but one the AI is working on right now: a mark made before
+  // the AI or the sync runs is kept through it (batchKeepMarks).
+  const off=!p || p.status==="running";
   for(const id of ["btIssuePick","btRealMeaning","btRightWord","btNotOkay","btDescribe"])
     $(id).disabled=off;
 }
@@ -5565,6 +5617,85 @@ async function btGetSuggestions(){
   finally{ BT_MAN_BUSY=false; btManButtons(); }
 }
 $("btManSugg").onclick=btGetSuggestions;
+
+/* ---- your own check -------------------------------------------------------
+   The reviewer types one check ("are the quotation marks and commas the
+   same as in the English?") and runs it on the page on screen or on every
+   page of the chapter. Each problem comes back as a yellow suggestion
+   ([Your check] …) with its versions; nothing is applied. It is kept
+   through a later AI or sync run on that page, like the hand marks. The
+   checks used last are kept with the chapter and offered as you type. */
+const CK_EXAMPLES=[
+  "Check that every quotation mark, comma and full stop is the same as in the English",
+  "Check that every number, name and place is the same as in the English",
+  "Check that no English sentence or phrase is left untranslated",
+  "Check that Sadhguru's \"you\" is always the respectful form",
+  "Check the spelling of every word"];
+const ckSay=(m,c)=>{ const el=$("ckStatus"); el.textContent=m; el.className="status "+(c||""); };
+function ckFill(){
+  const mine=(BATCH&&BATCH.checks)||[];
+  $("ckRecent").innerHTML=[...new Set(mine.concat(CK_EXAMPLES))]
+    .map(t=>'<option value="'+t.replace(/&/g,"&amp;").replace(/"/g,"&quot;")+'"></option>').join("");
+}
+function ckRemember(check){
+  BATCH.checks=[check].concat((BATCH.checks||[]).filter(t=>t!==check)).slice(0,12);
+  ckFill();
+}
+/* One page: the call, and its answers added where they do not overlap the
+   page's corrections. Returns how many were added; throws on a failure. */
+async function ckOnePage(p, check){
+  const sent=p.current;
+  const r=await fetch("/api/batch/custom?t="+encodeURIComponent(TOKEN),{
+    method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
+    body:JSON.stringify({english:p.english, telugu:sent, check:check,
+                         used:p.findings.map(f=>[f.start,f.end])})});
+  let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
+  if(s.error) throw new Error(s.error);
+  const items=(s.findings||[]).map(f=>({start:f.start, end:f.end, orig:f.orig,
+    current:f.current, english:f.english||"", issue:f.issue||"", options:f.options||[],
+    category:"Proofing", custom:true}));
+  // Placed by their words, so typing on the page meanwhile does no harm.
+  const before=p.findings.length;
+  batchKeepMarks(p, items);
+  return p.findings.length-before;
+}
+async function ckRun(all){
+  const check=$("ckText").value.trim();
+  if(!BATCH){ ckSay("Load pages first.","warn"); return; }
+  if(!check){ ckSay("Type the check you want first.","warn"); $("ckText").focus(); return; }
+  if(BATCH_RUNNING) return;
+  btSyncNow();
+  const idx=all ? BATCH.pages.map((p,i)=>i).filter(i=>(BATCH.pages[i].current||"").trim())
+                : [BATCH.sel.p];
+  if(!idx.length){ ckSay("No page has any text to check.","warn"); return; }
+  ckRemember(check);
+  BATCH_STOP=false; batchBusy(true); $("bCkPage").disabled=$("bCkAll").disabled=true;
+  let added=0, bad=0, lastErr="";
+  try{
+    for(const [n,i] of idx.entries()){
+      if(BATCH_STOP) break;
+      const p=BATCH.pages[i];
+      ckSay("Checking page "+p.page+(all?" ("+(n+1)+" of "+idx.length+")":"")+"…");
+      try{ added+=await ckOnePage(p, check); }
+      catch(e){ bad++; lastErr="page "+p.page+": "+e.message; }
+      batchSave(); renderBatch(BATCH.sel.p!==i);
+      if(all && n+1<idx.length){
+        for(let k=BATCH_GAP_S; k>0 && !BATCH_STOP; k--){
+          ckSay("Page "+p.page+" checked — next page in "+k+" s…");
+          await new Promise(r=>setTimeout(r,1000));
+        }
+      }
+    }
+  }finally{ batchBusy(false); $("bCkPage").disabled=$("bCkAll").disabled=false; }
+  ckSay((BATCH_STOP?"■ Stopped — ":"✔ Done — ")+added+" suggestion(s)"
+        +(all?" on "+idx.length+" page(s)":"")
+        +(added?" in yellow, marked [Your check] — click one to pick a version.":" — nothing found.")
+        +(bad?" · "+bad+" page(s) failed ("+lastErr+")":""), bad?"warn":"ok");
+}
+$("bCkPage").onclick=()=>ckRun(false);
+$("bCkAll").onclick=()=>ckRun(true);
+$("ckText").addEventListener("keydown", e=>{ if(e.key==="Enter") ckRun(false); });
+ckFill();
 
 /* Get suggestions for all pages: the button above, page after page, with
    the same BATCH_GAP_S wait between calls as the proofing run and the same

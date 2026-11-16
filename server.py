@@ -58,6 +58,10 @@ SYNC_PROMPT = "Sync_With_Final_English_Prompt_Batch.txt"
 # not made from the template, so other languages are not affected.
 CHECKS_PROMPT = "Hindi_Proofing_Checks_Prompt_Batch.txt"
 TRANSLATE_PROMPT = "Custom_Text_Translation_Prompt.txt"
+# Your own check: one check the reviewer types in ("are the quotation marks
+# and commas the same as in the English?"), run on a page — or page after
+# page, on a whole chapter — at {{CHECK}}.
+CUSTOM_PROMPT = "Custom_Check_Prompt_Batch.txt"
 # Each language team's "points to check after proofing": added to every
 # detection prompt, and to the suggestion prompts as house style for the
 # versions. Only Prompts/<language>/ has one — no template; a language
@@ -1262,6 +1266,41 @@ class ProofingServer:
                     raise
         return core.parse_oneshot(raw)
 
+    def act_batch_custom(self, english, telugu, check, used=()):
+        """Your own check on one page: the reviewer's instruction, answered
+        as findings in `telugu` that overlap none of `used` (the page's own
+        corrections). Nothing is applied: each waits for a version to be
+        picked."""
+        check = (check or "").strip()
+        if not check:
+            return {"error": "Type the check you want in the box first."}
+        if not (telugu or "").strip():
+            return {"error": f"this page has no {self.language}"}
+        payload = (f"=== English transcript ===\n{english or ''}"
+                   f"\n\n=== {self.language} dubbing script ===\n{telugu}")
+        body = (load_prompt(CUSTOM_PROMPT, self.language).replace("{{CHECK}}", check)
+                + fill_language(core.ONESHOT_CONTRACT, self.language))
+        raw = gemini_client.run_prompt(payload, body, self.mode, self.model)
+        items, note = core.parse_oneshot(raw)
+        taken = [tuple(u) for u in used if isinstance(u, (list, tuple)) and len(u) == 2]
+        out, missed = [], 0
+        for it in items:
+            sp = core.locate(telugu, it["text"], taken)
+            if not sp:
+                missed += 1
+                continue
+            orig = telugu[sp[0]:sp[1]]
+            opts = [house_style.fix(v, self.language)
+                    for v in core.keep_end_mark(orig, it["suggestions"][:3])]
+            if all(o.strip() == orig.strip() for o in opts if o):
+                continue                          # nothing would change
+            out.append({"start": sp[0], "end": sp[1], "orig": orig,
+                        "current": orig, "english": it["english"],
+                        "issue": "[Your check] " + it["issue"], "options": opts})
+            taken.append(sp)
+        out.sort(key=lambda f: f["start"])
+        return {"findings": out, "missed": missed, "note": note}
+
     def act_suggestions(self, scope="all"):
         with self._lock:
             targets = [f for f in self.session.spans()
@@ -2086,6 +2125,10 @@ def _make_handler(srv):
                 if r == "/api/batch/save":
                     return self._json(srv.act_batch_save(
                         p.get("batch"), str(p.get("path") or "")))
+                if r == "/api/batch/custom":
+                    return self._json(srv.act_batch_custom(
+                        p.get("english", ""), p.get("telugu", ""),
+                        p.get("check", ""), p.get("used") or []))
                 if r == "/api/update/apply":
                     return self._json(srv.act_update_apply())
                 if r == "/api/update/auto":

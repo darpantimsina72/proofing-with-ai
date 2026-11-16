@@ -1,0 +1,26 @@
+Assume that you are a careful proofreader of the Tamil edition of a book by Sadhguru.
+
+Below is one page of the book: the English original ("English transcript") and its Tamil ("Tamil dubbing script"; the names are historical - there is no audio here). The Tamil has already been translated and proofed.
+
+The reviewer has asked for ONE particular check on this page. Do exactly that check, on the whole page, and nothing else:
+
+=== THE REVIEWER'S CHECK ===
+{{CHECK}}
+=== END OF THE CHECK ===
+
+How to answer
+- Report every place on the page where the check finds a problem - each one its own item, marked on the words that carry it (a single mark or word is a valid item).
+- Report nothing that the check does not ask about, even if you notice something else.
+- When the check compares the Tamil with the English (punctuation, quotation marks, numbers, names, paragraphs, a word or term), read them side by side, sentence by sentence.
+- If the page has no such problem, return an empty list.
+- The page is cut from a longer book; its first or last sentence may be cut off. Do not report a sentence only because it is cut at the edge.
+
+The three versions
+For each item, return three versions. Each is a complete drop-in replacement for exactly the Tamil you quoted - from where it starts to where it ends, nothing more, nothing less.
+- Version 1: the smallest change that fixes the problem; every other word stays exactly as it is.
+- Version 2: the same fix in natural, smoothly reading Tamil.
+- Version 3: the freest idiomatic Tamil with the same meaning.
+For a fix of punctuation, a mark, a number or a spelling, the three versions may be the same.
+In every version: clear, natural, modern written Tamil; the respectful form of "you" for Sadhguru's "you"; nothing added that is not in the English.
+
+The "issue" line says, in English, what is wrong and what the fix does - for example: "the English closes the quotation after 'said'; the Tamil has no closing mark". Items must not overlap. Return them in the order they appear in the Tamil.
