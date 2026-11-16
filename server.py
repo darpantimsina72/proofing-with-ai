@@ -34,6 +34,7 @@ import keystore
 import review_core as core
 import sync_helper
 import tts
+import updater
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAGE_FILE = "index.html"
@@ -138,10 +139,50 @@ def load_app_language():
     return lang if lang in tts.APP_LANGUAGES else tts.DEFAULT_LANGUAGE
 
 
-def save_app_language(language):
+def load_app_settings():
+    try:
+        with open(os.path.join(HERE, APP_SETTINGS_FILE), "r",
+                  encoding="utf-8") as fh:
+            got = json.load(fh)
+        return got if isinstance(got, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_app_setting(key, value):
+    """One setting in App_Settings.json, the others kept."""
+    settings = load_app_settings()
+    settings[key] = value
     with open(os.path.join(HERE, APP_SETTINGS_FILE), "w",
               encoding="utf-8") as fh:
-        json.dump({"language": language}, fh, ensure_ascii=False, indent=2)
+        json.dump(settings, fh, ensure_ascii=False, indent=2)
+
+
+def save_app_language(language):
+    save_app_setting("language", language)
+
+
+def restart_app():
+    """Start the app again, as a new program, and end this one: after an
+    update, so the new code is what runs. The new one opens its own tab and,
+    with no window of its own, stops 15 minutes after its last tab closes
+    (PROOFING_NO_WINDOW — see the launcher)."""
+    launcher = os.path.join(HERE, "Proofing with AI.py")
+    exe = sys.executable
+    kw = {}
+    if os.name == "nt":
+        w = os.path.join(os.path.dirname(exe), "pythonw.exe")
+        exe = w if os.path.exists(w) else exe
+        kw["creationflags"] = 0x00000008 | 0x00000200   # detached, own group
+    else:
+        kw["start_new_session"] = True
+    subprocess.Popen([exe, launcher] + sys.argv[1:], cwd=HERE,
+                     env=dict(os.environ, PROOFING_NO_WINDOW="1",
+                              PROOFING_JUST_UPDATED="1"),
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, **kw)
+    # After this reply has gone back to the page.
+    threading.Timer(1.5, lambda: os._exit(0)).start()
 
 
 class ProofingServer:
@@ -269,6 +310,30 @@ class ProofingServer:
         return gemini_client.run_prompt(text, body, self.mode, self.model)
 
     # ── actions ──────────────────────────────────────────────────────────
+    # ── updating the app from GitHub (updater.py) ───────────────────────
+    def act_update_check(self):
+        try:
+            got = updater.check()
+        except Exception as exc:
+            got = {"available": False, "error": f"Could not reach GitHub — {exc}"}
+        got["auto"] = bool(load_app_settings().get("auto_update"))
+        return got
+
+    def act_update_apply(self):
+        """Put the latest version in place, then start the app again."""
+        try:
+            got = updater.apply()
+        except Exception as exc:
+            return {"ok": False, "error": f"The update did not finish — {exc}"}
+        if got.get("ok") and got.get("written"):
+            restart_app()
+            got["restarting"] = True
+        return got
+
+    def act_update_auto(self, on):
+        save_app_setting("auto_update", bool(on))
+        return {"auto": bool(on)}
+
     def act_set_config(self, patch):
         """Gemini access and model, and the app's language, set from the
         panels at the top of the page. Only the keys sent change. An empty
@@ -621,7 +686,7 @@ class ProofingServer:
                         for p in pages))
 
     def _ask_open_path(self, title="Load pages — a batch JSON, or its progress file",
-                       initialdir=None):
+                       initialdir=None, multiple=False):
         """A file dialog, on top of the browser; one at a time.
 
         On a Mac it is the system's own Choose File dialog, through
@@ -634,7 +699,7 @@ class ProofingServer:
         start = initialdir or (os.path.dirname(self.batch_path)
                                if self.batch_path else None)
         if sys.platform == "darwin":
-            return self._ask_open_path_mac(title, start)
+            return self._ask_open_path_mac(title, start, multiple)
         import tkinter as tk
         from tkinter import filedialog
         with self._dialog_lock:
@@ -642,53 +707,82 @@ class ProofingServer:
             root.withdraw()
             root.attributes("-topmost", True)
             try:
-                return filedialog.askopenfilename(
+                ask = (filedialog.askopenfilenames if multiple
+                       else filedialog.askopenfilename)
+                got = ask(
                     parent=root,
                     title=title,
                     initialdir=initialdir or (os.path.dirname(self.batch_path)
                                               if self.batch_path else None),
-                    filetypes=[("JSON", "*.json"), ("All files", "*.*")]) or ""
+                    filetypes=[("JSON", "*.json"), ("All files", "*.*")])
+                if multiple:
+                    return list(root.tk.splitlist(got)) if got else []
+                return got or ""
             finally:
                 root.destroy()
 
-    def _ask_open_path_mac(self, title, initialdir=None):
-        """The macOS Choose File dialog; "" when cancelled."""
+    def _ask_open_path_mac(self, title, initialdir=None, multiple=False):
+        """The macOS Choose File dialog; "" when cancelled — or, with
+        `multiple`, the list of files chosen ([] when cancelled)."""
         def q(text):                      # an AppleScript string literal
             return '"' + str(text).replace("\\", "\\\\").replace('"', '\\"') + '"'
         script = "POSIX path of (choose file with prompt " + q(title)
         if initialdir and os.path.isdir(initialdir):
             script += " default location (POSIX file " + q(initialdir) + ")"
-        script += ")"
-        # "activate" brings the dialog in front of the browser.
-        script = "activate\nreturn " + script
+        if multiple:
+            script = script[len("POSIX path of ("):]
+            script = ("set fs to (" + script + " with multiple selections allowed)\n"
+                      "set out to \"\"\n"
+                      "repeat with f in fs\n"
+                      "set out to out & POSIX path of f & linefeed\n"
+                      "end repeat\n"
+                      "return out")
+            script = "activate\n" + script
+        else:
+            script += ")"
+            # "activate" brings the dialog in front of the browser.
+            script = "activate\nreturn " + script
         with self._dialog_lock:
             r = subprocess.run(["osascript", "-e", script],
                                capture_output=True, text=True)
         if r.returncode != 0:            # cancelled (-128), or no dialog
             if "-128" in (r.stderr or ""):
-                return ""
+                return [] if multiple else ""
             raise RuntimeError("the file dialog did not open: "
                                + (r.stderr or "").strip())
+        if multiple:
+            return [ln for ln in r.stdout.split("\n") if ln.strip()]
         return r.stdout.strip()
 
     def act_batch_pick(self):
-        """Load pages: choose a file, and report what it is.
-
-        A progress file comes back as the batch to carry on with. A batch
-        JSON comes back as its text — the page parses it — with the
-        progress already saved beside it, if any, so
-        the page can offer to carry on from that instead."""
-        path = self._ask_open_path()
-        if not path:
+        """Load pages: choose one file or several (all of a book's chapters
+        at once), and report what each one is: {"files": [...]}, one entry
+        per file as _pick_one gives it. Every one joins the chapters list."""
+        paths = self._ask_open_path(
+            "Load pages — one or more batch JSONs (or progress files)",
+            multiple=True)
+        if not paths:
             return {"cancelled": True}
-        path = os.path.normpath(path)
+        files = []
+        for path in paths:
+            got = self._pick_one(os.path.normpath(path))
+            if got.get("progress_path"):
+                self._recent_add(got["progress_path"])
+            files.append(got)
+        return {"files": files}
+
+    def _pick_one(self, path):
+        """One chosen file. A progress file comes back as the batch to carry
+        on with. A batch JSON comes back as its text — the page parses it —
+        with the progress already saved beside it, if any, so the page can
+        carry on from that instead."""
         name = os.path.basename(path)
         try:
             with open(path, "r", encoding="utf-8") as fh:
                 raw = fh.read()
             data = json.loads(raw.lstrip("﻿"))
         except Exception as exc:
-            return {"error": f"Could not read {name} — {exc}"}
+            return {"error": f"Could not read {name} — {exc}", "name": name}
 
         if self._is_progress(data):
             # A progress file under the main app's old name carries on under
@@ -718,7 +812,8 @@ class ProofingServer:
                 return {"error": f"{pname} is beside {name} but cannot be read "
                                  f"as its progress, so nothing was loaded — it "
                                  f"is never written over. Move it to another "
-                                 f"folder or rename it, then Load pages again."}
+                                 f"folder or rename it, then Load pages again.",
+                        "name": name}
         self._picked.add(prog)
         return {"kind": "pages", "name": name, "text": raw,
                 "progress_path": prog, "saved": prev,
@@ -1924,6 +2019,8 @@ def _make_handler(srv):
                 return self._json(srv.act_batch_load())
             if parsed.path == "/api/batch/recent":
                 return self._json(srv.act_batch_recent())
+            if parsed.path == "/api/update/check":
+                return self._json(srv.act_update_check())
             if parsed.path == "/api/state":
                 st = srv.session.as_json()
                 st["presets"] = [list(p) for p in core.ALL_PRESETS]
@@ -1989,6 +2086,10 @@ def _make_handler(srv):
                 if r == "/api/batch/save":
                     return self._json(srv.act_batch_save(
                         p.get("batch"), str(p.get("path") or "")))
+                if r == "/api/update/apply":
+                    return self._json(srv.act_update_apply())
+                if r == "/api/update/auto":
+                    return self._json(srv.act_update_auto(p.get("on")))
                 if r == "/api/batch/open":
                     return self._json(srv.act_batch_open(str(p.get("id") or "")))
                 if r == "/api/batch/forget":

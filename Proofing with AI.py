@@ -60,9 +60,10 @@ def show_startup_error(text):
 
 
 # pythonw (Proofing with AI.bat on Windows) gives a program no stdout at
-# all. Set up the log before anything else can fail, so a broken import
+# all; an app restarted after an update (PROOFING_NO_WINDOW) has no window
+# either. Set up the log before anything else can fail, so a broken import
 # shows in a message box rather than nowhere.
-NO_WINDOW = sys.stdout is None
+NO_WINDOW = sys.stdout is None or os.environ.get("PROOFING_NO_WINDOW") == "1"
 if NO_WINDOW:
     os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
     sys.stdout = sys.stderr = open(LOG_PATH, "a", encoding="utf-8", buffering=1)
@@ -74,6 +75,40 @@ if NO_WINDOW:
         print(text)
         show_startup_error(text)
     sys.excepthook = _crash
+
+def auto_update():
+    """With "Update by itself" ticked (auto_update in App_Settings.json):
+    before anything else is loaded, fetch the latest version from GitHub
+    and, if there was one, start again on it. Any failure (no internet, no
+    GitHub) just carries on with the version here."""
+    if os.environ.get("PROOFING_JUST_UPDATED") == "1":
+        return
+    try:
+        import json
+        with open(os.path.join(HERE, "App_Settings.json"), "r",
+                  encoding="utf-8") as fh:
+            if not json.load(fh).get("auto_update"):
+                return
+        import updater
+        if updater.is_git_checkout():
+            return
+        got = updater.apply()
+        if got.get("ok") and got.get("written"):
+            print(f"Updated to the latest version ({len(got['written'])} file(s); "
+                  f"the old ones are in {got['backup']}). Starting again…")
+            os.environ["PROOFING_JUST_UPDATED"] = "1"
+            if os.name == "nt":
+                # os.execv on Windows splits a path with spaces in it.
+                import subprocess
+                subprocess.Popen([sys.executable] + sys.argv)
+                sys.exit(0)
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+    except Exception as exc:
+        print(f"(No update this time: {exc})")
+
+
+if __name__ == "__main__":
+    auto_update()
 
 import gemini_client                                            # noqa: E402
 import server                                                   # noqa: E402
@@ -89,6 +124,7 @@ gemini_client.OPENROUTER_URL = gemini_client._openrouter_endpoint(BASE_URL)
 # that has to be here.
 NEEDED = ("index.html", "server.py", "review_core.py", "gemini_client.py",
           "sync_helper.py", "tts.py", "_voices_literal.py", "house_style.py",
+          "updater.py",
           os.path.join("Prompts", "_template", "Detection_Prompt.txt"),
           os.path.join("Prompts", "_template", "Get_Suggestions_Prompt.txt"),
           os.path.join("Prompts", "_template",

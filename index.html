@@ -430,6 +430,10 @@ select:disabled{opacity:.5}
   padding:12px 16px;font:600 15px/1.45 "Nirmala UI",sans-serif;display:none;
   box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .appgone.on{display:block}
+.updbar{background:#1d4ed8;display:none}
+.updbar.on{display:block}
+.updbar label{font-weight:400;margin-left:8px}
+.updbar button{color:#1d4ed8}
 .appgone button{margin:6px 8px 0 0;font:700 14px sans-serif;padding:6px 12px;border-radius:6px;
   border:0;background:#fff;color:#b91c1c;cursor:pointer}
 </style></head><body>
@@ -437,6 +441,13 @@ select:disabled{opacity:.5}
   &#9888; THE APP HAS STOPPED — nothing you do on this page is being saved now.
   <div id="appGoneMore" style="font-weight:400"></div>
   <button id="bAppGoneSave">&#8681; Save my work now</button>
+</div>
+<div id="updBar" class="appgone updbar" role="status">
+  &#128260; <span id="updMsg">A new version of the app is ready.</span>
+  <div id="updMore" style="font-weight:400"></div>
+  <button id="bUpdNow">Update now</button>
+  <button id="bUpdLater">Later</button>
+  <label><input type="checkbox" id="updAuto"> Update by itself from now on (each time the app starts)</label>
 </div>
 
 <div class="app">
@@ -2869,8 +2880,50 @@ $("bAppGoneSave").onclick=()=>{
     +"with AI again, press Load pages and choose that file.";
 };
 setInterval(()=>{
+  if(UPDATING) return;                 // the app is restarting on purpose
   api("/api/ping").then(appBack).catch(e=>{ if(e instanceof TypeError) appGone(); });
 }, 5000);
+
+/* ---- updates ---------------------------------------------------------------
+   On start the page asks the app whether GitHub has a newer version. If
+   so, a blue bar says what changed, with Update now: the app saves nothing
+   of yours over (keys, settings, progress files are never touched; every
+   file it replaces is copied to Backup/ first), then starts again on the
+   new version, in a new tab. "Update by itself" does the same on every
+   start, before the app opens. */
+let UPDATING=false;
+async function updCheck(){
+  let r;
+  try{ r=await api("/api/update/check"); }catch(e){ return; }
+  $("updAuto").checked=!!r.auto;
+  if(!r.available) return;
+  const n=(r.changes||[]).length;
+  $("updMsg").textContent="A new version of the app is ready"+(n?" — "+n+" change(s):":".");
+  $("updMore").textContent=(r.changes||[]).slice(0,6).join(" · ")+(n>6?" · …":"");
+  $("updBar").classList.add("on");
+}
+$("bUpdLater").onclick=()=>$("updBar").classList.remove("on");
+$("updAuto").onchange=function(){ api("/api/update/auto",{on:this.checked}).catch(()=>{}); };
+$("bUpdNow").onclick=async()=>{
+  if(BATCH_RUNNING){ $("updMore").textContent="Stop the AI run first, then update."; return; }
+  try{ btSyncNow(); }catch(e){}
+  await BATCH_SAVING;                  // the chapter open now is saved first
+  $("bUpdNow").disabled=true;
+  $("updMore").textContent="Downloading the new version…";
+  let r;
+  try{ r=await api("/api/update/apply",{}); }
+  catch(e){ $("updMore").textContent="Could not update — "+e.message; $("bUpdNow").disabled=false; return; }
+  if(!r.ok){ $("updMore").textContent=r.error||"Could not update."; $("bUpdNow").disabled=false; return; }
+  if(!r.restarting){ $("updMsg").textContent="Already up to date."; $("updMore").textContent=""; return; }
+  UPDATING=true;
+  $("updMsg").textContent="✔ Updated. The app is starting again — a new tab opens in a few "
+    +"seconds. Work there and close this one.";
+  $("updMore").textContent=(r.kept_yours&&r.kept_yours.length
+    ? "Your own edits to "+r.kept_yours.join(", ")+" were replaced — your versions are kept in "+r.backup
+    : "The old files are kept in "+r.backup);
+  $("bUpdNow").style.display=$("bUpdLater").style.display="none";
+};
+updCheck();
 window.addEventListener("beforeunload", e=>{
   if(APP_GONE && BATCH && UNSAVED){ e.preventDefault(); e.returnValue=""; }
 });
@@ -3049,39 +3102,61 @@ async function batchLoadPick(){
   btSyncNow();                         // typing on the page open now is kept
   if(BATCH_RUNNING){ batchSay("Stop the run before loading another file.","warn"); return; }
   const btn=$("bBatchLoad");
-  btn.disabled=true;
-  batchSay("Choose the file in the window that has opened… (it may be behind this one)");
+  btn.disabled=true; $("bChapNew").disabled=true;
+  batchSay("Choose the file(s) in the window that has opened — several at once is fine "
+          +"(Ctrl/⌘-click), each becomes a chapter in the list… (it may be behind this one)");
   try{
     const r=await api("/api/batch/pick",{});
     if(r.cancelled){ batchSay("Nothing loaded.",""); return; }
     if(r.error){ batchSay(r.error,"err"); return; }
     await BATCH_SAVING;                // the chapter open now is saved first
-    let b=null;
-    if(r.kind==="progress") b=batchResumed(r.batch);
-    else{
-      if(r.saved){
-        // Saved progress is NEVER replaced: carrying on is the only offer.
-        // Starting again means moving the file out of the way first, which
-        // the reviewer does by hand, knowingly.
-        const done=r.saved.pages.filter(p=>p.status==="done").length;
-        if(!confirm(r.saved_name+" holds earlier work on this file — "+done+" of "
-                   +r.saved.pages.length+" page(s) done.\n\nCarry on from it?")){
-          alert(r.saved_name+" is never replaced.\n\nTo start \""+r.name+"\" again "
-               +"from the beginning, move "+r.saved_name+" to another folder or "
-               +"rename it, then Load pages again.");
-          batchSay("Nothing loaded — "+r.saved_name+" is kept as it is.","");
-          return;
-        }
-        b=batchResumed(r.saved);
-      }
-      if(!b) b={source:r.name, language:LANG, pages:parseBatchJson(r.text), sel:{p:0,f:null}};
+    const files=r.files||[];
+    if(files.length===1){ await batchLoadOne(files[0], true); return; }
+    // Several: each is saved as a chapter of its own, carrying on from its
+    // saved progress where it has some; the first one opens here.
+    const bad=[]; let first=null, n=0;
+    for(const f of files){
+      if(f.error){ bad.push(f.error); continue; }
+      const b=batchFromPick(f);
+      const s=await api("/api/batch/save",{batch:b, path:f.progress_path});
+      if(s.error){ bad.push((f.name||"")+": "+s.error); continue; }
+      n++; if(!first) first=f;
     }
-    const u=await batchUse(r.progress_path);
-    BATCH=b; batchSave(); renderBatch(); sgWarm();
-    batchLoadedSay(b, u.name, batchMarksNote(r.marks));
-    chapOpened();
+    if(first) await batchLoadOne(first, false);
+    chapRefresh();
+    batchSay("✔ "+n+" chapter(s) loaded — they are in the CHAPTERS list on the left."
+            +(bad.length?" Not loaded: "+bad.join(" · "):""), bad.length?"warn":"ok");
   }catch(e){ batchSay("Could not load — "+e.message,"err"); }
-  finally{ btn.disabled=BATCH_RUNNING; }
+  finally{ btn.disabled=BATCH_RUNNING; $("bChapNew").disabled=false; }
+}
+/* The batch for one file Load pages handed back: its progress file, the
+   progress saved beside it (never replaced — carrying on is the only way),
+   or a fresh batch from its pages. */
+function batchFromPick(f){
+  if(f.kind==="progress") return batchResumed(f.batch);
+  if(f.saved) return batchResumed(f.saved);
+  return {source:f.name, language:LANG, pages:parseBatchJson(f.text), sel:{p:0,f:null}};
+}
+/* Open one picked file in this tab. `ask`: say so when it carries on from
+   saved progress (a single Load pages), rather than doing it silently. */
+async function batchLoadOne(f, ask){
+  if(f.error){ batchSay(f.error,"err"); return; }
+  if(ask && f.kind!=="progress" && f.saved){
+    const done=f.saved.pages.filter(p=>p.status==="done").length;
+    if(!confirm(f.saved_name+" holds earlier work on this file — "+done+" of "
+               +f.saved.pages.length+" page(s) done.\n\nCarry on from it?")){
+      alert(f.saved_name+" is never replaced.\n\nTo start \""+f.name+"\" again "
+           +"from the beginning, move "+f.saved_name+" to another folder or "
+           +"rename it, then Load pages again.");
+      batchSay("Nothing loaded — "+f.saved_name+" is kept as it is.","");
+      return;
+    }
+  }
+  const b=batchFromPick(f);
+  const u=await batchUse(f.progress_path);
+  BATCH=b; batchSave(); renderBatch(); sgWarm();
+  batchLoadedSay(b, u.name, batchMarksNote(f.marks));
+  chapOpened();
 }
 
 /* Keys are matched loosely — "Page Number", "page_number" and "pageNumber"
