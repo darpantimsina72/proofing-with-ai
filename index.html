@@ -284,6 +284,15 @@ select:disabled{opacity:.5}
 .tabs button:hover{color:var(--text)}
 .tabs button.on{background:var(--panel);color:var(--green)}
 .tabs button.on[data-tab="batch"]{color:#0f766e}
+.tabs .setbtn{margin-left:auto;border-radius:4px;margin-bottom:4px;border-bottom:1px solid var(--border)}
+.tabs .setbtn #setSum{font-weight:normal;color:var(--muted);letter-spacing:0}
+#settingsDlg{width:min(1100px,94vw);max-height:88vh;padding:0;border:1px solid var(--border);
+  border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+#settingsDlg::backdrop{background:rgba(15,23,42,.35)}
+.setdlghead{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border);letter-spacing:.5px}
+.setdlghead button{font-size:18px;line-height:1;padding:2px 10px;cursor:pointer}
+#settingsDlg #sharedSlotSingle{padding:8px 10px 12px}
 .tabpane{display:flex;flex-direction:column;flex:1 0 auto}
 /* GEMINI and TTS SETTINGS live in whichever tab is open (see showTab);
    their wrapper adds no box of its own. */
@@ -458,6 +467,9 @@ select:disabled{opacity:.5}
   <button type="button" role="tab" data-tab="batch" aria-selected="false"
           title="A book, page by page: load, proof and review every page"
           >Book proofing</button>
+  <button type="button" id="bSettings" class="setbtn"
+          title="Language, Gemini access, access keys and read-aloud voices"
+          >&#9881; Settings <span id="setSum"></span></button>
 </div>
 
 <div class="tabpane" id="tabSingle" role="tabpanel">
@@ -593,6 +605,12 @@ select:disabled{opacity:.5}
      controls stay out of the way until you reach for them. -->
 <!-- GEMINI, TTS SETTINGS and SUGGESTIONS TTS SETTINGS: one set, shared by
      both tabs, moved into the open one (showTab). -->
+<!-- The settings — language, Gemini access, access keys, the two read-aloud
+     panels — in a window of their own, opened with ⚙ Settings at the top,
+     rather than taking up the bottom of every tab. -->
+<dialog id="settingsDlg">
+  <div class="setdlghead"><b>&#9881; SETTINGS</b>
+    <button type="button" id="bSettingsClose" title="Close (Esc)">&times;</button></div>
 <div id="sharedSlotSingle"><div id="sharedPanels">
 <div class="panel">
   <span class="name">LANGUAGE</span><span class="bar"></span>
@@ -673,6 +691,7 @@ select:disabled{opacity:.5}
   </div></div>
 </div>
 </div></div>
+</dialog>
 
 <div class="panel">
   <span class="name">AI REVIEW</span><span class="bar"></span>
@@ -846,7 +865,7 @@ select:disabled{opacity:.5}
 <div class="panel" id="batchPanel">
   <span class="name pink">BATCH</span><span class="bar"></span>
   <div class="rows"><div class="row">
-    <button id="bBatchLoad" class="b-sugg"
+    <button id="bBatchLoad" class="b-sugg" style="display:none"
             title="Choose a batch JSON, or its progress file, in a Windows
                    dialog. Progress is saved beside the file you choose, so a
                    folder of chapter files keeps each chapter's work next to
@@ -5605,14 +5624,27 @@ function showTab(name){
     const on=b.dataset.tab===(batch?"batch":"single");
     b.classList.toggle("on", on); b.setAttribute("aria-selected", on?"true":"false");
   }
-  (batch?$("sharedSlotBatch"):$("sharedSlotSingle")).appendChild($("sharedPanels"));
   if(batch && !VID.paused) VID.pause();
   try{ localStorage.setItem("proofTab", batch?"batch":"single"); }catch(e){}
   window.scrollTo(0,0);
   sizeAll();
 }
-for(const b of document.querySelectorAll(".tabs button"))
+for(const b of document.querySelectorAll(".tabs button[data-tab]"))
   b.addEventListener("click", ()=>showTab(b.dataset.tab));
+// Out of the Video tab, whose box it is written in: a window inside a
+// hidden tab would never show.
+document.body.appendChild($("settingsDlg"));
+$("bSettings").onclick=()=>{ setSummary(); $("settingsDlg").showModal(); };
+$("bSettingsClose").onclick=()=>$("settingsDlg").close();
+// A click on the dimmed page around the window closes it too.
+$("settingsDlg").addEventListener("click", e=>{ if(e.target===$("settingsDlg")) $("settingsDlg").close(); });
+$("settingsDlg").addEventListener("close", setSummary);
+/* What the settings are now, at a glance, on the button itself. */
+function setSummary(){
+  const sel=id=>{ const el=$(id); return el && el.selectedIndex>=0 ? el.options[el.selectedIndex].text : ""; };
+  $("setSum").textContent="· "+LANG+(sel("cfgMode")?" · "+sel("cfgMode").split(/\s+[—(]/)[0]:"");
+}
+setTimeout(setSummary, 1500);
 {
   let t="single";
   try{ t=localStorage.getItem("proofTab")||"single"; }catch(e){}
