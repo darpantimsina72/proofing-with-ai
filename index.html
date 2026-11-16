@@ -647,6 +647,15 @@ select:disabled{opacity:.5}
       </select>
       <span id="statusChecks" class="status"></span>
     </div>
+    <div class="row">
+      <span class="cfgname">Pages at once:</span>
+      <select id="cfgParallel"
+              title="How many pages AI Proofing and Corrections to sync work on at the same time. More is faster; the AI service took 24 calls at once in a test (a synced page makes 2). If pages start failing with 429 or 524, choose fewer.">
+        <option value="3">3</option><option value="6">6</option>
+        <option value="10">10 (default)</option><option value="15">15</option><option value="20">20</option>
+      </select>
+      <span id="statusParallel" class="status"></span>
+    </div>
   </div>
 </div>
 <div class="panel">
@@ -2523,6 +2532,7 @@ function buildConfig(cfg){
     L.appendChild(opt);
   }
   if(cfg.checks_mode) $("cfgChecks").value=cfg.checks_mode;
+  if(cfg.parallel) $("cfgParallel").value=String(cfg.parallel);
   $("statusLang").textContent="prompts: "+(cfg.prompts_dir||"")+"  ·  the TTS panels follow it";
   $("statusLang").className="status";
   const m=$("cfgMode"); m.innerHTML="";
@@ -2593,6 +2603,11 @@ $("cfgModel").onchange=saveConfig;
 /* A change of language is a reload: the server fills the language into
    every label when it serves the page. The scripts, findings, batch and TTS
    settings all live on the server, so nothing is lost. */
+$("cfgParallel").onchange=async function(){
+  try{ await api("/api/config",{parallel:Number(this.value)});
+       $("statusParallel").textContent="✔ saved — used from the next run"; $("statusParallel").className="status ok"; }
+  catch(e){ $("statusParallel").textContent="Could not save: "+e.message; $("statusParallel").className="status err"; }
+};
 $("cfgChecks").onchange=async function(){
   try{ await api("/api/config",{checks_mode:this.value});
        $("statusChecks").textContent="✔ saved — used from the next page"; $("statusChecks").className="status ok"; }
@@ -3980,7 +3995,6 @@ function batchBusy(){
    finishing and the next being sent, to go easy on the API; Stop ends the
    wait at once. */
 const BATCH_GAP_S=10;
-const BATCH_PARALLEL=3;     // pages worked on at once by AI Proofing and the sync
 /* `sync` runs Corrections to sync with new version instead of AI Proofing:
    the same page-by-page run, but /api/batch/sync with the chapter's helper
    file. Every sentence the editors touched comes back as a correction, its
@@ -4001,70 +4015,88 @@ async function batchRun(sync){
              +" mark it checked, or ORIGINAL to put the approved {{LANGUAGE}} back.")) return;
   // The chapter on screen now; the run keeps to it if another is opened.
   const B=BATCH, path=BATCH_PATH, run=runStart(B, path, sync?"sync":"proof");
-  let ok=0, bad=0, started=0, fatal="";
-  // BATCH_PARALLEL pages at a time, each its own call: a page's time is
-  // almost all the AI's, so three at once is about three times as fast.
-  // Each worker takes the next page not yet started.
-  const queue=todo.slice();
-  async function one(i){
-    const n=++started;
-    const p=B.pages[i], was=p.status;
-    p.status="running"; p.error=""; if(isOnScreen(B)) renderBatch(B.sel.p!==i);
-    runSay(run, (sync?"Syncing":"Proofing")+" — "+B.pages.filter(q=>q.status==="running").length
-            +" page(s) at once · started "+n+" of "+todo.length+"…");
-    try{
-      if(!p.telugu.trim()) throw new Error("this page has no {{LANGUAGE}}");
-      // Not api(): it throws a bare "HTTP 500" and the server's own
-      // message — which is what says WHY the page failed — is lost.
-      const r=await fetch((sync?"/api/batch/sync":"/api/batch/oneshot")+"?t="+encodeURIComponent(TOKEN),{
-        method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
-        signal:runSignal(run),
-        body:JSON.stringify(sync
-          // The pages before this one, so it is looked for after them in
-          // the chapter.
-          ? {english:p.english, telugu:p.telugu, helper:B.helper.path,
-             before:B.pages.slice(0,i).map(q=>q.english)}
-          : {english:p.english, telugu:p.telugu})});
-      let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
-      if(s.error) throw new Error(s.error);
-      const kept=p.findings.filter(batchKeeps);
-      p.current=s.telugu;
-      p.findings=(s.findings||[]).map(f=>({start:f.start, end:f.end,
-        orig:f.orig, current:f.current, english:f.english||"",
-        issue:f.issue||"", options:f.options||[],
-        ...(f.category!==undefined?{category:f.category||""}:{}),
-        ...(f.sync?{sync:f.sync}:{})}));
-      batchKeepMarks(p, kept);
-      p.missed=(s.missed||[]).length; p.note=s.note||"";
-      if(sync){ p.synced=true; p.syncInfo=s.sync||{}; p.missedList=s.missed||[]; }
-      p.status="done"; ok++;
-      // The page being looked at had its findings replaced under it.
-      if(B.sel.p===i) B.sel.f=null;
-    }catch(e){
-      // Stopped mid-page: the page is as it was, ready to run again.
-      if(e.name==="AbortError") p.status=was, p.error="";
-      else{ p.status="failed"; p.error=e.message; bad++; }
-    }
-    // The page being read was just rewritten: its sentences are gone.
-    if(isOnScreen(B) && READ.on && READ.pi===i) readStop();
-    batchSave(B, path); if(isOnScreen(B)) renderBatch(B.sel.p!==i);
-    // A missing prompt file fails every page the same way — stop at one.
-    if(/^FileNotFoundError/.test(p.error||"")){ fatal=p.error; run.stop=true; }
-    if(!run.stop) runSay(run, (sync?"Syncing":"Proofing")+" — "+(ok+bad)+" of "+todo.length
-                            +" page(s) finished"+(bad?", "+bad+" failed":"")+"…");
-  }
-  async function worker(){
-    while(queue.length && !run.stop) await one(queue.shift());
-  }
+  let ok=0, bad=0, fatal="";
+  const was=new Map(todo.map(i=>[i, B.pages[i].status]));
+  const verb=sync?"Syncing":"Proofing";
+  // The whole chapter goes to the app, which works on many pages at once
+  // (Settings → Pages at once) and is asked every second what has finished.
+  const empty=todo.filter(i=>!(B.pages[i].telugu||"").trim());
+  for(const i of empty){ B.pages[i].status="failed"; B.pages[i].error="this page has no {{LANGUAGE}}"; bad++; }
+  const send=todo.filter(i=>!empty.includes(i));
+  let jid="", parallel=0;
   try{
-    await Promise.all(Array.from({length:Math.min(BATCH_PARALLEL, todo.length)}, worker));
-    if(fatal){ runSay(run, "Stopped — "+fatal,"err"); return; }
-  }finally{ runEnd(run); }
+    if(send.length){
+      const st=await api("/api/batch/job/start",{kind:sync?"sync":"proof",
+        helper:sync?B.helper.path:"", english_all:B.pages.map(q=>q.english||""),
+        pages:send.map(i=>({i, english:B.pages[i].english, telugu:B.pages[i].telugu}))});
+      if(st.error) throw new Error(st.error);
+      jid=st.job; parallel=st.parallel;
+    }
+    let since=0, done=!send.length;
+    const stopSig=runSignal(run);
+    while(!done){
+      // A second between asks, cut short by Stop.
+      if(!stopSig.aborted) await new Promise(res=>{ const t=setTimeout(res,1000);
+        stopSig.addEventListener("abort",()=>{ clearTimeout(t); res(); }, {once:true}); });
+      if(run.stop){ api("/api/batch/job/stop",{job:jid}).catch(()=>{}); break; }
+      let r;
+      try{ r=await api("/api/batch/job/poll",{job:jid, since}); }
+      catch(e){ if(e instanceof TypeError) throw e; continue; }
+      if(r.error) throw new Error(r.error);
+      since=r.next; done=r.done;
+      for(const {i, result:s0} of r.finished){
+        const p=B.pages[i];
+        try{
+          if(s0.error) throw new Error(s0.error);
+          batchApplyResult(B, i, s0, sync);
+          ok++;
+        }catch(e){ p.status="failed"; p.error=e.message; bad++;
+          if(/^FileNotFoundError/.test(p.error)){ fatal=p.error; run.stop=true; } }
+        if(isOnScreen(B) && READ.on && READ.pi===i) readStop();
+      }
+      // Pages being worked on show as running; the rest wait their turn.
+      const now=new Set(r.running);
+      for(const i of send){ const p=B.pages[i];
+        if(p.status==="running" && !now.has(i)) p.status=was.get(i);
+        if(now.has(i) && p.status!=="done" && p.status!=="failed") p.status="running"; }
+      if(r.finished.length) batchSave(B, path);
+      if(isOnScreen(B)) renderBatch(true);
+      if(!run.stop) runSay(run, verb+" — "+(ok+bad)+" of "+todo.length+" page(s) finished"
+        +(now.size?" · "+now.size+" being worked on now"+(parallel?" (up to "+parallel+" at once)":""):"")
+        +(bad?" · "+bad+" failed":"")+"…");
+    }
+  }catch(e){
+    runSay(run, (e instanceof TypeError ? "The app stopped answering — " : "Could not run — ")+e.message, "err");
+  }finally{
+    // Anything still marked running (stopped, or the app gone) is as it was.
+    for(const i of send){ const p=B.pages[i]; if(p.status==="running") p.status=was.get(i); }
+    batchSave(B, path); if(isOnScreen(B)) renderBatch(true);
+    runEnd(run);
+  }
+  if(fatal){ runSay(run, "Stopped — "+fatal,"err"); return; }
   const left=B.pages.filter(p=>p.status!=="done").length;
   runSay(run, (run.stop?"■ Stopped — ":"✔ Run finished — ")
           +ok+(sync?" page(s) synced":" page(s) proofed")+(bad?", "+bad+" failed":"")
           +(left?" · "+left+" not done; press the button again to run them":""),
            bad?"warn":"ok");
+}
+/* One page's answer from the app, put on the page: its text as the AI left
+   it, its corrections, and the reviewer's own marks found again. */
+function batchApplyResult(B, i, s, sync){
+  const p=B.pages[i];
+  const kept=p.findings.filter(batchKeeps);
+  p.current=s.telugu;
+  p.findings=(s.findings||[]).map(f=>({start:f.start, end:f.end,
+    orig:f.orig, current:f.current, english:f.english||"",
+    issue:f.issue||"", options:f.options||[],
+    ...(f.category!==undefined?{category:f.category||""}:{}),
+    ...(f.sync?{sync:f.sync}:{})}));
+  batchKeepMarks(p, kept);
+  p.missed=(s.missed||[]).length; p.note=s.note||""; p.error="";
+  if(sync){ p.synced=true; p.syncInfo=s.sync||{}; p.missedList=s.missed||[]; }
+  p.status="done";
+  // The page being looked at had its findings replaced under it.
+  if(B.sel.p===i) B.sel.f=null;
 }
 
 /* What a page keeps when the AI or the sync runs on it: the reviewer's own

@@ -248,6 +248,7 @@ class ProofingServer:
         self.batch_path = None
         self._picked = set()
         self._recent_lock = threading.Lock()
+        self._jobs = {}                        # chapter runs being worked on (act_batch_job_*)
         self._dialog_lock = threading.Lock()
         # Sync helper files read so far, by path: (stamp, Helper).
         self._helpers = {}
@@ -348,6 +349,8 @@ class ProofingServer:
                 self.mode = patch["mode"]
             if "model" in patch:
                 self.model = (patch["model"] or None)
+            if patch.get("parallel") in self.PARALLEL_CHOICES:
+                save_app_setting("parallel", patch["parallel"])
             if patch.get("checks_mode") in self.CHECKS_EFFORTS:
                 save_app_setting("checks_mode", patch["checks_mode"])
             lang = patch.get("language")
@@ -370,6 +373,7 @@ class ProofingServer:
         return {
             "language": self.language,
             "checks_mode": self._checks_mode(),
+            "parallel": self._parallel(),
             "languages": tts.APP_LANGUAGES,
             "prompts_dir": os.path.join(PROMPTS_DIR, self.language),
             "mode": self.mode,
@@ -1163,6 +1167,91 @@ class ProofingServer:
                 session.apply_version(f["id"], f["options"][0])
                 applied += 1
         return missed, applied
+
+    # ── a whole chapter's run, worked on here (not page by page from the
+    # browser, which allows only about six calls to the app at once) ────
+    # The page hands over every page to do; PARALLEL of them are worked on
+    # at the same time, each by act_batch_sync / act_batch_oneshot, and the
+    # page asks every second for what has finished. Stop lets the calls
+    # out finish on their own and throws their answers away.
+    PARALLEL_CHOICES = (3, 6, 10, 15, 20)
+    PARALLEL_DEFAULT = 10
+
+    def _parallel(self):
+        try:
+            n = int(load_app_settings().get("parallel", self.PARALLEL_DEFAULT))
+        except Exception:
+            n = self.PARALLEL_DEFAULT
+        return max(1, min(n, max(self.PARALLEL_CHOICES)))
+
+    def act_batch_job_start(self, kind, pages, helper="", english_all=None):
+        """`pages`: [{"i", "english", "telugu"}] — the pages to do, by their
+        index in the chapter; `english_all`: every page's English, in order,
+        so a synced page is looked for after the ones before it."""
+        if kind not in ("sync", "proof"):
+            return {"error": "unknown run"}
+        pages = [q for q in (pages or []) if isinstance(q, dict) and "i" in q]
+        if not pages:
+            return {"error": "nothing to do"}
+        job = {"id": secrets.token_hex(6), "kind": kind, "cancel": False,
+               "lang": self.language, "results": [], "running": set(),
+               "total": len(pages), "finished": 0, "lock": threading.Lock()}
+        english_all = english_all or []
+        with self._lock:
+            self._jobs[job["id"]] = job
+
+        def work(q):
+            if job["cancel"]:
+                return
+            self._req.language = job["lang"]    # this thread answers in the tab's language
+            i = int(q["i"])
+            with job["lock"]:
+                job["running"].add(i)
+            try:
+                if kind == "sync":
+                    r = self.act_batch_sync(q.get("english", ""), q.get("telugu", ""),
+                                            helper, english_all[:i])
+                else:
+                    r = self.act_batch_oneshot(q.get("english", ""), q.get("telugu", ""))
+            except Exception as exc:
+                r = {"error": f"{type(exc).__name__}: {exc}"}
+            with job["lock"]:
+                job["running"].discard(i)
+                job["finished"] += 1
+                if not job["cancel"]:
+                    job["results"].append({"i": i, "result": r})
+
+        def run_all():
+            import concurrent.futures as cf
+            with cf.ThreadPoolExecutor(max_workers=self._parallel()) as pool:
+                list(pool.map(work, pages))
+            job["done"] = True
+        threading.Thread(target=run_all, daemon=True).start()
+        return {"job": job["id"], "parallel": self._parallel()}
+
+    def act_batch_job_poll(self, jid, since=0):
+        """What has finished since `since` (an index into the job's own list
+        of answers), which pages are being worked on now, and whether the
+        run is over."""
+        job = self._jobs.get(jid or "")
+        if not job:
+            return {"error": "that run is not going any more"}
+        with job["lock"]:
+            got = job["results"][int(since or 0):]
+            out = {"finished": got, "next": int(since or 0) + len(got),
+                   "running": sorted(job["running"]),
+                   "done": bool(job.get("done")) or job["cancel"]}
+        if out["done"] and not job["running"]:
+            with self._lock:
+                if out["next"] >= len(job["results"]):
+                    self._jobs.pop(jid, None)
+        return out
+
+    def act_batch_job_stop(self, jid):
+        job = self._jobs.get(jid or "")
+        if job:
+            job["cancel"] = True
+        return {"ok": True}
 
     def act_batch_oneshot(self, english, telugu):
         """One page of the batch: the same one-step proofing, run on a
@@ -2198,6 +2287,15 @@ def _make_handler(srv):
                 if r == "/api/batch/oneshot":
                     return self._json(srv.act_batch_oneshot(
                         p.get("english", ""), p.get("telugu", "")))
+                if r == "/api/batch/job/start":
+                    return self._json(srv.act_batch_job_start(
+                        p.get("kind", ""), p.get("pages") or [],
+                        p.get("helper", ""), p.get("english_all") or []))
+                if r == "/api/batch/job/poll":
+                    return self._json(srv.act_batch_job_poll(
+                        p.get("job", ""), p.get("since", 0)))
+                if r == "/api/batch/job/stop":
+                    return self._json(srv.act_batch_job_stop(p.get("job", "")))
                 if r == "/api/batch/sync":
                     return self._json(srv.act_batch_sync(
                         p.get("english", ""), p.get("telugu", ""),
