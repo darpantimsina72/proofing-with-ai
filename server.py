@@ -348,6 +348,8 @@ class ProofingServer:
                 self.mode = patch["mode"]
             if "model" in patch:
                 self.model = (patch["model"] or None)
+            if patch.get("checks_mode") in self.CHECKS_EFFORTS:
+                save_app_setting("checks_mode", patch["checks_mode"])
             lang = patch.get("language")
             if lang in tts.APP_LANGUAGES and lang != self.language:
                 self.language = lang
@@ -367,6 +369,7 @@ class ProofingServer:
         have = gemini_client.available_modes()
         return {
             "language": self.language,
+            "checks_mode": self._checks_mode(),
             "languages": tts.APP_LANGUAGES,
             "prompts_dir": os.path.join(PROMPTS_DIR, self.language),
             "mode": self.mode,
@@ -1200,7 +1203,45 @@ class ProofingServer:
         return state
 
     # ── the last proofing pass (each team's house rules) ────────────────
-    def _proofing_checks(self, english, text, existing, with_ai=True):
+    # How thorough the checklist pass is (App_Settings "checks_mode", set in
+    # Settings): "thorough" thinks at medium effort (about 110 s a page —
+    # most of a sync page's time), "quick" at low (about 5 s, finds less),
+    # "off" leaves only the rules checked in code.
+    CHECKS_EFFORTS = {"thorough": ("medium", "low"), "quick": ("low",), "off": ()}
+
+    def _checks_mode(self):
+        m = load_app_settings().get("checks_mode", "thorough")
+        return m if m in self.CHECKS_EFFORTS else "thorough"
+
+    def _checks_start(self, english, text):
+        """Start the checklist call on `text` in the background and hand
+        back a function that waits for it: (items, note). The sync call for
+        the same page runs meanwhile, so a page takes as long as the slower
+        of the two rather than both one after the other. The items quote
+        the text as it was; _proofing_checks finds them again in the text
+        as the sync leaves it, skipping any the sync rewrote."""
+        if (not self.CHECKS_EFFORTS[self._checks_mode()]
+                or not os.path.exists(prompt_path(CHECKS_PROMPT, self.language))):
+            return lambda: ([], "")
+        lang, box = self.language, {}
+
+        def work():
+            self._req.language = lang      # this thread answers in the tab's language
+            try:
+                box["got"] = self._checks_ask(english, text)
+            except Exception as exc:
+                box["err"] = exc
+        t = threading.Thread(target=work, daemon=True)
+        t.start()
+
+        def wait():
+            t.join()
+            if "err" in box:
+                raise box["err"]
+            return box["got"]
+        return wait
+
+    def _proofing_checks(self, english, text, existing, with_ai=True, ai=None):
         """(findings, note, text) for `text` as it now stands, never
         overlapping `existing`. Nothing is applied — each finding's text is
         still the original, its versions wait for the reviewer to pick one —
@@ -1211,8 +1252,9 @@ class ProofingServer:
         Two parts: the rules that need no AI (house_style — the invisible
         joiner in सद्‌गुरु, nukta, जरूरी, a spaced hyphen, curly quotes …),
         and, when the language has CHECKS_PROMPT, one AI call with the
-        proofing checklist. A failed AI call only leaves a note — the page
-        is still done."""
+        proofing checklist — or `ai`, the waiting end of one already started
+        (_checks_start). A failed AI call only leaves a note — the page is
+        still done."""
         used = [(f["start"], f["end"]) for f in existing]
         out = []
         for r in house_style.findings(text, self.language, used):
@@ -1226,9 +1268,11 @@ class ProofingServer:
                         "category": "Proofing"})
             used.append((r["start"], r["end"]))
         note = ""
-        if with_ai and os.path.exists(prompt_path(CHECKS_PROMPT, self.language)):
+        if ai is None and with_ai:
+            ai = self._checks_start(english, text)
+        if ai is not None:
             try:
-                items, note = self._checks_ask(english, text)
+                items, note = ai()
                 for it in items:
                     sp = core.locate(text, it["text"], used)
                     if not sp:
@@ -1255,13 +1299,14 @@ class ProofingServer:
                    f"\n\n=== {self.language} dubbing script ===\n{text}")
         body = (load_prompt(CHECKS_PROMPT, self.language)
                 + fill_language(core.ONESHOT_CONTRACT, self.language))
-        for effort in ("medium", "low"):
+        efforts = self.CHECKS_EFFORTS[self._checks_mode()]
+        for effort in efforts:
             try:
                 raw = gemini_client.run_prompt(payload, body, self.mode,
                                                self.model, effort=effort)
                 break
             except Exception as exc:
-                if effort == "low" or not re.search(
+                if effort == efforts[-1] or not re.search(
                         r"\b(524|502|503|504)\b|timed? ?out", str(exc), re.I):
                     raise
         return core.parse_oneshot(raw)
@@ -1527,6 +1572,8 @@ class ProofingServer:
             h = self._helper(helper)
         except Exception as exc:
             return {"error": f"Could not open the helper file — {exc}"}
+        # The checklist, at the same time as the sync call below.
+        checks = self._checks_start(english, telugu)
 
         cursor = None
         for e in before or []:
@@ -1540,7 +1587,8 @@ class ProofingServer:
                   "unfound_en": [u[:300] for u in pc["unfound"]],
                   "paired": paired}
         if not changes:
-            extra, cnote, telugu = self._proofing_checks(english, telugu, [])
+            extra, cnote, telugu = self._proofing_checks(english, telugu, [],
+                                                         ai=checks)
             return {"telugu": telugu, "findings": extra, "missed": [],
                     "sync": report, "note": cnote}
 
@@ -1765,7 +1813,8 @@ class ProofingServer:
                        "not_in_telugu": gone, "unplaced": unplaced})
         # The last proofing pass, on the page as it now stands, around the
         # sync corrections (never inside one).
-        extra, cnote, text = self._proofing_checks(english, text, findings)
+        extra, cnote, text = self._proofing_checks(english, text, findings,
+                                                   ai=checks)
         if cnote:
             note = (note + " · " if note else "") + cnote
         findings = sorted(findings + extra, key=lambda f: f["start"])

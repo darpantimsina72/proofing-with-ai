@@ -637,6 +637,16 @@ select:disabled{opacity:.5}
               title="The language of the script being proofed. Changes the AI prompts (one folder per language under Prompts), every label on this page, the file formats, and what both TTS panels read in. The page reloads."></select>
       <span id="statusLang" class="status"></span>
     </div>
+    <div class="row">
+      <span class="cfgname">Checklist in sync:</span>
+      <select id="cfgChecks"
+              title="The team's proofing checklist that runs with Corrections to sync, on every page (Hindi has one). Thorough finds the most but takes about 110 seconds a page; Quick takes about 5 seconds and finds less; Off leaves only the exact rules (nukta, सद्‌गुरु, hyphen, quotes …). The sync itself is the same in all three.">
+        <option value="thorough">Thorough — finds most, about 2 min a page</option>
+        <option value="quick">Quick — about 5 s a page, finds less</option>
+        <option value="off">Off — exact rules only, fastest</option>
+      </select>
+      <span id="statusChecks" class="status"></span>
+    </div>
   </div>
 </div>
 <div class="panel">
@@ -2512,6 +2522,7 @@ function buildConfig(cfg){
     if(name===cfg.language) opt.selected=true;
     L.appendChild(opt);
   }
+  if(cfg.checks_mode) $("cfgChecks").value=cfg.checks_mode;
   $("statusLang").textContent="prompts: "+(cfg.prompts_dir||"")+"  ·  the TTS panels follow it";
   $("statusLang").className="status";
   const m=$("cfgMode"); m.innerHTML="";
@@ -2582,6 +2593,11 @@ $("cfgModel").onchange=saveConfig;
 /* A change of language is a reload: the server fills the language into
    every label when it serves the page. The scripts, findings, batch and TTS
    settings all live on the server, so nothing is lost. */
+$("cfgChecks").onchange=async function(){
+  try{ await api("/api/config",{checks_mode:this.value});
+       $("statusChecks").textContent="✔ saved — used from the next page"; $("statusChecks").className="status ok"; }
+  catch(e){ $("statusChecks").textContent="Could not save: "+e.message; $("statusChecks").className="status err"; }
+};
 $("cfgLang").onchange=async function(){
   const lang=this.value;
   if(lang===(CONFIG&&CONFIG.language)) return;
@@ -3897,6 +3913,7 @@ function batchBusy(on){
    finishing and the next being sent, to go easy on the API; Stop ends the
    wait at once. */
 const BATCH_GAP_S=10;
+const BATCH_PARALLEL=3;     // pages worked on at once by AI Proofing and the sync
 /* `sync` runs Corrections to sync with new version instead of AI Proofing:
    the same page-by-page run, but /api/batch/sync with the chapter's helper
    file. Every sentence the editors touched comes back as a correction, its
@@ -3916,60 +3933,64 @@ async function batchRun(sync){
              +" correction, and its VERSION 1 goes in straight away. Tick VERSION 1 to"
              +" mark it checked, or ORIGINAL to put the approved {{LANGUAGE}} back.")) return;
   BATCH_STOP=false; batchBusy(true);
-  let ok=0, bad=0;
-  try{
-    for(const [n,i] of todo.entries()){
-      if(BATCH_STOP) break;
-      const p=BATCH.pages[i], was=p.status;
-      p.status="running"; p.error=""; renderBatch(BATCH.sel.p!==i);
-      batchSay((sync?"Syncing page ":"Proofing page ")+p.page+" ("+(n+1)+" of "+todo.length+")…");
-      try{
-        if(!p.telugu.trim()) throw new Error("this page has no {{LANGUAGE}}");
-        // Not api(): it throws a bare "HTTP 500" and the server's own
-        // message — which is what says WHY the page failed — is lost.
-        const r=await fetch((sync?"/api/batch/sync":"/api/batch/oneshot")+"?t="+encodeURIComponent(TOKEN),{
-          method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
-          signal:batchSignal(),
-          body:JSON.stringify(sync
-            // The pages before this one, so it is looked for after them in
-            // the chapter.
-            ? {english:p.english, telugu:p.telugu, helper:BATCH.helper.path,
-               before:BATCH.pages.slice(0,i).map(q=>q.english)}
-            : {english:p.english, telugu:p.telugu})});
-        let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
-        if(s.error) throw new Error(s.error);
-        const kept=p.findings.filter(batchKeeps);
-        p.current=s.telugu;
-        p.findings=(s.findings||[]).map(f=>({start:f.start, end:f.end,
-          orig:f.orig, current:f.current, english:f.english||"",
-          issue:f.issue||"", options:f.options||[],
-          ...(f.category!==undefined?{category:f.category||""}:{}),
-          ...(f.sync?{sync:f.sync}:{})}));
-        batchKeepMarks(p, kept);
-        p.missed=(s.missed||[]).length; p.note=s.note||"";
-        if(sync){ p.synced=true; p.syncInfo=s.sync||{}; p.missedList=s.missed||[]; }
-        p.status="done"; ok++;
-        // The page being looked at had its findings replaced under it.
-        if(BATCH.sel.p===i) BATCH.sel.f=null;
-      }catch(e){
-        // Stopped mid-page: the page is as it was, ready to run again.
-        if(e.name==="AbortError"){ p.status=was; p.error=""; batchSave(); renderBatch(BATCH.sel.p!==i); break; }
-        p.status="failed"; p.error=e.message; bad++;
-      }
-      // The page being read was just rewritten: its sentences are gone.
-      if(READ.on && READ.pi===i) readStop();
-      batchSave(); renderBatch(BATCH.sel.p!==i);
-      // A missing prompt file fails every page the same way — stop at one.
-      if(/^FileNotFoundError/.test(p.error||"")){
-        batchSay("Stopped — "+p.error,"err"); return; }
-      if(n+1<todo.length){
-        for(let k=BATCH_GAP_S; k>0 && !BATCH_STOP; k--){
-          batchSay("Page "+p.page+(p.status==="done"?" done":" failed")
-                  +" — next page in "+k+" s…");
-          await new Promise(r=>setTimeout(r,1000));
-        }
-      }
+  let ok=0, bad=0, started=0, fatal="";
+  // BATCH_PARALLEL pages at a time, each its own call: a page's time is
+  // almost all the AI's, so three at once is about three times as fast.
+  // Each worker takes the next page not yet started.
+  const queue=todo.slice();
+  async function one(i){
+    const n=++started;
+    const p=BATCH.pages[i], was=p.status;
+    p.status="running"; p.error=""; renderBatch(BATCH.sel.p!==i);
+    batchSay((sync?"Syncing":"Proofing")+" — "+BATCH.pages.filter(q=>q.status==="running").length
+            +" page(s) at once · started "+n+" of "+todo.length+"…");
+    try{
+      if(!p.telugu.trim()) throw new Error("this page has no {{LANGUAGE}}");
+      // Not api(): it throws a bare "HTTP 500" and the server's own
+      // message — which is what says WHY the page failed — is lost.
+      const r=await fetch((sync?"/api/batch/sync":"/api/batch/oneshot")+"?t="+encodeURIComponent(TOKEN),{
+        method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
+        signal:batchSignal(),
+        body:JSON.stringify(sync
+          // The pages before this one, so it is looked for after them in
+          // the chapter.
+          ? {english:p.english, telugu:p.telugu, helper:BATCH.helper.path,
+             before:BATCH.pages.slice(0,i).map(q=>q.english)}
+          : {english:p.english, telugu:p.telugu})});
+      let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
+      if(s.error) throw new Error(s.error);
+      const kept=p.findings.filter(batchKeeps);
+      p.current=s.telugu;
+      p.findings=(s.findings||[]).map(f=>({start:f.start, end:f.end,
+        orig:f.orig, current:f.current, english:f.english||"",
+        issue:f.issue||"", options:f.options||[],
+        ...(f.category!==undefined?{category:f.category||""}:{}),
+        ...(f.sync?{sync:f.sync}:{})}));
+      batchKeepMarks(p, kept);
+      p.missed=(s.missed||[]).length; p.note=s.note||"";
+      if(sync){ p.synced=true; p.syncInfo=s.sync||{}; p.missedList=s.missed||[]; }
+      p.status="done"; ok++;
+      // The page being looked at had its findings replaced under it.
+      if(BATCH.sel.p===i) BATCH.sel.f=null;
+    }catch(e){
+      // Stopped mid-page: the page is as it was, ready to run again.
+      if(e.name==="AbortError") p.status=was, p.error="";
+      else{ p.status="failed"; p.error=e.message; bad++; }
     }
+    // The page being read was just rewritten: its sentences are gone.
+    if(READ.on && READ.pi===i) readStop();
+    batchSave(); renderBatch(BATCH.sel.p!==i);
+    // A missing prompt file fails every page the same way — stop at one.
+    if(/^FileNotFoundError/.test(p.error||"")){ fatal=p.error; BATCH_STOP=true; }
+    if(!BATCH_STOP) batchSay((sync?"Syncing":"Proofing")+" — "+(ok+bad)+" of "+todo.length
+                            +" page(s) finished"+(bad?", "+bad+" failed":"")+"…");
+  }
+  async function worker(){
+    while(queue.length && !BATCH_STOP) await one(queue.shift());
+  }
+  try{
+    await Promise.all(Array.from({length:Math.min(BATCH_PARALLEL, todo.length)}, worker));
+    if(fatal){ batchSay("Stopped — "+fatal,"err"); return; }
   }finally{ batchBusy(false); }
   const left=BATCH.pages.filter(p=>p.status!=="done").length;
   batchSay((BATCH_STOP?"■ Stopped — ":"✔ Run finished — ")
@@ -4073,11 +4094,15 @@ $("bBatchLoad").onclick=batchLoadPick;
    (the AI may still finish it on its side; the answer is thrown away),
    and that page goes back to how it was, so pressing the button again
    runs it. */
-let BATCH_ABORT=null;
-function batchSignal(){ BATCH_ABORT=new AbortController(); return BATCH_ABORT.signal; }
+const BATCH_ABORTS=new Set();
+function batchSignal(){
+  const c=new AbortController(); BATCH_ABORTS.add(c);
+  c.signal.addEventListener("abort", ()=>BATCH_ABORTS.delete(c));
+  return c.signal;
+}
 $("bBatchStop").onclick=()=>{
   BATCH_STOP=true;
-  if(BATCH_ABORT) BATCH_ABORT.abort();
+  for(const c of [...BATCH_ABORTS]) c.abort();
   batchSay("■ Stopped.","warn");
 };
 $("bBatchPrev").onclick=()=>batchStepAndRead(-1,"ai");
