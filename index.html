@@ -2601,6 +2601,8 @@ $("cfgChecks").onchange=async function(){
 $("cfgLang").onchange=async function(){
   const lang=this.value;
   if(lang===(CONFIG&&CONFIG.language)) return;
+  if(RUNS.size && !confirm("A run is going in this tab. Changing the language reloads the page and stops it.\n\nChange anyway?")){
+    this.value=CONFIG.language; return; }
   try{
     $("statusLang").textContent="switching to "+lang+"…"; $("statusLang").className="status";
     await api("/api/config",{language:lang});
@@ -2887,11 +2889,14 @@ const batchSay=(m,c)=>{const s=$("batchStatus"); s.textContent=m; s.className="s
    act_batch_save for why not the browser's own storage. Chained, so two
    quick saves can never land in the wrong order. */
 let BATCH_SAVING=Promise.resolve();
-function batchSave(){
-  if(!BATCH) return;
-  const body=JSON.stringify(BATCH);
+function batchSave(B, path){
+  // A chapter running in the background saves to its own file, whatever
+  // chapter is on screen.
+  B=B||BATCH; if(!B) return;
+  if(path===undefined) path=BATCH_PATH;
+  const body=JSON.stringify(B);
   BATCH_SAVING=BATCH_SAVING.then(()=>
-    api("/api/batch/save",{batch:JSON.parse(body), path:BATCH_PATH}).then(r=>{
+    api("/api/batch/save",{batch:JSON.parse(body), path:path}).then(r=>{
       if(r.error) throw new Error(r.error);
       UNSAVED=false; })
   ).catch(e=>(UNSAVED=true, e instanceof TypeError && appGone(), batchSay(
@@ -2974,7 +2979,7 @@ async function updCheck(){
 $("bUpdLater").onclick=()=>$("updBar").classList.remove("on");
 $("updAuto").onchange=function(){ api("/api/update/auto",{on:this.checked}).catch(()=>{}); };
 $("bUpdNow").onclick=async()=>{
-  if(BATCH_RUNNING){ $("updMore").textContent="Stop the AI run first, then update."; return; }
+  if(RUNS.size){ $("updMore").textContent="Stop the AI runs first (or let them finish), then update."; return; }
   try{ btSyncNow(); }catch(e){}
   await BATCH_SAVING;                  // the chapter open now is saved first
   $("bUpdNow").disabled=true;
@@ -2994,7 +2999,8 @@ $("bUpdNow").onclick=async()=>{
 };
 updCheck();
 window.addEventListener("beforeunload", e=>{
-  if(APP_GONE && BATCH && UNSAVED){ e.preventDefault(); e.returnValue=""; }
+  // Closing or reloading the tab ends every run in it.
+  if((APP_GONE && BATCH && UNSAVED) || RUNS.size){ e.preventDefault(); e.returnValue=""; }
 });
 /* A saved batch made ready to carry on with. */
 function batchResumed(b){
@@ -3057,6 +3063,11 @@ const CHAP_TAB=Math.random().toString(36).slice(2);
 const chapChan=("BroadcastChannel" in window) ? new BroadcastChannel("proofing-chapters") : null;
 let CHAPTERS=[];
 const chapName=c=>(c.source||c.name||"").replace(/(\.progress)?\.json$/i,"");
+let CHAP_RENDER_T=0;
+function chapRenderSoon(){             // many runs saying things: at most twice a second
+  if(CHAP_RENDER_T) return;
+  CHAP_RENDER_T=setTimeout(()=>{ CHAP_RENDER_T=0; chapRender(); }, 500);
+}
 async function chapRefresh(){
   try{ const r=await api("/api/batch/recent"); CHAPTERS=r.chapters||[]; }catch(e){ return; }
   chapRender();
@@ -3075,8 +3086,12 @@ function chapRender(){
       +'<button data-a="tab" title="Open in a new browser tab, to work on it at the same time">&#8599;</button>'
       +'<button data-a="forget" title="Take it off this list (its file is kept)">&times;</button></div>';
     d.querySelector(".cn").textContent=chapName(c);
+    const run=runOf(c.path), live=run&&run.B;
+    const done=live ? live.pages.filter(q=>q.status==="done").length : c.done;
     d.querySelector(".cs").textContent=c.missing ? "file not found"
-      : [c.language, c.total ? c.done+" / "+c.total+" done" : ""].filter(Boolean).join(" · ");
+      : [c.language, c.total ? done+" / "+c.total+" done" : "", run ? "⏳ running" : ""]
+          .filter(Boolean).join(" · ");
+    if(run) d.title=c.path+"\n"+(run.msg||"running");
     d.onclick=e=>{
       const a=e.target.dataset && e.target.dataset.a;
       if(a==="forget") return chapForget(c);
@@ -3095,20 +3110,33 @@ function chapNewTab(c){
 async function chapOpen(c){
   if(c.path===BATCH_PATH) return;
   if(c.missing){ batchSay(chapName(c)+" — its file is not there any more: "+c.path,"err"); return; }
-  if(BATCH_RUNNING){
-    batchSay("Stop the run first — or open that chapter in a new tab (↗) to work on both at once.","warn");
-    return;
-  }
   try{ btSyncNow(); }catch(e){}
   await BATCH_SAVING;                  // this chapter's work is saved first
-  if(c.language && c.language!==LANG){ location.href=chapUrl(c); return; }
+  if(c.language && c.language!==LANG){
+    // Another language needs a page in that language — a new tab while
+    // anything runs here, so the run is not cut off.
+    if(RUNS.size){ window.open(chapUrl(c),"_blank");
+      batchSay(chapName(c)+" is in "+c.language+" — opened in a new tab, so the run here goes on.","ok"); return; }
+    location.href=chapUrl(c); return;
+  }
+  // A chapter that is running: the very pages the run is working on.
+  const live=runOf(c.path);
+  if(live){
+    if(READ.on) readStop();
+    BATCH=live.B; BATCH_PATH=c.path;
+    renderBatch(); sgWarm(); batchBusy();
+    batchSay(live.msg||"Running…");
+    chapOpened();
+    return;
+  }
   await chapLoad(c.id);
 }
 async function chapLoad(id){
   const r=await api("/api/batch/open",{id:id});
   if(r.error){ batchSay(r.error,"err"); chapRefresh(); return false; }
+  if(READ.on) readStop();
   BATCH=batchResumed(r.batch); BATCH_PATH=r.path;
-  renderBatch(); sgWarm();
+  renderBatch(); sgWarm(); batchBusy();
   batchLoadedSay(BATCH, r.name, batchMarksNote(r.marks));
   if(Object.keys(r.marks||{}).length) batchSave();
   chapOpened();
@@ -3170,7 +3198,6 @@ function batchLoadedSay(b, where, extra){
    progress file is there, carrying on from it is offered. */
 async function batchLoadPick(){
   btSyncNow();                         // typing on the page open now is kept
-  if(BATCH_RUNNING){ batchSay("Stop the run before loading another file.","warn"); return; }
   const btn=$("bBatchLoad");
   btn.disabled=true; $("bChapNew").disabled=true;
   batchSay("Choose the file(s) in the window that has opened — several at once is fine "
@@ -3197,7 +3224,7 @@ async function batchLoadPick(){
     batchSay("✔ "+n+" chapter(s) loaded — they are in the CHAPTERS list on the left."
             +(bad.length?" Not loaded: "+bad.join(" · "):""), bad.length?"warn":"ok");
   }catch(e){ batchSay("Could not load — "+e.message,"err"); }
-  finally{ btn.disabled=BATCH_RUNNING; $("bChapNew").disabled=false; }
+  finally{ btn.disabled=false; $("bChapNew").disabled=false; }
 }
 /* The batch for one file Load pages handed back: its progress file, the
    progress saved beside it (never replaced — carrying on is the only way),
@@ -3222,9 +3249,13 @@ async function batchLoadOne(f, ask){
       return;
     }
   }
+  // Loading the chapter that is running here: show the live one.
+  const live=runOf(f.progress_path);
+  if(live){ BATCH=live.B; BATCH_PATH=f.progress_path; renderBatch(); batchBusy(); chapOpened(); return; }
   const b=batchFromPick(f);
   const u=await batchUse(f.progress_path);
-  BATCH=b; batchSave(); renderBatch(); sgWarm();
+  if(READ.on) readStop();
+  BATCH=b; batchSave(); renderBatch(); sgWarm(); batchBusy();
   batchLoadedSay(b, u.name, batchMarksNote(f.marks));
   chapOpened();
 }
@@ -3900,11 +3931,47 @@ function batchExport(){
            pending?"warn":"ok");
 }
 
-function batchBusy(on){
+/* ---- runs, one per chapter ---------------------------------------------------
+   A run (AI Proofing, the sync, Get suggestions for all pages, Your check
+   on the whole chapter) belongs to its chapter, not to the screen: it
+   works on that chapter's own pages and saves to that chapter's own file,
+   so another chapter can be opened, loaded, edited or run while it goes
+   on. Coming back to a running chapter shows it as it is. The buttons
+   below act on the chapter on screen: Stop stops ITS run only. The
+   chapters list shows which chapters are running. */
+const RUNS=new Map();                  // progress path -> run
+const runOf=path=>RUNS.get(path||"");
+function runStart(B, path, kind){
+  const r={B, path, kind, stop:false, aborts:new Set(), msg:""};
+  RUNS.set(path, r); batchBusy(); chapRender();
+  return r;
+}
+function runEnd(r){
+  if(RUNS.get(r.path)===r) RUNS.delete(r.path);
+  batchBusy(); chapRender();
+  BATCH_SAVING.then(chapRefresh);      // its pages-done count, from the saved file
+}
+function runSignal(r){
+  if(!r) return undefined;
+  const c=new AbortController(); r.aborts.add(c);
+  c.signal.addEventListener("abort", ()=>r.aborts.delete(c));
+  return c.signal;
+}
+/* A run's message: on the status line when its chapter is on screen, in
+   the chapters list either way. */
+function runSay(r, m, c){
+  r.msg=m;
+  if(r.B===BATCH) batchSay(m, c);
+  chapRenderSoon();
+}
+const isOnScreen=B=>B===BATCH;
+function batchBusy(){
+  const on=!!runOf(BATCH_PATH);
   BATCH_RUNNING=on;
   $("bBatchRun").disabled=on; $("bBatchSkip").disabled=on; $("bBatchStop").disabled=!on;
   $("bBatchSync").disabled=on; $("bBatchHelper").disabled=on;
-  $("bBatchLoad").disabled=on; $("bBatchSugg").disabled=on;
+  $("bBatchSugg").disabled=on; $("bBatchLoad").disabled=false;
+  try{ $("bCkPage").disabled=$("bCkAll").disabled=on; }catch(e){}
   try{ btManButtons(); }catch(e){}
 }
 /* Every page that is not done yet, one after the other. A failure is
@@ -3921,7 +3988,7 @@ const BATCH_PARALLEL=3;     // pages worked on at once by AI Proofing and the sy
 async function batchRun(sync){
   sync=sync===true;
   if(!BATCH){ batchSay("Load pages first.","warn"); return; }
-  if(BATCH_RUNNING) return;
+  if(runOf(BATCH_PATH)) return;
   if(sync && !(BATCH.helper&&BATCH.helper.path)){
     batchSay("Open the chapter's helper file first — 📎 Open helper file.","warn"); return; }
   const todo=BATCH.pages.map((p,i)=>i).filter(i=>BATCH.pages[i].status!=="done");
@@ -3932,7 +3999,8 @@ async function batchRun(sync){
              +" the approved {{LANGUAGE}}. Every sentence the editors touched comes back as a"
              +" correction, and its VERSION 1 goes in straight away. Tick VERSION 1 to"
              +" mark it checked, or ORIGINAL to put the approved {{LANGUAGE}} back.")) return;
-  BATCH_STOP=false; batchBusy(true);
+  // The chapter on screen now; the run keeps to it if another is opened.
+  const B=BATCH, path=BATCH_PATH, run=runStart(B, path, sync?"sync":"proof");
   let ok=0, bad=0, started=0, fatal="";
   // BATCH_PARALLEL pages at a time, each its own call: a page's time is
   // almost all the AI's, so three at once is about three times as fast.
@@ -3940,9 +4008,9 @@ async function batchRun(sync){
   const queue=todo.slice();
   async function one(i){
     const n=++started;
-    const p=BATCH.pages[i], was=p.status;
-    p.status="running"; p.error=""; renderBatch(BATCH.sel.p!==i);
-    batchSay((sync?"Syncing":"Proofing")+" — "+BATCH.pages.filter(q=>q.status==="running").length
+    const p=B.pages[i], was=p.status;
+    p.status="running"; p.error=""; if(isOnScreen(B)) renderBatch(B.sel.p!==i);
+    runSay(run, (sync?"Syncing":"Proofing")+" — "+B.pages.filter(q=>q.status==="running").length
             +" page(s) at once · started "+n+" of "+todo.length+"…");
     try{
       if(!p.telugu.trim()) throw new Error("this page has no {{LANGUAGE}}");
@@ -3950,12 +4018,12 @@ async function batchRun(sync){
       // message — which is what says WHY the page failed — is lost.
       const r=await fetch((sync?"/api/batch/sync":"/api/batch/oneshot")+"?t="+encodeURIComponent(TOKEN),{
         method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
-        signal:batchSignal(),
+        signal:runSignal(run),
         body:JSON.stringify(sync
           // The pages before this one, so it is looked for after them in
           // the chapter.
-          ? {english:p.english, telugu:p.telugu, helper:BATCH.helper.path,
-             before:BATCH.pages.slice(0,i).map(q=>q.english)}
+          ? {english:p.english, telugu:p.telugu, helper:B.helper.path,
+             before:B.pages.slice(0,i).map(q=>q.english)}
           : {english:p.english, telugu:p.telugu})});
       let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
       if(s.error) throw new Error(s.error);
@@ -3971,29 +4039,29 @@ async function batchRun(sync){
       if(sync){ p.synced=true; p.syncInfo=s.sync||{}; p.missedList=s.missed||[]; }
       p.status="done"; ok++;
       // The page being looked at had its findings replaced under it.
-      if(BATCH.sel.p===i) BATCH.sel.f=null;
+      if(B.sel.p===i) B.sel.f=null;
     }catch(e){
       // Stopped mid-page: the page is as it was, ready to run again.
       if(e.name==="AbortError") p.status=was, p.error="";
       else{ p.status="failed"; p.error=e.message; bad++; }
     }
     // The page being read was just rewritten: its sentences are gone.
-    if(READ.on && READ.pi===i) readStop();
-    batchSave(); renderBatch(BATCH.sel.p!==i);
+    if(isOnScreen(B) && READ.on && READ.pi===i) readStop();
+    batchSave(B, path); if(isOnScreen(B)) renderBatch(B.sel.p!==i);
     // A missing prompt file fails every page the same way — stop at one.
-    if(/^FileNotFoundError/.test(p.error||"")){ fatal=p.error; BATCH_STOP=true; }
-    if(!BATCH_STOP) batchSay((sync?"Syncing":"Proofing")+" — "+(ok+bad)+" of "+todo.length
+    if(/^FileNotFoundError/.test(p.error||"")){ fatal=p.error; run.stop=true; }
+    if(!run.stop) runSay(run, (sync?"Syncing":"Proofing")+" — "+(ok+bad)+" of "+todo.length
                             +" page(s) finished"+(bad?", "+bad+" failed":"")+"…");
   }
   async function worker(){
-    while(queue.length && !BATCH_STOP) await one(queue.shift());
+    while(queue.length && !run.stop) await one(queue.shift());
   }
   try{
     await Promise.all(Array.from({length:Math.min(BATCH_PARALLEL, todo.length)}, worker));
-    if(fatal){ batchSay("Stopped — "+fatal,"err"); return; }
-  }finally{ batchBusy(false); }
-  const left=BATCH.pages.filter(p=>p.status!=="done").length;
-  batchSay((BATCH_STOP?"■ Stopped — ":"✔ Run finished — ")
+    if(fatal){ runSay(run, "Stopped — "+fatal,"err"); return; }
+  }finally{ runEnd(run); }
+  const left=B.pages.filter(p=>p.status!=="done").length;
+  runSay(run, (run.stop?"■ Stopped — ":"✔ Run finished — ")
           +ok+(sync?" page(s) synced":" page(s) proofed")+(bad?", "+bad+" failed":"")
           +(left?" · "+left+" not done; press the button again to run them":""),
            bad?"warn":"ok");
@@ -4094,15 +4162,11 @@ $("bBatchLoad").onclick=batchLoadPick;
    (the AI may still finish it on its side; the answer is thrown away),
    and that page goes back to how it was, so pressing the button again
    runs it. */
-const BATCH_ABORTS=new Set();
-function batchSignal(){
-  const c=new AbortController(); BATCH_ABORTS.add(c);
-  c.signal.addEventListener("abort", ()=>BATCH_ABORTS.delete(c));
-  return c.signal;
-}
 $("bBatchStop").onclick=()=>{
-  BATCH_STOP=true;
-  for(const c of [...BATCH_ABORTS]) c.abort();
+  const r=runOf(BATCH_PATH);
+  if(!r) return;
+  r.stop=true;
+  for(const c of [...r.aborts]) c.abort();
   batchSay("■ Stopped.","warn");
 };
 $("bBatchPrev").onclick=()=>batchStepAndRead(-1,"ai");
@@ -5626,16 +5690,17 @@ function btManButtons(){
    the reviewer picks a version as before. The sentences are kept by
    reference, so typing on the page while the call is out does not send
    the versions to the wrong ones. */
-async function btFetchSuggestions(p){
+async function btFetchSuggestions(p, run){
   const todo=btManTodo(p);
   if(!todo.length) return {filled:0, total:0};
-  SUGG_ST.set(p,"running"); renderBatch(true);
+  const B=run?run.B:BATCH, path=run?run.path:BATCH_PATH;
+  SUGG_ST.set(p,"running"); if(isOnScreen(B)) renderBatch(true);
   let s;
   try{
     if(!(p.english||"").trim()) throw new Error("this page has no English to work from");
     const r=await fetch("/api/batch/suggestions?t="+encodeURIComponent(TOKEN),{
       method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
-      signal:batchSignal(),
+      signal:runSignal(run),
       body:JSON.stringify({english:p.english, telugu:p.current,
                            items:todo.map(f=>({text:f.current, issue:f.issue}))})});
     try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
@@ -5653,8 +5718,8 @@ async function btFetchSuggestions(p){
     filled++;
   });
   SUGG_ST.set(p,"ready");
-  batchSave();
-  renderBatch(true);
+  batchSave(B, path);
+  if(isOnScreen(B)) renderBatch(true);
   if(batchPage()===p){ renderBatchSugg(); try{ readMark(); }catch(e){} }
   return {filled, total:todo.length};
 }
@@ -5786,11 +5851,11 @@ function ckRemember(check){
 }
 /* One page: the call, and its answers added where they do not overlap the
    page's corrections. Returns how many were added; throws on a failure. */
-async function ckOnePage(p, check){
+async function ckOnePage(p, check, run){
   const sent=p.current;
   const r=await fetch("/api/batch/custom?t="+encodeURIComponent(TOKEN),{
     method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
-    signal:batchSignal(),
+    signal:runSignal(run),
     body:JSON.stringify({english:p.english, telugu:sent, check:check,
                          used:p.findings.map(f=>[f.start,f.end])})});
   let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
@@ -5807,31 +5872,27 @@ async function ckRun(all){
   const check=$("ckText").value.trim();
   if(!BATCH){ ckSay("Load pages first.","warn"); return; }
   if(!check){ ckSay("Type the check you want first.","warn"); $("ckText").focus(); return; }
-  if(BATCH_RUNNING) return;
+  if(runOf(BATCH_PATH)) return;
   btSyncNow();
   const idx=all ? BATCH.pages.map((p,i)=>i).filter(i=>(BATCH.pages[i].current||"").trim())
                 : [BATCH.sel.p];
   if(!idx.length){ ckSay("No page has any text to check.","warn"); return; }
   ckRemember(check);
-  BATCH_STOP=false; batchBusy(true); $("bCkPage").disabled=$("bCkAll").disabled=true;
+  const B=BATCH, path=BATCH_PATH, run=runStart(B, path, "check");
+  // Its own status line when on screen, the chapters list either way.
+  const say=(m,c)=>{ run.msg=m; if(isOnScreen(B)) ckSay(m,c); chapRenderSoon(); };
   let added=0, bad=0, lastErr="";
   try{
     for(const [n,i] of idx.entries()){
-      if(BATCH_STOP) break;
-      const p=BATCH.pages[i];
-      ckSay("Checking page "+p.page+(all?" ("+(n+1)+" of "+idx.length+")":"")+"…");
-      try{ added+=await ckOnePage(p, check); }
+      if(run.stop) break;
+      const p=B.pages[i];
+      say("Checking page "+p.page+(all?" ("+(n+1)+" of "+idx.length+")":"")+"…");
+      try{ added+=await ckOnePage(p, check, run); }
       catch(e){ if(e.name==="AbortError") break; bad++; lastErr="page "+p.page+": "+e.message; }
-      batchSave(); renderBatch(BATCH.sel.p!==i);
-      if(all && n+1<idx.length){
-        for(let k=BATCH_GAP_S; k>0 && !BATCH_STOP; k--){
-          ckSay("Page "+p.page+" checked — next page in "+k+" s…");
-          await new Promise(r=>setTimeout(r,1000));
-        }
-      }
+      batchSave(B, path); if(isOnScreen(B)) renderBatch(B.sel.p!==i);
     }
-  }finally{ batchBusy(false); $("bCkPage").disabled=$("bCkAll").disabled=false; }
-  ckSay((BATCH_STOP?"■ Stopped — ":"✔ Done — ")+added+" suggestion(s)"
+  }finally{ runEnd(run); }
+  say((run.stop?"■ Stopped — ":"✔ Done — ")+added+" suggestion(s)"
         +(all?" on "+idx.length+" page(s)":"")
         +(added?" in yellow, marked [Your check] — click one to pick a version.":" — nothing found.")
         +(bad?" · "+bad+" page(s) failed ("+lastErr+")":""), bad?"warn":"ok");
@@ -5849,33 +5910,26 @@ ckFill();
    since its sentences still have no versions. */
 async function batchSuggestAll(){
   if(!BATCH){ batchSay("Load pages first.","warn"); return; }
-  if(BATCH_RUNNING || BT_MAN_BUSY) return;
+  if(runOf(BATCH_PATH) || BT_MAN_BUSY) return;
   btSyncNow();
   const todo=BATCH.pages.map((p,i)=>i).filter(i=>btManTodo(BATCH.pages[i]).length);
   if(!todo.length){
     batchSay("No page has hand-marked sentences waiting for versions.","warn"); return; }
-  // BT_MAN_BUSY too: the single-page button waits for this run.
-  BATCH_STOP=false; BT_MAN_BUSY=true; batchBusy(true);
+  const B=BATCH, path=BATCH_PATH, run=runStart(B, path, "suggestions");
   let pages=0, filled=0, total=0, bad=0, lastErr="";
   try{
     for(const [n,i] of todo.entries()){
-      if(BATCH_STOP) break;
-      btSyncNow();                     // typing on the page being viewed goes in first
-      const p=BATCH.pages[i];
-      batchSay("Getting suggestions for page "+p.page+" ("+(n+1)+" of "+todo.length+")…");
+      if(run.stop) break;
+      if(isOnScreen(B)) btSyncNow();   // typing on the page being viewed goes in first
+      const p=B.pages[i];
+      runSay(run, "Getting suggestions for page "+p.page+" ("+(n+1)+" of "+todo.length+")…");
       try{
-        const r=await btFetchSuggestions(p);
+        const r=await btFetchSuggestions(p, run);
         pages++; filled+=r.filled; total+=r.total;
       }catch(e){ if(e.name==="AbortError") break; bad++; lastErr="page "+p.page+": "+e.message; }
-      if(n+1<todo.length){
-        for(let k=BATCH_GAP_S; k>0 && !BATCH_STOP; k--){
-          batchSay("Page "+p.page+" done — next page in "+k+" s…");
-          await new Promise(r=>setTimeout(r,1000));
-        }
-      }
     }
-  }finally{ BT_MAN_BUSY=false; batchBusy(false); }
-  batchSay((BATCH_STOP?"■ Stopped — ":"✔ Suggestions done — ")
+  }finally{ runEnd(run); }
+  runSay(run, (run.stop?"■ Stopped — ":"✔ Suggestions done — ")
           +"versions for "+filled+" of "+total+" sentence(s) on "+pages+" page(s)"
           +(bad?" · "+bad+" page(s) failed ("+lastErr+") — press the button again to retry":"")
           +(filled?" · click a sky-blue highlight to pick one.":""),
