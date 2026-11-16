@@ -442,6 +442,15 @@ select:disabled{opacity:.5}
 .updbar{background:#1d4ed8;display:none}
 .updbar.on{display:block}
 .updbar label{font-weight:400;margin-left:8px}
+/* Find (Ctrl/⌘+F) on the Book tab: every page of the chapter, both boxes. */
+#findBar{position:fixed;top:44px;right:16px;z-index:10001;display:none;align-items:center;gap:6px;
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 8px;
+  box-shadow:0 4px 16px rgba(0,0,0,.18);font:12px "Nirmala UI",sans-serif}
+#findBar.on{display:flex}
+#findQ{width:260px;padding:4px 8px;font:inherit;font-size:13px}
+#findBar button{padding:2px 8px;cursor:pointer}
+#findInfo{color:var(--muted);min-width:150px}
+::highlight(found){background:#f97316;color:#fff}
 .updbar button{color:#1d4ed8}
 .appgone button{margin:6px 8px 0 0;font:700 14px sans-serif;padding:6px 12px;border-radius:6px;
   border:0;background:#fff;color:#b91c1c;cursor:pointer}
@@ -450,6 +459,13 @@ select:disabled{opacity:.5}
   &#9888; THE APP HAS STOPPED — nothing you do on this page is being saved now.
   <div id="appGoneMore" style="font-weight:400"></div>
   <button id="bAppGoneSave">&#8681; Save my work now</button>
+</div>
+<div id="findBar" role="search">
+  <input id="findQ" type="search" placeholder="Find in this chapter — English or {{LANGUAGE}}" autocomplete="off">
+  <button id="bFindPrev" title="Previous (Shift+Enter)">&#9650;</button>
+  <button id="bFindNext" title="Next (Enter)">&#9660;</button>
+  <span id="findInfo"></span>
+  <button id="bFindClose" title="Close (Esc)">&times;</button>
 </div>
 <div id="updBar" class="appgone updbar" role="status">
   &#128260; <span id="updMsg">A new version of the app is ready.</span>
@@ -3904,7 +3920,7 @@ async function batchRun(sync){
   try{
     for(const [n,i] of todo.entries()){
       if(BATCH_STOP) break;
-      const p=BATCH.pages[i];
+      const p=BATCH.pages[i], was=p.status;
       p.status="running"; p.error=""; renderBatch(BATCH.sel.p!==i);
       batchSay((sync?"Syncing page ":"Proofing page ")+p.page+" ("+(n+1)+" of "+todo.length+")…");
       try{
@@ -3912,7 +3928,8 @@ async function batchRun(sync){
         // Not api(): it throws a bare "HTTP 500" and the server's own
         // message — which is what says WHY the page failed — is lost.
         const r=await fetch((sync?"/api/batch/sync":"/api/batch/oneshot")+"?t="+encodeURIComponent(TOKEN),{
-          method:"POST", headers:{"Content-Type":"application/json"},
+          method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
+          signal:batchSignal(),
           body:JSON.stringify(sync
             // The pages before this one, so it is looked for after them in
             // the chapter.
@@ -3934,7 +3951,11 @@ async function batchRun(sync){
         p.status="done"; ok++;
         // The page being looked at had its findings replaced under it.
         if(BATCH.sel.p===i) BATCH.sel.f=null;
-      }catch(e){ p.status="failed"; p.error=e.message; bad++; }
+      }catch(e){
+        // Stopped mid-page: the page is as it was, ready to run again.
+        if(e.name==="AbortError"){ p.status=was; p.error=""; batchSave(); renderBatch(BATCH.sel.p!==i); break; }
+        p.status="failed"; p.error=e.message; bad++;
+      }
       // The page being read was just rewritten: its sentences are gone.
       if(READ.on && READ.pi===i) readStop();
       batchSave(); renderBatch(BATCH.sel.p!==i);
@@ -4048,8 +4069,17 @@ function syncExportOk(){
     +"\n\nExport anyway?");
 }
 $("bBatchLoad").onclick=batchLoadPick;
-$("bBatchStop").onclick=()=>{ BATCH_STOP=true;
-  batchSay("Stopping after the page being proofed now…","warn"); };
+/* Stop: at once. The call out for the page being worked on is dropped
+   (the AI may still finish it on its side; the answer is thrown away),
+   and that page goes back to how it was, so pressing the button again
+   runs it. */
+let BATCH_ABORT=null;
+function batchSignal(){ BATCH_ABORT=new AbortController(); return BATCH_ABORT.signal; }
+$("bBatchStop").onclick=()=>{
+  BATCH_STOP=true;
+  if(BATCH_ABORT) BATCH_ABORT.abort();
+  batchSay("■ Stopped.","warn");
+};
 $("bBatchPrev").onclick=()=>batchStepAndRead(-1,"ai");
 $("bBatchNext").onclick=()=>batchStepAndRead(1,"ai");
 $("bBatchPrevMan").onclick=()=>batchStepAndRead(-1,"man");
@@ -5579,12 +5609,16 @@ async function btFetchSuggestions(p){
   try{
     if(!(p.english||"").trim()) throw new Error("this page has no English to work from");
     const r=await fetch("/api/batch/suggestions?t="+encodeURIComponent(TOKEN),{
-      method:"POST", headers:{"Content-Type":"application/json"},
+      method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
+      signal:batchSignal(),
       body:JSON.stringify({english:p.english, telugu:p.current,
                            items:todo.map(f=>({text:f.current, issue:f.issue}))})});
     try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
     if(s.error) throw new Error(s.error);
-  }catch(e){ SUGG_ST.set(p,{err:e.message}); renderBatch(true); throw e; }
+  }catch(e){
+    if(e.name==="AbortError"){ SUGG_ST.delete(p); renderBatch(true); throw e; }
+    SUGG_ST.set(p,{err:e.message}); renderBatch(true); throw e;
+  }
   let filled=0;
   (s.results||[]).forEach((g,k)=>{
     const f=todo[k];
@@ -5618,6 +5652,90 @@ async function btGetSuggestions(){
 }
 $("btManSugg").onclick=btGetSuggestions;
 
+/* ---- Find (Ctrl/⌘+F) ----------------------------------------------------
+   On the Book tab, Ctrl+F (⌘+F on a Mac) searches every page of the
+   chapter — the English and the {{LANGUAGE}} as they stand — not only the page on
+   screen, which is all the browser's own Find can see. Enter goes to the
+   next place, Shift+Enter back, Esc closes. The place found is lit in
+   orange in its box; the page it is on opens. Capitals do not matter. On
+   the Video tab the browser's own Find is left as it is. */
+const FIND={hits:[], i:-1, q:""};
+function findOpen(){
+  $("findBar").classList.add("on");
+  const q=$("findQ"); q.focus(); q.select();
+  const w=(window.getSelection()+"").trim();
+  if(w && w.length<80 && !w.includes("\n")){ q.value=w; findRun(); }
+}
+function findClose(){
+  $("findBar").classList.remove("on");
+  if(window.CSS&&CSS.highlights) CSS.highlights.delete("found");
+}
+function findRun(){
+  const q=$("findQ").value.toLowerCase();
+  FIND.q=q; FIND.hits=[]; FIND.i=-1;
+  if(!BATCH || !q){ findShow(); return; }
+  BATCH.pages.forEach((p,pi)=>{
+    for(const [box,text] of [["en",p.english||""],["te",p.current||""]]){
+      const t=text.toLowerCase(); let k=0;
+      for(let i=t.indexOf(q); i>=0; i=t.indexOf(q, i+q.length)) FIND.hits.push({pi, box, k:k++});
+    }
+  });
+  // The first one on or after the page on screen.
+  const at=FIND.hits.findIndex(h=>h.pi>=BATCH.sel.p);
+  FIND.i=FIND.hits.length ? (at<0?0:at) : -1;
+  findShow();
+}
+function findStep(d){
+  if(!FIND.hits.length) return;
+  FIND.i=(FIND.i+d+FIND.hits.length)%FIND.hits.length;
+  findShow();
+}
+/* A DOM range over string offsets [a, b) of `box`'s text. */
+function rangeInBox(box, a, b){
+  const range=document.createRange(), walk=document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+  let pos=0, startSet=false, n;
+  while((n=walk.nextNode())){
+    const len=n.data.length;
+    if(!startSet && a<pos+len){ range.setStart(n, a-pos); startSet=true; }
+    if(startSet && b<=pos+len){ range.setEnd(n, b-pos); return range; }
+    pos+=len;
+  }
+  return null;
+}
+function findShow(){
+  const info=$("findInfo");
+  if(!FIND.q){ info.textContent=""; return; }
+  if(!FIND.hits.length){ info.textContent="not found"; if(window.CSS&&CSS.highlights) CSS.highlights.delete("found"); return; }
+  const h=FIND.hits[FIND.i], p=BATCH.pages[h.pi];
+  info.textContent=(FIND.i+1)+" of "+FIND.hits.length+" · page "+p.page+" · "+(h.box==="en"?"English":LANG);
+  if(BATCH.sel.p!==h.pi) batchSelect(h.pi, null);
+  requestAnimationFrame(()=>{
+    const el=$(h.box==="en"?"btEnglish":"btTelugu"), t=el.textContent.toLowerCase();
+    let i=-1;
+    for(let n=0; n<=h.k; n++){ i=t.indexOf(FIND.q, n?i+FIND.q.length:0); if(i<0) return; }
+    const r=rangeInBox(el, i, i+FIND.q.length);
+    if(!r) return;
+    if(window.CSS && CSS.highlights) CSS.highlights.set("found", new Highlight(r));
+    // Scrolled inside the box only, so the page itself stays put.
+    const rr=r.getBoundingClientRect(), br=el.getBoundingClientRect();
+    el.scrollTop+=rr.top-br.top-el.clientHeight/2;
+  });
+}
+$("findQ").addEventListener("input", findRun);
+$("findQ").addEventListener("keydown", e=>{
+  if(e.key==="Enter"){ e.preventDefault(); findStep(e.shiftKey?-1:1); }
+  else if(e.key==="Escape"){ e.preventDefault(); findClose(); }
+});
+$("bFindNext").onclick=()=>findStep(1);
+$("bFindPrev").onclick=()=>findStep(-1);
+$("bFindClose").onclick=findClose;
+document.addEventListener("keydown", e=>{
+  if((e.ctrlKey||e.metaKey) && !e.altKey && !e.shiftKey && (e.key==="f"||e.key==="F")
+     && !$("tabBatch").hidden && BATCH && !$("settingsDlg").open){
+    e.preventDefault(); findOpen();
+  }
+});
+
 /* ---- your own check -------------------------------------------------------
    The reviewer types one check ("are the quotation marks and commas the
    same as in the English?") and runs it on the page on screen or on every
@@ -5647,6 +5765,7 @@ async function ckOnePage(p, check){
   const sent=p.current;
   const r=await fetch("/api/batch/custom?t="+encodeURIComponent(TOKEN),{
     method:"POST", headers:{"Content-Type":"application/json","X-Proofing-Lang":LANG},
+    signal:batchSignal(),
     body:JSON.stringify({english:p.english, telugu:sent, check:check,
                          used:p.findings.map(f=>[f.start,f.end])})});
   let s; try{ s=await r.json(); }catch(_){ s={error:"HTTP "+r.status}; }
@@ -5677,7 +5796,7 @@ async function ckRun(all){
       const p=BATCH.pages[i];
       ckSay("Checking page "+p.page+(all?" ("+(n+1)+" of "+idx.length+")":"")+"…");
       try{ added+=await ckOnePage(p, check); }
-      catch(e){ bad++; lastErr="page "+p.page+": "+e.message; }
+      catch(e){ if(e.name==="AbortError") break; bad++; lastErr="page "+p.page+": "+e.message; }
       batchSave(); renderBatch(BATCH.sel.p!==i);
       if(all && n+1<idx.length){
         for(let k=BATCH_GAP_S; k>0 && !BATCH_STOP; k--){
@@ -5722,7 +5841,7 @@ async function batchSuggestAll(){
       try{
         const r=await btFetchSuggestions(p);
         pages++; filled+=r.filled; total+=r.total;
-      }catch(e){ bad++; lastErr="page "+p.page+": "+e.message; }
+      }catch(e){ if(e.name==="AbortError") break; bad++; lastErr="page "+p.page+": "+e.message; }
       if(n+1<todo.length){
         for(let k=BATCH_GAP_S; k>0 && !BATCH_STOP; k--){
           batchSay("Page "+p.page+" done — next page in "+k+" s…");
