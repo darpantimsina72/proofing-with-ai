@@ -460,6 +460,16 @@ select:disabled{opacity:.5}
   <div id="appGoneMore" style="font-weight:400"></div>
   <button id="bAppGoneSave">&#8681; Save my work now</button>
 </div>
+<dialog id="rerunDlg" style="max-width:560px;border:1px solid var(--border);border-radius:8px;padding:16px 18px">
+  <div style="font-weight:bold;margin-bottom:8px" id="rerunTitle"></div>
+  <div id="rerunText" style="font:13px/1.5 'Nirmala UI',sans-serif;margin-bottom:12px"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button id="rerunPending" class="b-one"></button>
+    <button id="rerunPage" class="b-man2"></button>
+    <button id="rerunAll" class="b-sugg"></button>
+    <button id="rerunCancel">Cancel</button>
+  </div>
+</dialog>
 <div id="findBar" role="search">
   <input id="findQ" type="search" placeholder="Find in this chapter — English or {{LANGUAGE}}" autocomplete="off">
   <button id="bFindPrev" title="Previous (Shift+Enter)">&#9650;</button>
@@ -4005,14 +4015,13 @@ async function batchRun(sync){
   if(runOf(BATCH_PATH)) return;
   if(sync && !(BATCH.helper&&BATCH.helper.path)){
     batchSay("Open the chapter's helper file first — 📎 Open helper file.","warn"); return; }
-  const todo=BATCH.pages.map((p,i)=>i).filter(i=>BATCH.pages[i].status!=="done");
-  if(!todo.length){ batchSay("Every page is already done.","ok"); return; }
-  if(sync && !confirm("Corrections to sync with new version, on "+todo.length+" page(s),"
-             +" with "+BATCH.helper.name+"?"
-             +"\n\nThe English of these pages must be the FINAL English, and the {{LANGUAGE}}"
-             +" the approved {{LANGUAGE}}. Every sentence the editors touched comes back as a"
-             +" correction, and its VERSION 1 goes in straight away. Tick VERSION 1 to"
-             +" mark it checked, or ORIGINAL to put the approved {{LANGUAGE}} back.")) return;
+  // Which pages: those not done yet, the page on screen, or every page —
+  // so a page already done can be run again.
+  const all=BATCH.pages.map((p,i)=>i);
+  const pend=all.filter(i=>BATCH.pages[i].status!=="done");
+  const pick=await rerunAsk(sync, pend.length, all.length);
+  if(!pick) return;
+  const todo=pick==="pending" ? pend : pick==="page" ? [BATCH.sel.p] : all;
   // The chapter on screen now; the run keeps to it if another is opened.
   const B=BATCH, path=BATCH_PATH, run=runStart(B, path, sync?"sync":"proof");
   let ok=0, bad=0, fatal="";
@@ -4020,7 +4029,13 @@ async function batchRun(sync){
   const verb=sync?"Syncing":"Proofing";
   // The whole chapter goes to the app, which works on many pages at once
   // (Settings → Pages at once) and is asked every second what has finished.
-  const empty=todo.filter(i=>!(B.pages[i].telugu||"").trim());
+  // AI Proofing again on a page already done works on the page as it is
+  // now — the sync's and the reviewer's work kept — and keeps its earlier
+  // corrections wherever the new ones do not land. The sync again starts
+  // from the approved text, as the sync always does.
+  const again=new Set(todo.filter(i=>B.pages[i].status==="done"));
+  const textOf=i=>(!sync && again.has(i)) ? B.pages[i].current : B.pages[i].telugu;
+  const empty=todo.filter(i=>!(textOf(i)||"").trim());
   for(const i of empty){ B.pages[i].status="failed"; B.pages[i].error="this page has no {{LANGUAGE}}"; bad++; }
   const send=todo.filter(i=>!empty.includes(i));
   let jid="", parallel=0;
@@ -4028,7 +4043,7 @@ async function batchRun(sync){
     if(send.length){
       const st=await api("/api/batch/job/start",{kind:sync?"sync":"proof",
         helper:sync?B.helper.path:"", english_all:B.pages.map(q=>q.english||""),
-        pages:send.map(i=>({i, english:B.pages[i].english, telugu:B.pages[i].telugu}))});
+        pages:send.map(i=>({i, english:B.pages[i].english, telugu:textOf(i)}))});
       if(st.error) throw new Error(st.error);
       jid=st.job; parallel=st.parallel;
     }
@@ -4048,7 +4063,7 @@ async function batchRun(sync){
         const p=B.pages[i];
         try{
           if(s0.error) throw new Error(s0.error);
-          batchApplyResult(B, i, s0, sync);
+          batchApplyResult(B, i, s0, sync, !sync && again.has(i));
           ok++;
         }catch(e){ p.status="failed"; p.error=e.message; bad++;
           if(/^FileNotFoundError/.test(p.error)){ fatal=p.error; run.stop=true; } }
@@ -4080,11 +4095,40 @@ async function batchRun(sync){
           +(left?" · "+left+" not done; press the button again to run them":""),
            bad?"warn":"ok");
 }
+/* The run's pages, asked in a small window: the pages not done yet (when
+   there are any), the page on screen, or all pages. Resolves to "pending",
+   "page", "all" or "" (cancelled). */
+function rerunAsk(sync, pending, total){
+  const d=$("rerunDlg"), p=batchPage();
+  $("rerunTitle").textContent=sync?"⇄ Corrections to sync with new version":"⚡ AI Proofing";
+  $("rerunText").textContent=(pending
+      ? pending+" of "+total+" page(s) are not done yet."
+      : "Every page of this chapter is already done — choose what to run again.")
+    +(sync ? " The sync works from the approved {{LANGUAGE}} with "+(BATCH.helper?BATCH.helper.name:"the helper file")
+             +": on a page done before, its earlier sync corrections and choices are replaced (your own marks and checks are kept)."
+           : " On a page done before, the AI proofs it as it is now and its earlier corrections are kept.");
+  $("rerunPending").style.display=pending?"":"none";
+  $("rerunPending").textContent="▶ Pages not done ("+pending+")";
+  $("rerunPage").textContent="▶ This page only (page "+(p?p.page:"")+")";
+  $("rerunAll").textContent="▶ All pages ("+total+")";
+  return new Promise(res=>{
+    const done=v=>{ d.close(); res(v); };
+    $("rerunPending").onclick=()=>done("pending");
+    $("rerunPage").onclick=()=>done("page");
+    $("rerunAll").onclick=()=>done("all");
+    $("rerunCancel").onclick=()=>done("");
+    // Esc. Not "close": that one arrives late, after the next ask has begun.
+    d.oncancel=e=>{ e.preventDefault(); done(""); };
+    d.showModal();
+  });
+}
 /* One page's answer from the app, put on the page: its text as the AI left
    it, its corrections, and the reviewer's own marks found again. */
-function batchApplyResult(B, i, s, sync){
+function batchApplyResult(B, i, s, sync, keepAll){
   const p=B.pages[i];
-  const kept=p.findings.filter(batchKeeps);
+  // keepAll: proofing a page again — every earlier correction is kept
+  // where the new ones do not land (found again by its words).
+  const kept=keepAll ? p.findings.slice() : p.findings.filter(batchKeeps);
   p.current=s.telugu;
   p.findings=(s.findings||[]).map(f=>({start:f.start, end:f.end,
     orig:f.orig, current:f.current, english:f.english||"",
@@ -4112,12 +4156,14 @@ function batchKeepMarks(p, kept){
   let lost=0;
   for(const m of kept){
     const want=Array.from(m.current||m.orig||"");
-    if(!want.length){ lost++; continue; }
+    if(!want.length){ if(batchKeeps(m)) lost++; continue; }
     const hits=[];
     for(let i=text.indexOf(want.join("")); i>=0; i=text.indexOf(want.join(""), i+1))
       hits.push(Array.from(text.slice(0,i)).length);
     const free=hits.filter(a=>!p.findings.some(f=>a<f.end && a+want.length>f.start));
-    if(!free.length){ lost++; continue; }
+    // Only the reviewer's own marks count as lost: an earlier AI
+    // correction the new run rewrote is simply replaced.
+    if(!free.length){ if(batchKeeps(m)) lost++; continue; }
     const a=free.reduce((x,y)=>Math.abs(y-m.start)<Math.abs(x-m.start)?y:x);
     p.findings.push({...m, start:a, end:a+want.length});
   }
