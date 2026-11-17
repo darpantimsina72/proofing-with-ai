@@ -469,6 +469,13 @@ select:disabled{opacity:.5}
     <button id="rerunAll" class="b-sugg"></button>
     <button id="rerunCancel">Cancel</button>
   </div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px;
+              padding-top:10px;border-top:1px solid var(--border);font:13px 'Nirmala UI',sans-serif">
+    Pages from <input id="rerunFrom" type="number" style="width:70px;padding:3px 6px">
+    to <input id="rerunTo" type="number" style="width:70px;padding:3px 6px">
+    <button id="rerunRange" class="b-one">&#9654; Run these pages</button>
+    <span id="rerunRangeInfo" class="status"></span>
+  </div>
 </dialog>
 <div id="findBar" role="search">
   <input id="findQ" type="search" placeholder="Find in this chapter — English or {{LANGUAGE}}" autocomplete="off">
@@ -4021,7 +4028,8 @@ async function batchRun(sync){
   const pend=all.filter(i=>BATCH.pages[i].status!=="done");
   const pick=await rerunAsk(sync, pend.length, all.length);
   if(!pick) return;
-  const todo=pick==="pending" ? pend : pick==="page" ? [BATCH.sel.p] : all;
+  const todo=Array.isArray(pick) ? pick
+           : pick==="pending" ? pend : pick==="page" ? [BATCH.sel.p] : all;
   // The chapter on screen now; the run keeps to it if another is opened.
   const B=BATCH, path=BATCH_PATH, run=runStart(B, path, sync?"sync":"proof");
   let ok=0, bad=0, fatal="";
@@ -4097,7 +4105,8 @@ async function batchRun(sync){
 }
 /* The run's pages, asked in a small window: the pages not done yet (when
    there are any), the page on screen, or all pages. Resolves to "pending",
-   "page", "all" or "" (cancelled). */
+   "page", "all", "" (cancelled), or the list of page indexes from one
+   page number to another (both included; done or not). */
 function rerunAsk(sync, pending, total){
   const d=$("rerunDlg"), p=batchPage();
   $("rerunTitle").textContent=sync?"⇄ Corrections to sync with new version":"⚡ AI Proofing";
@@ -4111,8 +4120,24 @@ function rerunAsk(sync, pending, total){
   $("rerunPending").textContent="▶ Pages not done ("+pending+")";
   $("rerunPage").textContent="▶ This page only (page "+(p?p.page:"")+")";
   $("rerunAll").textContent="▶ All pages ("+total+")";
+  // From / to: by the pages' own numbers ("Page Number"), or by place in
+  // the chapter where a page has no number.
+  const num=(q,i)=>{ const n=parseInt(q.page,10); return isNaN(n)?i+1:n; };
+  const nums=BATCH.pages.map(num);
+  $("rerunFrom").value=Math.min(...nums); $("rerunTo").value=Math.max(...nums);
+  const inRange=()=>{
+    let a=parseInt($("rerunFrom").value,10), b=parseInt($("rerunTo").value,10);
+    if(isNaN(a)||isNaN(b)) return [];
+    if(a>b) [a,b]=[b,a];
+    return nums.map((n,i)=>n>=a&&n<=b?i:-1).filter(i=>i>=0);
+  };
+  const info=()=>{ const r=inRange(), dn=r.filter(i=>BATCH.pages[i].status==="done").length;
+    $("rerunRangeInfo").textContent=r.length+" page(s)"+(dn?", "+dn+" already done":""); };
+  $("rerunFrom").oninput=$("rerunTo").oninput=info; info();
   return new Promise(res=>{
     const done=v=>{ d.close(); res(v); };
+    $("rerunRange").onclick=()=>{ const r=inRange(); if(r.length) done(r);
+      else $("rerunRangeInfo").textContent="no page in that range"; };
     $("rerunPending").onclick=()=>done("pending");
     $("rerunPage").onclick=()=>done("page");
     $("rerunAll").onclick=()=>done("all");
